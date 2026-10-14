@@ -4,7 +4,7 @@
 
 **Local reference-machine probe: PASS / COMPLETE**
 
-**FPS-002 overall: ACTIVE — BLOCKED ON TWO-PEER QUALIFICATION**
+**FPS-002 overall: GREEN / CLOSED — LOCAL REFERENCE QUALIFICATION**
 
 Date: 2026-10-14
 
@@ -14,7 +14,7 @@ Branch: `fps-002-reference-baseline-spike`
 
 GitHub Issue: #3 — FPS-002 — Reference Baseline & Technical Spike
 
-This report records runtime evidence from the current Windows reference machine. It deliberately does not convert missing two-peer evidence into a PASS or FAIL.
+This report records runtime evidence from the current Windows reference machine. On 2026-10-14 the project qualification scope was explicitly adjusted to accept this local machine as the FPS-002 reference baseline because no second physical Windows PC is available. Missing two-peer evidence is deferred to the later network tasks rather than treated as a failure.
 
 ---
 
@@ -89,8 +89,8 @@ last seen: 2026-09-19T14:24:36.1Z
 - Local Tailscale networking baseline: **PASS**
 - UDP availability: **PASS**
 - Stable mapping indication: **PASS**
-- Current real Direct-vs-DERP path to a peer: **NOT TESTED / BLOCKED**
-- Two-peer RTT and throughput: **NOT TESTED / BLOCKED**
+- Current real Direct-vs-DERP path to a peer: **NOT TESTED / DEFERRED TO FPS-009/FPS-010**
+- Two-peer RTT and throughput: **NOT TESTED / DEFERRED TO FPS-009/FPS-010**
 
 Reason: the only visible reference peer was offline during qualification.
 
@@ -126,7 +126,7 @@ Current upstream licensing verified during the spike:
 
 ### Result
 
-Reference-stack end-to-end benchmark: **NOT TESTED / BLOCKED**
+Reference-stack end-to-end benchmark: **NOT TESTED / DEFERRED TO FPS-009/FPS-010**
 
 DG-001 and DG-006 remain open.
 
@@ -433,7 +433,7 @@ DG-002 remains OPEN.
 
 ### DG-001 — Network video transport
 
-**OPEN / BLOCKED ON TWO-PEER TEST**
+**OPEN / TWO-PEER TEST DEFERRED TO FPS-009/FPS-010**
 
 Evidence gained:
 
@@ -507,9 +507,9 @@ Any reuse/fork/link decision needs an explicit distribution architecture review 
 
 ---
 
-## 12. Blockers preventing FPS-002 GREEN
+## 12. Deferred two-peer qualification
 
-The local reference-machine phase is complete, but FPS-002 cannot honestly be called GREEN yet because the master plan explicitly requires real two-peer evidence.
+The local reference-machine phase is complete and is sufficient to close FPS-002 under the project qualification ruling. Real two-peer evidence remains required before network behavior is called qualified, but that evidence now belongs to FPS-009/FPS-010 rather than blocking FPS-002.
 
 Required remaining test:
 
@@ -534,9 +534,11 @@ Must record:
 - CPU/GPU utilization on both machines
 - Discord running simultaneously if that is the intended normal use case
 
-Current blocker:
+Current environment limitation:
 
-> Tailscale reference peer `XQ-DC72` was offline during the spike.
+> No second physical Windows reference machine is available. The only visible Tailscale reference peer `XQ-DC72` was offline during the spike.
+
+This is no longer a blocker for FPS-002 closure. It is a deferred dependency for the network qualification tasks.
 
 ---
 
@@ -553,10 +555,12 @@ When the second physical machine is online:
 5. repeat across Direct and DERP if both paths can be induced or observed
 6. only then close FPS-002 and use the evidence to constrain FPS-003/FPS-009 decisions
 
-Until then:
+Final FPS-002 state:
 
 ```text
-FPS-002 = ACTIVE
-Local probe = COMPLETE
-Two-peer reference qualification = BLOCKED
+FPS-002 = GREEN / CLOSED
+Local reference qualification = COMPLETE
+Two-peer network qualification = DEFERRED TO FPS-009 / FPS-010
 ```
+
+This does not change the FriendPushScreen V1 product requirement for real peer-to-peer sharing.

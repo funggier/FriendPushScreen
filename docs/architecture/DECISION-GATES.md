@@ -23,7 +23,7 @@ Decision inputs:
 
 **Rule:** no permanent transport choice before reference-stack benchmark and licensing review.
 
-**FPS-002 evidence (2026-10-14):** Tailscale is operational with UDP available and stable mapping indication, but the only visible reference peer was offline. Sunshine/Moonlight were not installed locally. Two-peer Direct/DERP and end-to-end stream measurements remain BLOCKED, so DG-001 stays OPEN.
+**FPS-002 evidence (2026-10-14):** Tailscale is operational with UDP available and stable mapping indication, but no second physical Windows peer is available. Sunshine/Moonlight were not installed locally. FPS-002 closes on the local reference baseline; two-peer Direct/DERP and end-to-end stream measurements are explicitly deferred to FPS-009/FPS-010. DG-001 stays OPEN.
 
 ## DG-002 — Monitor capture backend policy
 
