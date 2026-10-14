@@ -24,12 +24,15 @@ add_executable(FriendPushScreenTests
     src/diagnostics/logger.cpp
     src/platform/windows/os_probe.cpp
     src/platform/windows/cpu_memory_probe.cpp
+    src/platform/windows/dxgi_adapter_probe.cpp
+    src/platform/windows/monitor_probe.cpp
+    src/platform/windows/window_probe.cpp
 )
 target_include_directories(FriendPushScreenTests PRIVATE
     tests
     src
 )
 fps_apply_warnings(FriendPushScreenTests)
-target_link_libraries(FriendPushScreenTests PRIVATE Advapi32)
+target_link_libraries(FriendPushScreenTests PRIVATE Advapi32 Dxgi User32)
 
 add_test(NAME FriendPushScreenTests COMMAND FriendPushScreenTests)

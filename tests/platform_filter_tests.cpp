@@ -1,7 +1,10 @@
 #include "test_support.h"
 
 #include "platform/windows/cpu_memory_probe.h"
+#include "platform/windows/dxgi_adapter_probe.h"
+#include "platform/windows/monitor_probe.h"
 #include "platform/windows/os_probe.h"
+#include "platform/windows/window_probe.h"
 
 #include <string>
 
@@ -63,5 +66,57 @@ void RunPlatformFilterTests() {
         FPS_EXPECT_TRUE(cpu.logical_processors > 0);
         FPS_EXPECT_TRUE(cpu.total_physical_memory_bytes > 0);
         FPS_EXPECT_TRUE(!cpu.cpu_model.empty());
+    }
+
+    {
+        const HWND self = reinterpret_cast<HWND>(0x100);
+        FPS_EXPECT_TRUE(!ShouldIncludeWindow(WindowCandidate{
+            .handle = reinterpret_cast<HWND>(0x101),
+            .visible = false,
+            .title = "Invisible"
+        }, self));
+
+        FPS_EXPECT_TRUE(!ShouldIncludeWindow(WindowCandidate{
+            .handle = reinterpret_cast<HWND>(0x102),
+            .visible = true,
+            .title = ""
+        }, self));
+
+        FPS_EXPECT_TRUE(!ShouldIncludeWindow(WindowCandidate{
+            .handle = self,
+            .visible = true,
+            .title = "FriendPushScreen"
+        }, self));
+
+        FPS_EXPECT_TRUE(!ShouldIncludeWindow(WindowCandidate{
+            .handle = reinterpret_cast<HWND>(0x103),
+            .visible = true,
+            .title = "Tool Window",
+            .tool_window = true
+        }, self));
+
+        FPS_EXPECT_TRUE(!ShouldIncludeWindow(WindowCandidate{
+            .handle = reinterpret_cast<HWND>(0x104),
+            .owner = reinterpret_cast<HWND>(0x200),
+            .visible = true,
+            .title = "Owned Popup"
+        }, self));
+
+        FPS_EXPECT_TRUE(ShouldIncludeWindow(WindowCandidate{
+            .handle = reinterpret_cast<HWND>(0x105),
+            .visible = true,
+            .title = "Application Window"
+        }, self));
+    }
+
+    {
+        const auto adapters = ProbeDxgiAdapters();
+        FPS_EXPECT_TRUE(!adapters.empty());
+
+        const auto monitors = ProbeMonitors();
+        FPS_EXPECT_TRUE(!monitors.empty());
+
+        const auto windows = ProbeVisibleTopLevelWindows(nullptr);
+        FPS_EXPECT_TRUE(windows.size() >= 0);
     }
 }
