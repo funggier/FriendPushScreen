@@ -2,7 +2,7 @@
 
 ## FPS-003 — Windows App Skeleton & Hardware Diagnostics
 
-**Status:** IMPLEMENTATION PLAN REVIEW PENDING
+**Status:** ACTIVE — TASK 1 TOOLCHAIN BASELINE
 
 **Branch:** `fps-003-native-windows-app-design`
 
@@ -39,9 +39,11 @@ User approved the written FPS-003 design on 2026-10-14.
 
 `docs/superpowers/plans/2026-10-14-fps-003-native-windows-app-implementation.md`
 
-### Current gate
+### Execution
 
-The implementation plan exists and has passed self-review. Product code, dependency installation/repair, and build changes must wait until the user confirms the plan and selects the execution method.
+User approved the implementation plan and selected Native execution on 2026-10-14.
+
+Current step: Task 1 — Toolchain Prerequisite, CMake Baseline, and Test Harness.
 
 ### Important implementation prerequisite
 

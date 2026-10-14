@@ -6,7 +6,7 @@ This roadmap converts the V1 master specification into execution-sized FPS tasks
 |---|---|---|---|
 | FPS-001 | Engineering Baseline | Repository/workspace/task/qualification structure | GREEN |
 | FPS-002 | Reference Baseline & Technical Spike | Local reference-machine qualification: Tailscale baseline, capture-card modes, WDA behavior, simultaneous hardware encode/decode | GREEN |
-| FPS-003 | Windows App Skeleton & Hardware Diagnostics | Launchable native Win32/D3D11 app plus capability inventory | IMPLEMENTATION PLAN REVIEW |
+| FPS-003 | Windows App Skeleton & Hardware Diagnostics | Launchable native Win32/D3D11 app plus capability inventory | ACTIVE |
 | FPS-004 | Viewer UI & Settings Shell | Viewer-first UI, settings overlay, state visibility | PLANNED |
 | FPS-005 | Unified Capture Sources | Monitor, Window, and generic Capture Card preview through one source abstraction | PLANNED |
 | FPS-006 | Encode / Decode / Local Loopback | Hardware paths plus H.264 fallback and stable 1080p60 local loop | PLANNED |
