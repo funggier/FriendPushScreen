@@ -100,6 +100,7 @@ struct NetworkAdapterInfo {
     std::vector<std::string> ipv4_addresses;
     std::uint64_t link_speed_bps{0};
     bool loopback{false};
+    bool tunnel{false};
 };
 
 enum class TailscalePresence {

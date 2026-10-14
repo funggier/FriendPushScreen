@@ -3,6 +3,7 @@
 #include "platform/windows/cpu_memory_probe.h"
 #include "platform/windows/dxgi_adapter_probe.h"
 #include "platform/windows/monitor_probe.h"
+#include "platform/windows/network_probe.h"
 #include "platform/windows/os_probe.h"
 #include "platform/windows/window_probe.h"
 #include "media/capture_device_probe.h"
@@ -173,6 +174,67 @@ void RunPlatformFilterTests() {
             0);
         FPS_EXPECT_EQ(error_result.state, fps::diagnostics::ProbeState::Error);
         FPS_EXPECT_EQ(error_result.error_code, static_cast<long>(0x80004005L));
+    }
+
+    {
+        using fps::platform::windows::AnalyzeNetworkAdapters;
+        using fps::platform::windows::NetworkAdapterCandidate;
+        using fps::platform::windows::SelectPrimaryPhysicalAdapterIndex;
+
+        std::vector<NetworkAdapterCandidate> candidates{
+            NetworkAdapterCandidate{
+                .name = "Loopback",
+                .operational = true,
+                .loopback = true,
+                .ipv4_addresses = {"127.0.0.1"}
+            },
+            NetworkAdapterCandidate{
+                .name = "Ethernet",
+                .operational = true,
+                .loopback = false,
+                .ipv4_addresses = {"192.168.1.20"}
+            },
+            NetworkAdapterCandidate{
+                .name = "Tailscale",
+                .description = "Tailscale Tunnel",
+                .operational = true,
+                .loopback = false,
+                .tunnel = true,
+                .ipv4_addresses = {"100.80.10.2"}
+            }
+        };
+
+        const auto analyzed = AnalyzeNetworkAdapters(candidates);
+        FPS_EXPECT_EQ(
+            analyzed.tailscale,
+            fps::diagnostics::TailscalePresence::Present);
+
+        const auto primary = SelectPrimaryPhysicalAdapterIndex(analyzed.adapters);
+        FPS_EXPECT_TRUE(primary.has_value());
+        FPS_EXPECT_EQ(*primary, static_cast<std::size_t>(1));
+
+        const auto no_tailscale = AnalyzeNetworkAdapters({
+            NetworkAdapterCandidate{
+                .name = "Ethernet",
+                .operational = true,
+                .ipv4_addresses = {"10.0.0.5"}
+            }
+        });
+        FPS_EXPECT_EQ(
+            no_tailscale.tailscale,
+            fps::diagnostics::TailscalePresence::Absent);
+
+        const auto failed = fps::platform::windows::NetworkInfoFromFailure(5);
+        FPS_EXPECT_EQ(
+            failed.tailscale,
+            fps::diagnostics::TailscalePresence::Unknown);
+        FPS_EXPECT_EQ(
+            failed.result.state,
+            fps::diagnostics::ProbeState::Error);
+        FPS_EXPECT_EQ(failed.result.error_code, 5L);
+
+        const auto live_network = fps::platform::windows::ProbeNetworkState();
+        FPS_EXPECT_TRUE(!live_network.adapters.empty());
     }
 
     {
