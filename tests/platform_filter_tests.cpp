@@ -5,6 +5,11 @@
 #include "platform/windows/monitor_probe.h"
 #include "platform/windows/os_probe.h"
 #include "platform/windows/window_probe.h"
+#include "media/capture_device_probe.h"
+#include "media/codec_capability_probe.h"
+
+#include <mfapi.h>
+#include <objbase.h>
 
 #include <string>
 
@@ -118,5 +123,74 @@ void RunPlatformFilterTests() {
 
         const auto windows = ProbeVisibleTopLevelWindows(nullptr);
         FPS_EXPECT_TRUE(windows.size() >= 0);
+    }
+
+    {
+        using fps::diagnostics::CodecDirection;
+        using fps::diagnostics::CodecKind;
+        using fps::diagnostics::HardwareClassification;
+        using fps::media::NormalizeCodecCapability;
+
+        const auto h264_encoder = NormalizeCodecCapability(
+            CodecKind::H264,
+            CodecDirection::Encode,
+            "Synthetic H264 Encoder",
+            true,
+            false);
+        FPS_EXPECT_EQ(h264_encoder.codec, CodecKind::H264);
+        FPS_EXPECT_EQ(h264_encoder.direction, CodecDirection::Encode);
+        FPS_EXPECT_EQ(h264_encoder.hardware, HardwareClassification::Hardware);
+
+        const auto hevc_decoder = NormalizeCodecCapability(
+            CodecKind::HEVC,
+            CodecDirection::Decode,
+            "Synthetic HEVC Decoder",
+            false,
+            true);
+        FPS_EXPECT_EQ(hevc_decoder.codec, CodecKind::HEVC);
+        FPS_EXPECT_EQ(hevc_decoder.direction, CodecDirection::Decode);
+        FPS_EXPECT_EQ(hevc_decoder.hardware, HardwareClassification::Software);
+
+        const auto av1_unknown = NormalizeCodecCapability(
+            CodecKind::AV1,
+            CodecDirection::Decode,
+            "Synthetic AV1 Decoder",
+            false,
+            false);
+        FPS_EXPECT_EQ(av1_unknown.codec, CodecKind::AV1);
+        FPS_EXPECT_EQ(av1_unknown.direction, CodecDirection::Decode);
+        FPS_EXPECT_EQ(av1_unknown.hardware, HardwareClassification::Unknown);
+
+        const auto empty_result = fps::media::MakeMediaEnumerationResult(
+            "capture_devices",
+            0,
+            0);
+        FPS_EXPECT_EQ(empty_result.state, fps::diagnostics::ProbeState::Unavailable);
+
+        const auto error_result = fps::media::MakeMediaEnumerationResult(
+            "capture_devices",
+            static_cast<long>(0x80004005L),
+            0);
+        FPS_EXPECT_EQ(error_result.state, fps::diagnostics::ProbeState::Error);
+        FPS_EXPECT_EQ(error_result.error_code, static_cast<long>(0x80004005L));
+    }
+
+    {
+        const HRESULT co_hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        const bool should_uninitialize = SUCCEEDED(co_hr);
+
+        const HRESULT mf_hr = MFStartup(MF_VERSION, MFSTARTUP_LITE);
+        FPS_EXPECT_TRUE(SUCCEEDED(mf_hr));
+        if (SUCCEEDED(mf_hr)) {
+            const auto devices = fps::media::ProbeVideoCaptureDevices();
+            const auto codecs = fps::media::ProbeCodecCapabilities();
+            FPS_EXPECT_TRUE(devices.size() >= 0);
+            FPS_EXPECT_TRUE(codecs.size() >= 0);
+            MFShutdown();
+        }
+
+        if (should_uninitialize) {
+            CoUninitialize();
+        }
     }
 }
