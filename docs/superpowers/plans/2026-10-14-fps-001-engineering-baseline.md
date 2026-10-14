@@ -46,9 +46,9 @@
 - Consumes: existing V1 master specification.
 - Produces: stable navigation and task/decision tracking used by subsequent FPS tasks.
 
-- [ ] Write repository baseline documents.
-- [ ] Verify every referenced path exists and every roadmap item maps back to V1 scope.
-- [ ] Verify no product implementation is claimed.
+- [x] Write repository baseline documents.
+- [x] Verify every referenced path exists and every roadmap item maps back to V1 scope.
+- [x] Verify no product implementation is claimed.
 
 ### Task 2: Workspace registration
 
@@ -59,9 +59,9 @@
 - Consumes: current workspace organization rules.
 - Produces: canonical local location for program projects and FriendPushScreen.
 
-- [ ] Add `ProjectsProgram` to the workspace tree.
-- [ ] Add a Program Projects section describing FriendPushScreen.
-- [ ] Preserve existing AI project sections byte-for-byte except required surrounding insertion.
+- [x] Add `ProjectsProgram` to the workspace tree.
+- [x] Add a Program Projects section describing FriendPushScreen.
+- [x] Preserve existing AI project sections byte-for-byte except required surrounding insertion.
 
 ### Task 3: Qualification evidence and publishable branch
 
@@ -74,8 +74,8 @@
 - Consumes: repository and workspace verification output.
 - Produces: reproducible evidence for closing FPS-001 and activating FPS-002.
 
-- [ ] Run structural and Git verification.
-- [ ] Record exact baseline/head SHAs and working-tree state.
-- [ ] Mark FPS-001 GREEN only if all acceptance checks pass.
-- [ ] Commit on `fps-001-engineering-baseline`.
-- [ ] Push the branch to GitHub for review/integration.
+- [x] Run structural and Git verification.
+- [x] Record exact baseline/head SHAs and working-tree state.
+- [x] Mark FPS-001 GREEN only if all acceptance checks pass.
+- [x] Commit on `fps-001-engineering-baseline`.
+- [x] Push the branch to GitHub for review/integration.
