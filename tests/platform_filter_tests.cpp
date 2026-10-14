@@ -8,6 +8,7 @@
 #include "platform/windows/window_probe.h"
 #include "media/capture_device_probe.h"
 #include "media/codec_capability_probe.h"
+#include "graphics/d3d11_device.h"
 
 #include <mfapi.h>
 #include <objbase.h>
@@ -16,6 +17,25 @@
 
 void RunPlatformFilterTests() {
     using namespace fps::platform::windows;
+
+    FPS_EXPECT_EQ(
+        fps::graphics::ResolveRendererMode(true, false),
+        fps::graphics::RendererMode::Hardware);
+    FPS_EXPECT_EQ(
+        fps::graphics::ResolveRendererMode(false, true),
+        fps::graphics::RendererMode::WarpFallback);
+    FPS_EXPECT_EQ(
+        fps::graphics::ResolveRendererMode(false, false),
+        fps::graphics::RendererMode::Error);
+    FPS_EXPECT_EQ(
+        fps::graphics::ResolveRendererMode(
+            fps::graphics::RendererCreationPolicy{
+                .try_hardware = false,
+                .try_warp = true
+            },
+            true,
+            true),
+        fps::graphics::RendererMode::WarpFallback);
 
     {
         const OsVersionQuery raw{

@@ -10,9 +10,22 @@ add_compile_definitions(UNICODE _UNICODE)
 
 include(cmake/warnings.cmake)
 
-# Task 1 reserves the product target name. Task 7 replaces this placeholder
-# with the first Win32 executable after its RED tests exist.
-add_custom_target(FriendPushScreen)
+add_executable(FriendPushScreen WIN32
+    src/app/main.cpp
+    src/app/application.cpp
+    src/ui/main_window.cpp
+    src/graphics/d3d11_device.cpp
+    src/graphics/placeholder_renderer.cpp
+)
+target_include_directories(FriendPushScreen PRIVATE src)
+fps_apply_warnings(FriendPushScreen)
+target_link_libraries(FriendPushScreen PRIVATE
+    D3D11
+    Dxgi
+    Ole32
+    User32
+    Gdi32
+)
 
 enable_testing()
 
@@ -30,6 +43,7 @@ add_executable(FriendPushScreenTests
     src/platform/windows/network_probe.cpp
     src/media/capture_device_probe.cpp
     src/media/codec_capability_probe.cpp
+    src/graphics/d3d11_device.cpp
 )
 target_include_directories(FriendPushScreenTests PRIVATE
     tests
@@ -44,6 +58,7 @@ target_link_libraries(FriendPushScreenTests PRIVATE
     Mf
     Mfplat
     Mfuuid
+    D3D11
 )
 
 add_test(NAME FriendPushScreenTests COMMAND FriendPushScreenTests)
