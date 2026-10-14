@@ -5,7 +5,7 @@ A task may be called **GREEN** only when its required evidence exists and can be
 | Task | Qualification evidence | State |
 |---|---|---|
 | FPS-001 | canonical checkout; documentation baseline; workspace README registration; clean exact-commit Git state; remote branch present; dated evidence report | GREEN |
-| FPS-002 | measurements for reference stream stack; Tailscale Direct/Relay state; capture-card runtime modes; WDA/backend behavior; simultaneous hardware encode/decode resource evidence | PENDING |
+| FPS-002 | measurements for reference stream stack; Tailscale Direct/Relay state; capture-card runtime modes; WDA/backend behavior; simultaneous hardware encode/decode resource evidence | ACTIVE / BLOCKED: two-peer stream benchmark |
 | FPS-003 | app launches on supported baseline; hardware capability report; automated smoke test | PENDING |
 | FPS-004 | UI state tests plus manual UX evidence for viewer/settings/share visibility | PENDING |
 | FPS-005 | Monitor/Window/Capture Card source enumeration and preview evidence; hot-plug/source-loss behavior | PENDING |
