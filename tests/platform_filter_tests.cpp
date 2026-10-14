@@ -9,6 +9,7 @@
 #include "media/capture_device_probe.h"
 #include "media/codec_capability_probe.h"
 #include "graphics/d3d11_device.h"
+#include "ui/main_window.h"
 
 #include <mfapi.h>
 #include <objbase.h>
@@ -36,6 +37,12 @@ void RunPlatformFilterTests() {
             true,
             true),
         fps::graphics::RendererMode::WarpFallback);
+
+    FPS_EXPECT_EQ(
+        fps::ui::NormalizeWin32MultilineText(
+            L"line1\nline2\r\nline3"),
+        std::wstring{
+            L"line1\r\nline2\r\nline3"});
 
     {
         const OsVersionQuery raw{

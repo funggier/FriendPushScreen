@@ -1,5 +1,6 @@
 #include "diagnostics/diagnostics_formatter.h"
 
+#include <fstream>
 #include <sstream>
 
 namespace fps::diagnostics {
@@ -31,6 +32,59 @@ const char* HardwareName(HardwareClassification classification) {
         return "Unknown";
     }
     return "Unknown";
+}
+
+std::string CapabilityStatus(
+    const std::vector<CodecCapabilityInfo>& capabilities,
+    CodecKind codec,
+    CodecDirection direction) {
+    bool found = false;
+    bool hardware = false;
+    bool software = false;
+
+    for (const auto& capability : capabilities) {
+        if (capability.codec != codec ||
+            capability.direction != direction) {
+            continue;
+        }
+
+        found = true;
+        hardware =
+            hardware ||
+            capability.hardware ==
+                HardwareClassification::Hardware;
+        software =
+            software ||
+            capability.hardware ==
+                HardwareClassification::Software;
+    }
+
+    if (!found) {
+        return "Unavailable";
+    }
+    if (hardware) {
+        return "Available / Hardware";
+    }
+    if (software) {
+        return "Available / Software";
+    }
+    return "Available / Unknown";
+}
+
+void WriteCapabilityStatus(
+    std::ostringstream& out,
+    const std::vector<CodecCapabilityInfo>& capabilities,
+    CodecKind codec,
+    const char* codec_name,
+    CodecDirection direction,
+    const char* direction_name) {
+    out << codec_name << ' '
+        << direction_name << ": "
+        << CapabilityStatus(
+               capabilities,
+               codec,
+               direction)
+        << "\n";
 }
 
 }  // namespace
@@ -83,6 +137,15 @@ std::string FormatDiagnosticsText(
 
     out << "\nMonitors\n";
     out << "Count: " << snapshot.monitors.size() << "\n";
+    for (const auto& monitor : snapshot.monitors) {
+        out << "- " << monitor.device_name
+            << " / "
+            << (monitor.right - monitor.left)
+            << "x"
+            << (monitor.bottom - monitor.top)
+            << (monitor.primary ? " / Primary" : "")
+            << "\n";
+    }
 
     out << "\nVisible Windows\n";
     out << "Count: " << snapshot.visible_windows.size() << "\n";
@@ -101,7 +164,52 @@ std::string FormatDiagnosticsText(
     }
 
     out << "\nCodec Capabilities\n";
-    out << "Count: " << snapshot.codec_capabilities.size() << "\n";
+    WriteCapabilityStatus(
+        out,
+        snapshot.codec_capabilities,
+        CodecKind::H264,
+        "H.264",
+        CodecDirection::Encode,
+        "Encode");
+    WriteCapabilityStatus(
+        out,
+        snapshot.codec_capabilities,
+        CodecKind::H264,
+        "H.264",
+        CodecDirection::Decode,
+        "Decode");
+    WriteCapabilityStatus(
+        out,
+        snapshot.codec_capabilities,
+        CodecKind::HEVC,
+        "HEVC",
+        CodecDirection::Encode,
+        "Encode");
+    WriteCapabilityStatus(
+        out,
+        snapshot.codec_capabilities,
+        CodecKind::HEVC,
+        "HEVC",
+        CodecDirection::Decode,
+        "Decode");
+    WriteCapabilityStatus(
+        out,
+        snapshot.codec_capabilities,
+        CodecKind::AV1,
+        "AV1",
+        CodecDirection::Encode,
+        "Encode");
+    WriteCapabilityStatus(
+        out,
+        snapshot.codec_capabilities,
+        CodecKind::AV1,
+        "AV1",
+        CodecDirection::Decode,
+        "Decode");
+
+    out << "Detailed transforms: "
+        << snapshot.codec_capabilities.size()
+        << "\n";
     for (const auto& codec : snapshot.codec_capabilities) {
         out << "- " << CodecName(codec.codec) << ' '
             << DirectionName(codec.direction) << " / "
@@ -114,9 +222,34 @@ std::string FormatDiagnosticsText(
 
     out << "\nNetwork\n";
     out << "Adapters: " << snapshot.network.adapters.size() << "\n";
+    out << "Tailscale: ";
+    switch (snapshot.network.tailscale) {
+    case TailscalePresence::Present:
+        out << "Present\n";
+        break;
+    case TailscalePresence::Absent:
+        out << "Absent\n";
+        break;
+    case TailscalePresence::Unknown:
+        out << "Unknown\n";
+        break;
+    }
     for (const auto& adapter : snapshot.network.adapters) {
         out << "- " << adapter.name
-            << " / " << (adapter.operational ? "Up" : "Down") << "\n";
+            << " / " << (adapter.operational ? "Up" : "Down");
+        if (adapter.loopback) {
+            out << " / Loopback";
+        }
+        if (adapter.tunnel) {
+            out << " / Tunnel";
+        }
+        if (adapter.link_speed_bps > 0) {
+            out << " / " << adapter.link_speed_bps << " bps";
+        }
+        out << "\n";
+        for (const auto& address : adapter.ipv4_addresses) {
+            out << "  IPv4: " << address << "\n";
+        }
     }
 
     out << "\nProbe Warnings / Errors\n";
@@ -135,6 +268,21 @@ std::string FormatDiagnosticsText(
     }
 
     return out.str();
+}
+
+bool SaveDiagnosticsUtf8(
+    const DiagnosticsSnapshot& snapshot,
+    const std::filesystem::path& path) {
+    std::ofstream output{path, std::ios::binary | std::ios::trunc};
+    if (!output) {
+        return false;
+    }
+
+    const std::string text = FormatDiagnosticsText(snapshot, false);
+    output.write(
+        text.data(),
+        static_cast<std::streamsize>(text.size()));
+    return output.good();
 }
 
 }  // namespace fps::diagnostics

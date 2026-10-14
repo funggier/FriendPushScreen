@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_compile_definitions(UNICODE _UNICODE)
+add_compile_definitions(UNICODE _UNICODE NOMINMAX)
 
 include(cmake/warnings.cmake)
 
@@ -16,15 +16,32 @@ add_executable(FriendPushScreen WIN32
     src/ui/main_window.cpp
     src/graphics/d3d11_device.cpp
     src/graphics/placeholder_renderer.cpp
+    src/diagnostics/diagnostics_formatter.cpp
+    src/diagnostics/diagnostics_service.cpp
+    src/diagnostics/logger.cpp
+    src/platform/windows/os_probe.cpp
+    src/platform/windows/cpu_memory_probe.cpp
+    src/platform/windows/dxgi_adapter_probe.cpp
+    src/platform/windows/monitor_probe.cpp
+    src/platform/windows/window_probe.cpp
+    src/platform/windows/network_probe.cpp
+    src/media/capture_device_probe.cpp
+    src/media/codec_capability_probe.cpp
 )
 target_include_directories(FriendPushScreen PRIVATE src)
 fps_apply_warnings(FriendPushScreen)
 target_link_libraries(FriendPushScreen PRIVATE
+    Advapi32
+    Comdlg32
     D3D11
     Dxgi
+    Gdi32
+    Iphlpapi
+    Mf
+    Mfplat
+    Mfuuid
     Ole32
     User32
-    Gdi32
 )
 
 enable_testing()
@@ -33,7 +50,9 @@ add_executable(FriendPushScreenTests
     tests/test_main.cpp
     tests/diagnostics_formatter_tests.cpp
     tests/platform_filter_tests.cpp
+    tests/diagnostics_service_tests.cpp
     src/diagnostics/diagnostics_formatter.cpp
+    src/diagnostics/diagnostics_service.cpp
     src/diagnostics/logger.cpp
     src/platform/windows/os_probe.cpp
     src/platform/windows/cpu_memory_probe.cpp
@@ -44,6 +63,7 @@ add_executable(FriendPushScreenTests
     src/media/capture_device_probe.cpp
     src/media/codec_capability_probe.cpp
     src/graphics/d3d11_device.cpp
+    src/ui/main_window.cpp
 )
 target_include_directories(FriendPushScreenTests PRIVATE
     tests
@@ -59,6 +79,8 @@ target_link_libraries(FriendPushScreenTests PRIVATE
     Mfplat
     Mfuuid
     D3D11
+    Gdi32
+    Comdlg32
 )
 
 add_test(NAME FriendPushScreenTests COMMAND FriendPushScreenTests)

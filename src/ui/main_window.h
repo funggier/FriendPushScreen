@@ -3,15 +3,21 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+#include <filesystem>
 #include <functional>
+#include <optional>
+#include <string>
 #include <string_view>
 
 namespace fps::ui {
+
+std::wstring NormalizeWin32MultilineText(std::wstring_view text);
 
 class MainWindow {
 public:
     using ResizeCallback = std::function<void(UINT, UINT)>;
     using FrameCallback = std::function<void()>;
+    using CommandCallback = std::function<void()>;
 
     bool Create(HINSTANCE instance, int show_command);
 
@@ -20,7 +26,14 @@ public:
 
     void SetResizeCallback(ResizeCallback callback);
     void SetFrameCallback(FrameCallback callback);
+    void SetRefreshCallback(CommandCallback callback);
+    void SetSaveCallback(CommandCallback callback);
+    void SetDiagnosticsReadyCallback(CommandCallback callback);
+
     void SetStatusText(std::wstring_view text);
+    bool SetDiagnosticsText(std::wstring_view text);
+    void SetCollecting(bool collecting);
+    std::optional<std::filesystem::path> PromptDiagnosticsSavePath();
 
 private:
     static LRESULT CALLBACK WindowProc(
@@ -39,8 +52,15 @@ private:
 
     HWND hwnd_{nullptr};
     HWND render_hwnd_{nullptr};
+    HWND diagnostics_hwnd_{nullptr};
+    HWND refresh_button_{nullptr};
+    HWND save_button_{nullptr};
+
     ResizeCallback resize_callback_;
     FrameCallback frame_callback_;
+    CommandCallback refresh_callback_;
+    CommandCallback save_callback_;
+    CommandCallback diagnostics_ready_callback_;
 };
 
 }  // namespace fps::ui

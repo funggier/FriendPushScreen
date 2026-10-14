@@ -51,6 +51,12 @@ void RunDiagnosticsFormatterTests() {
     FPS_EXPECT_TRUE(text.find("Graphics Adapters") != std::string::npos);
     FPS_EXPECT_TRUE(text.find("Capture Devices") != std::string::npos);
     FPS_EXPECT_TRUE(text.find("Codec Capabilities") != std::string::npos);
+    FPS_EXPECT_TRUE(text.find("H.264 Encode: Available") != std::string::npos);
+    FPS_EXPECT_TRUE(text.find("H.264 Decode: Unavailable") != std::string::npos);
+    FPS_EXPECT_TRUE(text.find("HEVC Encode: Unavailable") != std::string::npos);
+    FPS_EXPECT_TRUE(text.find("HEVC Decode: Unavailable") != std::string::npos);
+    FPS_EXPECT_TRUE(text.find("AV1 Encode: Unavailable") != std::string::npos);
+    FPS_EXPECT_TRUE(text.find("AV1 Decode: Unavailable") != std::string::npos);
     FPS_EXPECT_TRUE(text.find("Network") != std::string::npos);
     FPS_EXPECT_TRUE(text.find("Visible Windows") != std::string::npos);
     FPS_EXPECT_TRUE(text.find("Secret Project - Payroll") == std::string::npos);
