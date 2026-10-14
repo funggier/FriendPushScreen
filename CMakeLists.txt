@@ -18,8 +18,14 @@ enable_testing()
 
 add_executable(FriendPushScreenTests
     tests/test_main.cpp
+    tests/diagnostics_formatter_tests.cpp
+    src/diagnostics/diagnostics_formatter.cpp
+    src/diagnostics/logger.cpp
 )
-target_include_directories(FriendPushScreenTests PRIVATE tests)
+target_include_directories(FriendPushScreenTests PRIVATE
+    tests
+    src
+)
 fps_apply_warnings(FriendPushScreenTests)
 
 add_test(NAME FriendPushScreenTests COMMAND FriendPushScreenTests)
