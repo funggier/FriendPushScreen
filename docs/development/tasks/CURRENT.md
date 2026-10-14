@@ -2,7 +2,7 @@
 
 ## FPS-003 — Windows App Skeleton & Hardware Diagnostics
 
-**Status:** DESIGN REVIEW PENDING
+**Status:** IMPLEMENTATION PLAN REVIEW PENDING
 
 **Branch:** `fps-003-native-windows-app-design`
 
@@ -29,11 +29,19 @@ Create the first real FriendPushScreen Windows executable and native diagnostics
 
 `docs/superpowers/specs/2026-10-14-fps-003-native-windows-app-design.md`
 
+### Approved design
+
+`docs/superpowers/specs/2026-10-14-fps-003-native-windows-app-design.md`
+
+User approved the written FPS-003 design on 2026-10-14.
+
+### Implementation plan
+
+`docs/superpowers/plans/2026-10-14-fps-003-native-windows-app-implementation.md`
+
 ### Current gate
 
-The written design exists and has passed self-review.
-
-Implementation planning must not begin until the user reviews and approves the written design.
+The implementation plan exists and has passed self-review. Product code, dependency installation/repair, and build changes must wait until the user confirms the plan and selects the execution method.
 
 ### Important implementation prerequisite
 
