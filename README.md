@@ -94,6 +94,12 @@ funggier/FriendPushScreen
 
 Visibility: public
 
+## License
+
+FriendPushScreen is licensed under the MIT License. See `LICENSE`.
+
+Third-party components, if introduced later, remain subject to their own licenses and must pass the project's licensing/compliance gate before integration.
+
 ## Current task
 
 See:
