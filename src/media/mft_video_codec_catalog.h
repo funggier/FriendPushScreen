@@ -13,6 +13,7 @@ struct MftVideoCodecDescriptor {
     VideoCodecCandidate candidate;
     GUID clsid{};
     bool asynchronous{false};
+    std::wstring hardware_url;
 };
 
 std::vector<MftVideoCodecDescriptor>

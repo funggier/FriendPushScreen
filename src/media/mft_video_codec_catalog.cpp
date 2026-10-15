@@ -5,6 +5,7 @@
 #include <wrl/client.h>
 
 #include <string>
+#include <algorithm>
 #include <utility>
 #include <vector>
 
@@ -97,24 +98,12 @@ std::string ReadFriendlyName(
     return output;
 }
 
-bool HasHardwareEvidence(
-    IMFActivate* activate) {
-    wchar_t* value = nullptr;
-    UINT32 length = 0;
-
-    const HRESULT hr =
-        activate->GetAllocatedString(
-            MFT_ENUM_HARDWARE_URL_Attribute,
-            &value,
-            &length);
-
-    const bool present =
-        SUCCEEDED(hr) &&
-        value != nullptr &&
-        length > 0;
-
-    CoTaskMemFree(value);
-    return present;
+std::wstring ReadHardwareUrl(IMFActivate* activate) {
+    wchar_t* value=nullptr;UINT32 length=0;
+    const HRESULT hr=activate->GetAllocatedString(MFT_ENUM_HARDWARE_URL_Attribute,&value,&length);
+    std::wstring result;
+    if(SUCCEEDED(hr) && value)result=value;
+    CoTaskMemFree(value);return result;
 }
 
 void ReadTransformAttributes(
@@ -233,9 +222,8 @@ EnumerateMftVideoCodecDescriptors(
         descriptor.candidate.name =
             ReadFriendlyName(activate);
 
-        const bool hardware =
-            HasHardwareEvidence(
-                activate);
+        descriptor.hardware_url=ReadHardwareUrl(activate);
+        const bool hardware=!descriptor.hardware_url.empty();
 
         descriptor.candidate.classification =
             hardware
@@ -247,6 +235,14 @@ EnumerateMftVideoCodecDescriptors(
         activate->GetGUID(
             MFT_TRANSFORM_CLSID_Attribute,
             &descriptor.clsid);
+
+        const bool duplicate=std::any_of(output.begin(),output.end(),[&](const auto& previous) {
+            return IsEqualGUID(previous.clsid,descriptor.clsid) &&
+                previous.candidate.name==descriptor.candidate.name &&
+                previous.candidate.classification==descriptor.candidate.classification &&
+                previous.hardware_url==descriptor.hardware_url;
+        });
+        if(duplicate){activate->Release();continue;}
 
         ReadTransformAttributes(
             activate,

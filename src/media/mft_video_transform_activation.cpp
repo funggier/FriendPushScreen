@@ -77,7 +77,7 @@ std::string WideToUtf8(
 }
 
 std::string FriendlyName(
-    IMFActivate* activation) {
+    IMFAttributes* activation) {
     if (activation == nullptr) {
         return {};
     }
@@ -104,7 +104,7 @@ std::string FriendlyName(
 }
 
 bool HardwareEvidence(
-    IMFActivate* activation) {
+    IMFAttributes* activation) {
     if (activation == nullptr) {
         return false;
     }
@@ -128,7 +128,7 @@ bool HardwareEvidence(
 }
 
 bool MatchesDescriptor(
-    IMFActivate* activation,
+    IMFAttributes* activation,
     const MftVideoCodecDescriptor& descriptor) {
     if (activation == nullptr) {
         return false;
@@ -170,10 +170,23 @@ bool MatchesDescriptor(
         return false;
     }
 
+    if(hardware) {
+        wchar_t* url=nullptr;UINT32 length=0;
+        const HRESULT hr=activation->GetAllocatedString(MFT_ENUM_HARDWARE_URL_Attribute,&url,&length);
+        const bool same=SUCCEEDED(hr) && url && !descriptor.hardware_url.empty() &&
+            descriptor.hardware_url==url;
+        CoTaskMemFree(url);
+        if(!same)return false;
+    }
     return true;
 }
 
 }  // namespace
+
+bool MatchesMftVideoCodecDescriptor(IMFAttributes* activation,
+    const MftVideoCodecDescriptor& descriptor) {
+    return MatchesDescriptor(activation,descriptor);
+}
 
 HRESULT ActivateMftVideoCodecDescriptor(
     const MftVideoCodecDescriptor& descriptor,
@@ -231,7 +244,7 @@ HRESULT ActivateMftVideoCodecDescriptor(
             raw[index];
 
         if (item == nullptr ||
-            !MatchesDescriptor(
+            !MatchesMftVideoCodecDescriptor(
                 item,
                 descriptor)) {
             continue;

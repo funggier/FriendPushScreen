@@ -30,8 +30,10 @@ $stderr=Join-Path $EvidenceDirectory 'stderr.log'
 $started=Get-Date
 $process=Start-Process -FilePath $exe -ArgumentList $probeArgs -WorkingDirectory $repo -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
 $probeProcessId=$process.Id
+# Force opening/retaining the process handle before an early exit (Windows PowerShell).
+$processHandle=$process.Handle
 Write-Output ('EVIDENCE_DIR='+$EvidenceDirectory+' PROBE_PID='+$probeProcessId)
-@{source=$Source;seconds=$Seconds;configuration=$Configuration;exe=$exe;args=$probeArgs;process_id=$probeProcessId;started_utc=$started.ToUniversalTime().ToString('o');git_head=(& git -C $repo rev-parse HEAD);binary_sha256=(Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash} | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 (Join-Path $EvidenceDirectory 'identity.json')
+@{source=$Source;seconds=$Seconds;configuration=$Configuration;exe=$exe;args=$probeArgs;process_id=$probeProcessId;started_utc=$started.ToUniversalTime().ToString('o');git_head=(& git -C $repo rev-parse HEAD);git_status=@(& git -C $repo status --porcelain);binary_sha256=(Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash} | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 (Join-Path $EvidenceDirectory 'identity.json')
 $gpuSamples=@();$processSamples=@();$counterError=$null;$timedOut=$false
 while(-not $process.HasExited){
  try{
@@ -46,7 +48,11 @@ while(-not $process.HasExited){
  Start-Sleep -Seconds 1
  $process.Refresh()
 }
-$process.WaitForExit();$code=$process.ExitCode
+$process.WaitForExit();$process.Refresh();$code=$process.ExitCode
+if($null -eq $code){$code=99}
+$lastLine=Get-Content -LiteralPath $stdout -Tail 1
+$expectedMarker=if($capture){'CAPTURE_LOOP_PASS'}else{'SYNTHETIC_LOOP_PASS'}
+if($code -eq 0 -and $lastLine -ne $expectedMarker){$code=98}
 $processSamples | Export-Csv -NoTypeInformation -Encoding UTF8 (Join-Path $EvidenceDirectory 'process.csv')
 $gpuSamples | Export-Csv -NoTypeInformation -Encoding UTF8 (Join-Path $EvidenceDirectory 'gpu-engines.csv')
 $summary=@{

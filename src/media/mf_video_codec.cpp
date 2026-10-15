@@ -223,24 +223,9 @@ struct MftVideoDecoder::Impl {
             if(found==pending.end()) return session.Check(E_UNEXPECTED,"Unknown decoded timestamp");
             ComPtr<IMFMediaType> type;
             if(!session.Check(session.Get()->GetOutputCurrentType(0,&type),"Decoder output type")) return false;
-            UINT32 width=0,height=0,stride=config.width;
-            if(!session.Check(MFGetAttributeSize(type.Get(),MF_MT_FRAME_SIZE,&width,&height),"Decoded size")) return false;
-            const UINT32 coded_height=height;
-            if(width!=config.width || height!=config.height) {
-                MFVideoArea visible{}; UINT32 bytes=0;
-                HRESULT aperture=type->GetBlob(MF_MT_MINIMUM_DISPLAY_APERTURE,
-                    reinterpret_cast<UINT8*>(&visible),sizeof(visible),&bytes);
-                if(FAILED(aperture)) aperture=type->GetBlob(MF_MT_GEOMETRIC_APERTURE,
-                    reinterpret_cast<UINT8*>(&visible),sizeof(visible),&bytes);
-                if(FAILED(aperture) || bytes!=sizeof(visible) || width<config.width || height<config.height ||
-                    visible.OffsetX.value!=0 || visible.OffsetX.fract!=0 ||
-                    visible.OffsetY.value!=0 || visible.OffsetY.fract!=0 ||
-                    visible.Area.cx!=static_cast<LONG>(config.width) ||
-                    visible.Area.cy!=static_cast<LONG>(config.height))
-                    return session.Check(MF_E_INVALIDMEDIATYPE,"Unexpected decoded aperture");
-                width=config.width; height=config.height;
-            }
-            type->GetUINT32(MF_MT_DEFAULT_STRIDE,&stride);
+            DecodedNv12Layout layout;
+            if(!session.Check(ResolveDecodedNv12Layout(type.Get(),config.width,config.height,layout),"Decoded layout"))return false;
+            const UINT32 width=layout.width,height=layout.height;
             ComPtr<IMFMediaBuffer> buffer;
             if(!session.Check(sample->GetBufferByIndex(0,&buffer),"Decoded buffer")) return false;
             ComPtr<IMFDXGIBuffer> dxgi;
@@ -253,21 +238,28 @@ struct MftVideoDecoder::Impl {
             } else {
                 if(!cpu_nv12 && !converter.CreateNv12Texture(width,height,cpu_nv12))
                     return session.Check(converter.LastError(),"CPU decoder upload texture");
-                BYTE* bytes=nullptr; DWORD size=0;
-                if(!session.Check(buffer->Lock(&bytes,nullptr,&size),"Decoded CPU lock")) return false;
-                bool valid=stride>=width && static_cast<std::uint64_t>(stride)*coded_height*3/2<=size;
-                if(valid) {
-                    std::vector<BYTE> compact(static_cast<size_t>(width)*height*3/2);
-                    for(UINT row=0;row<height;++row)
-                        std::memcpy(compact.data()+static_cast<size_t>(row)*width,
-                            bytes+static_cast<size_t>(row)*stride,width);
-                    for(UINT row=0;row<height/2;++row)
-                        std::memcpy(compact.data()+static_cast<size_t>(height+row)*width,
-                            bytes+static_cast<size_t>(coded_height+row)*stride,width);
-                    context->UpdateSubresource(cpu_nv12.Get(),0,nullptr,compact.data(),width,0);
+                std::vector<BYTE> compact;
+                ComPtr<IMF2DBuffer2> two_d;
+                HRESULT copy=S_OK;
+                if(SUCCEEDED(buffer.As(&two_d))) {
+                    BYTE* scan=nullptr;BYTE* base=nullptr;LONG pitch=0;DWORD size=0;
+                    if(!session.Check(two_d->Lock2DSize(MF2DBuffer_LockFlags_Read,&scan,&pitch,&base,&size),"Decoded 2D lock"))return false;
+                    const auto begin=reinterpret_cast<std::uintptr_t>(base);
+                    const auto first=reinterpret_cast<std::uintptr_t>(scan);
+                    if(pitch<=0 || first<begin || first-begin>size)copy=E_INVALIDARG;
+                    else {
+                        layout.stride=static_cast<UINT32>(pitch);
+                        copy=CopyNv12VisibleRows(std::span<const BYTE>(scan,size-static_cast<DWORD>(first-begin)),layout,compact);
+                    }
+                    two_d->Unlock2D();
+                } else {
+                    BYTE* bytes=nullptr;DWORD size=0;
+                    if(!session.Check(buffer->Lock(&bytes,nullptr,&size),"Decoded CPU lock"))return false;
+                    copy=CopyNv12VisibleRows(std::span<const BYTE>(bytes,size),layout,compact);
+                    buffer->Unlock();
                 }
-                buffer->Unlock();
-                if(!valid) return session.Check(E_INVALIDARG,"Decoded CPU layout");
+                if(!session.Check(copy,"Decoded CPU layout"))return false;
+                context->UpdateSubresource(cpu_nv12.Get(),0,nullptr,compact.data(),width,0);
                 nv12=cpu_nv12; ++info.cpu_frames;
             }
             capture::CapturedFrame frame;

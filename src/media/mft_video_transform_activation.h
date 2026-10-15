@@ -8,6 +8,9 @@
 
 namespace fps::media {
 
+bool MatchesMftVideoCodecDescriptor(IMFAttributes* activation,
+    const MftVideoCodecDescriptor& descriptor);
+
 HRESULT ActivateMftVideoCodecDescriptor(
     const MftVideoCodecDescriptor& descriptor,
     Microsoft::WRL::ComPtr<IMFActivate>& activation,

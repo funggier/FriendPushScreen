@@ -35,7 +35,7 @@ int main(int argc,char** argv) {
     if(!decoder.Initialize(device.Get(),config,software_decode)) { std::cerr<<"DECODER "<<decoder.Error()<<"\n"; return 1; }
     std::cout<<"encoder="<<encoder.Info().candidate.name<<" async="<<encoder.Info().asynchronous
         <<" surface_io="<<encoder.Info().surface_io<<" low_latency="<<encoder.Info().low_latency_applied<<"\n";
-    std::cout<<"decoder="<<decoder.Info().candidate.name<<" catalog_class=software"
+    std::cout<<"decoder="<<decoder.Info().candidate.name<<" catalog_class="<<(decoder.Info().candidate.classification==media::VideoBackendClassification::Hardware?"hardware":"software")
         <<" surface_io="<<decoder.Info().surface_io<<" low_latency="<<decoder.Info().low_latency_applied<<"\n";
     capture::CapturedFrame source; source.width=width; source.height=height;
     D3D11_TEXTURE2D_DESC desc{}; desc.Width=width; desc.Height=height;
@@ -71,7 +71,7 @@ int main(int argc,char** argv) {
     auto transmit=[&](std::vector<media::EncodedAccessUnit>& units) {
         for(auto& unit:units) {
             ++encoded; total_bytes+=unit.bytes.size();
-            if(unit.keyframe) { ++keyframes; if(unit.sequence>=61) forced_key=true; }
+            if(unit.keyframe) { ++keyframes; if(unit.sequence==37) forced_key=true; }
             if(unit.source_sequence!=unit.sequence) return false;
             queue.Push(std::move(unit));
             while(auto next=queue.Pop()) {
@@ -84,7 +84,7 @@ int main(int argc,char** argv) {
     };
     const auto start=std::chrono::steady_clock::now();
     for(unsigned i=1;i<=frames;++i) {
-        if(i==61 && !encoder.RequestKeyframe()) {std::cerr<<encoder.Error()<<"\n";return 1;}
+        if(i==37 && !encoder.RequestKeyframe()) {std::cerr<<encoder.Error()<<"\n";return 1;}
         const float red[4]{1,0,0,1},blue[4]{0,0,1,1};
         context->ClearRenderTargetView(target.Get(),i%2 ? red:blue);
         source.sequence=i;source.timestamp_100ns=static_cast<LONGLONG>(i)*166667;
@@ -108,7 +108,7 @@ int main(int argc,char** argv) {
         <<" bytes="<<total_bytes<<" encoder_gpu="<<encoder.Info().gpu_frames<<" decoder_gpu="<<decoder.Info().gpu_frames
         <<" encoder_cpu="<<encoder.Info().cpu_frames<<" decoder_cpu="<<decoder.Info().cpu_frames<<"\n";
     bool pass=encoded==frames && decoded==frames && quality_fail==0 && keyframes>0 &&
-        (frames<61 || forced_key) && queue.Stats().dropped==0 &&
+        (frames<37 || forced_key) && queue.Stats().dropped==0 &&
         (software_encode ? encoder.Info().gpu_frames==0 : encoder.Info().gpu_frames==frames) &&
         (software_decode ? decoder.Info().gpu_frames==0 : decoder.Info().gpu_frames==frames);
     std::cout<<(pass?"SYNTHETIC_LOOP_PASS":"SYNTHETIC_LOOP_FAIL")<<"\n";

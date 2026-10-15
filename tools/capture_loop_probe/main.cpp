@@ -16,6 +16,8 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
+#include <future>
 using namespace fps;
 namespace {
 graphics::PreviewRenderer* preview=nullptr;
@@ -65,12 +67,32 @@ int main(int argc,char** argv) {
     WNDCLASSW wc{};wc.hInstance=instance;wc.lpfnWndProc=WindowProc;wc.lpszClassName=L"FPS006CaptureLoopPreview";RegisterClassW(&wc);
     WNDCLASSW fixture_class=wc;fixture_class.lpfnWndProc=FixtureProc;fixture_class.lpszClassName=L"FPS006MovingFixture";RegisterClassW(&fixture_class);
     HWND fixture=nullptr;
+    std::jthread fixture_thread;
     if(source_kind=="window" || source_kind=="monitor") {
-        fixture=CreateWindowExW(0,fixture_class.lpszClassName,L"FPS-006 1080p moving source",
-            WS_POPUP|WS_VISIBLE,0,0,1920,1080,nullptr,nullptr,instance,nullptr);
+        std::promise<HWND> created;
+        auto ready=created.get_future();
+        // The capture producer must keep its own clock while encode/decode/present runs.
+        fixture_thread=std::jthread([instance,signal=std::move(created)](std::stop_token stop) mutable {
+            HWND own=CreateWindowExW(0,L"FPS006MovingFixture",L"FPS-006 1080p moving source",
+                WS_POPUP|WS_VISIBLE,0,0,1920,1080,nullptr,nullptr,instance,nullptr);
+            if(own){UpdateWindow(own);DwmFlush();}
+            signal.set_value(own);
+            auto deadline=std::chrono::steady_clock::now();
+            while(own && !stop.stop_requested()) {
+                MSG message{};
+                while(PeekMessageW(&message,nullptr,0,0,PM_REMOVE)){
+                    TranslateMessage(&message);DispatchMessageW(&message);
+                }
+                if(std::chrono::steady_clock::now()>=deadline){
+                    ++fixture_frame;InvalidateRect(own,nullptr,FALSE);UpdateWindow(own);
+                    deadline+=std::chrono::microseconds(16667);
+                }
+                Sleep(1);
+            }
+            if(own)DestroyWindow(own);
+        });
+        fixture=ready.get();
         if(!fixture)return 2;
-        UpdateWindow(fixture);
-        DwmFlush();
     }
     HWND window=CreateWindowExW(WS_EX_NOACTIVATE,wc.lpszClassName,L"FPS-006 H.264 DECODED local loop",
         WS_OVERLAPPEDWINDOW|WS_VISIBLE,1600,850,800,520,nullptr,nullptr,instance,nullptr);
@@ -116,7 +138,7 @@ int main(int argc,char** argv) {
         if(!capture_session->Start()){std::cerr<<"Capture start "<<capture_session->StatusText()<<" hr="<<std::hex<<capture_session->LastError()<<"\n";return 2;}
         std::cout<<"PID="<<GetCurrentProcessId()<<" selected="<<selected.display_name<<" backend="<<source_kind<<"\n"<<std::flush;
         media::VideoLocalLoop loop;bool initialized=false,failed=false,quit=false;
-        auto start=std::chrono::steady_clock::now();auto last_progress=start,last_fixture=start;
+        auto start=std::chrono::steady_clock::now();auto last_progress=start;
         auto stream_start=start;bool first_frame=true;
         ULONGLONG cpu_start=CpuTime();SIZE_T max_private=0,min_private=MAXSIZE_T,max_ws=0;
         std::uint64_t source_gaps=0,last_source_seq=0;
@@ -129,11 +151,10 @@ int main(int argc,char** argv) {
                 TranslateMessage(&message);DispatchMessageW(&message);
             }
             auto now=std::chrono::steady_clock::now();
-            if(fixture && now-last_fixture>=std::chrono::microseconds(16667)) {
-                ++fixture_frame;InvalidateRect(fixture,nullptr,FALSE);UpdateWindow(fixture);last_fixture=now;
-            }
+            const auto rendered_before=loop.Metrics().rendered_frames;
             capture::CapturedFrame frame;
-            if(capture_session->TryAcquireFrame(frame) && frame.IsValid()) {
+            const bool acquired=capture_session->TryAcquireFrame(frame) && frame.IsValid();
+            if(acquired) {
                 if(last_source_seq && frame.sequence>last_source_seq+1)source_gaps+=frame.sequence-last_source_seq-1;
                 last_source_seq=frame.sequence;
                 if(first_frame) {
@@ -167,7 +188,8 @@ int main(int argc,char** argv) {
             }
             if(!first_frame && std::chrono::duration<double>(now-stream_start).count()>=seconds)break;
             if(first_frame && now-start>std::chrono::seconds(10)){failed=true;break;}
-            Sleep(1);
+            // Present already paces rendered frames; only wait when both capture and codec are idle.
+            if(!acquired && loop.Metrics().rendered_frames==rendered_before)Sleep(1);
         }
         capture_session->Stop();
         if(initialized && !failed && !loop.Drain(sink))failed=true;
@@ -195,12 +217,14 @@ int main(int argc,char** argv) {
         if(failed)std::cerr<<"LOOP ERROR "<<loop.Error()<<" capture="<<capture_session->StatusText()<<"\n";
         bool pass=!failed && initialized && m.rendered_frames>0 && m.encoded_access_units==m.encoder_submissions &&
             m.decoded_frames==m.rendered_frames && m.dropped_frames==0 && m.current_queue_depth==0 && elapsed>=seconds*0.95;
-        if(require_1080)pass=pass && width==1920 && height==1080 && fps>=58.0;
+        if(require_1080)pass=pass && width==1920 && height==1080 && fps>=59.0;
         std::cout<<(pass?"CAPTURE_LOOP_PASS":"CAPTURE_LOOP_FAIL")<<"\n"<<std::flush;
         result=pass?0:1;
         preview_ready=false;preview=nullptr;
     }
-    if(window)DestroyWindow(window);if(fixture)DestroyWindow(fixture);
+    if(window)DestroyWindow(window);
+    fixture_thread.request_stop();
+    if(fixture_thread.joinable())fixture_thread.join();
     if(SUCCEEDED(ro))RoUninitialize();
     return result;
 }
