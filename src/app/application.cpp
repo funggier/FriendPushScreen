@@ -122,7 +122,8 @@ bool IsPreferenceCommand(
     case ui::UiCommandType::ToggleSettings:
     case ui::UiCommandType::SetConnectionMode:
     case ui::UiCommandType::SetHost:
-    case ui::UiCommandType::SetPort:
+    case ui::UiCommandType::SetSharePort:
+    case ui::UiCommandType::SetRemotePort:
     case ui::UiCommandType::SelectAudioSource:
     case ui::UiCommandType::ToggleReceiverMute:
     case ui::UiCommandType::SetReceiverVolume:
@@ -337,10 +338,20 @@ void Application::HandleUiCommand(
         state_changed = true;
         break;
 
-    case ui::UiCommandType::SetPort:
+    case ui::UiCommandType::SetSharePort:
         if (command.value >= 1 &&
             command.value <= 65535) {
-            ui_state_.preferences.port =
+            ui_state_.preferences.share_port =
+                static_cast<std::uint32_t>(
+                    command.value);
+            state_changed = true;
+        }
+        break;
+
+    case ui::UiCommandType::SetRemotePort:
+        if (command.value >= 1 &&
+            command.value <= 65535) {
+            ui_state_.preferences.remote_port =
                 static_cast<std::uint32_t>(
                     command.value);
             state_changed = true;

@@ -17,7 +17,8 @@ void RunSettingsStoreTests() {
     preferences.connection_mode =
         ConnectionMode::DirectIpDdNs;
     preferences.host = "friend.example.net";
-    preferences.port = 43123;
+    preferences.share_port = 42801;
+    preferences.remote_port = 43123;
     preferences.audio_source =
         AudioSourceKind::System;
     preferences.receiver_muted = true;
@@ -35,7 +36,15 @@ void RunSettingsStoreTests() {
         text.find("host=friend.example.net") !=
         std::string::npos);
     FPS_EXPECT_TRUE(
-        text.find("share") == std::string::npos);
+        text.find("share_port=42801") !=
+        std::string::npos);
+    FPS_EXPECT_TRUE(
+        text.find("remote_port=43123") !=
+        std::string::npos);
+    FPS_EXPECT_TRUE(
+        text.find("share_state=") == std::string::npos);
+    FPS_EXPECT_TRUE(
+        text.find("sharing=") == std::string::npos);
     FPS_EXPECT_TRUE(
         text.find("connected") == std::string::npos);
     FPS_EXPECT_TRUE(
@@ -60,8 +69,11 @@ void RunSettingsStoreTests() {
         parsed.host,
         preferences.host);
     FPS_EXPECT_EQ(
-        parsed.port,
-        preferences.port);
+        parsed.share_port,
+        preferences.share_port);
+    FPS_EXPECT_EQ(
+        parsed.remote_port,
+        preferences.remote_port);
     FPS_EXPECT_EQ(
         parsed.audio_source,
         preferences.audio_source);
@@ -77,7 +89,8 @@ void RunSettingsStoreTests() {
             "version=1\n"
             "settings_visible=maybe\n"
             "connection_mode=unknown\n"
-            "port=999999\n"
+            "share_port=0\n"
+            "remote_port=999999\n"
             "receiver_volume=-200\n"
             "garbage=noise\n");
 
@@ -85,7 +98,8 @@ void RunSettingsStoreTests() {
         FPS_EXPECT_EQ(
             corrupt.connection_mode,
             ConnectionMode::Auto);
-        FPS_EXPECT_EQ(corrupt.port, 42800u);
+        FPS_EXPECT_EQ(corrupt.share_port, 42800u);
+        FPS_EXPECT_EQ(corrupt.remote_port, 42800u);
         FPS_EXPECT_EQ(corrupt.receiver_volume, 100);
     }
 
@@ -131,7 +145,8 @@ void RunSettingsStoreTests() {
         FPS_EXPECT_EQ(
             loaded.host,
             std::string{"friend.example.net"});
-        FPS_EXPECT_EQ(loaded.port, 43123u);
+        FPS_EXPECT_EQ(loaded.share_port, 42801u);
+        FPS_EXPECT_EQ(loaded.remote_port, 43123u);
         FPS_EXPECT_EQ(loaded.receiver_volume, 42);
 
         std::ifstream input{path, std::ios::binary};
@@ -149,7 +164,8 @@ void RunSettingsStoreTests() {
         UiPreferences fallback{};
         fallback.connection_mode =
             ConnectionMode::Tailscale;
-        fallback.port = 42888;
+        fallback.share_port = 42877;
+        fallback.remote_port = 42888;
 
         const auto missing =
             std::filesystem::temp_directory_path() /
@@ -164,7 +180,22 @@ void RunSettingsStoreTests() {
         FPS_EXPECT_EQ(
             loaded.connection_mode,
             ConnectionMode::Tailscale);
-        FPS_EXPECT_EQ(loaded.port, 42888u);
+        FPS_EXPECT_EQ(loaded.share_port, 42877u);
+        FPS_EXPECT_EQ(loaded.remote_port, 42888u);
+    }
+
+    {
+        const UiPreferences legacy =
+            ParsePreferences(
+                "version=1\n"
+                "port=42999\n");
+
+        FPS_EXPECT_EQ(
+            legacy.remote_port,
+            42999u);
+        FPS_EXPECT_EQ(
+            legacy.share_port,
+            42800u);
     }
 
     FPS_EXPECT_TRUE(

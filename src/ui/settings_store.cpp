@@ -194,8 +194,11 @@ std::string SerializePreferences(
     out << "host="
         << SanitizeSingleLine(preferences.host)
         << "\n";
-    out << "port="
-        << preferences.port
+    out << "share_port="
+        << preferences.share_port
+        << "\n";
+    out << "remote_port="
+        << preferences.remote_port
         << "\n";
     out << "audio_source="
         << AudioSourceText(
@@ -267,12 +270,21 @@ UiPreferences ParsePreferences(
                     result.host =
                         SanitizeSingleLine(
                             std::string{value});
-                } else if (key == "port") {
+                } else if (key == "share_port") {
                     std::uint32_t parsed = 0;
                     if (ParseUnsigned(value, parsed) &&
                         parsed >= 1 &&
                         parsed <= 65535) {
-                        result.port = parsed;
+                        result.share_port = parsed;
+                    }
+                } else if (
+                    key == "remote_port" ||
+                    key == "port") {
+                    std::uint32_t parsed = 0;
+                    if (ParseUnsigned(value, parsed) &&
+                        parsed >= 1 &&
+                        parsed <= 65535) {
+                        result.remote_port = parsed;
                     }
                 } else if (key == "audio_source") {
                     AudioSourceKind parsed{};

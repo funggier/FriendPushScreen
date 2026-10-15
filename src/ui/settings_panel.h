@@ -81,39 +81,55 @@ private:
 
     void SetScrollOffset(int offset);
 
+    void ScrollBySmoothDelta(int delta);
+
+    void AnimateScrollStep();
+
+
     void Emit(UiCommand command);
 
     std::string ReadEditUtf8(HWND edit) const;
 
-    std::uint32_t ReadPort() const;
+    std::uint32_t ReadPort(HWND edit) const;
 
     void UpdateDiagnosticsVisibility(bool visible);
+
+    void HideDropLists();
+    void ToggleDropList(HWND list);
+    void UpdateDropDownText(const UiState& state);
 
     HWND hwnd_{nullptr};
 
     HWND title_label_{nullptr};
 
     HWND share_heading_{nullptr};
+    HWND share_port_label_{nullptr};
+    HWND share_port_edit_{nullptr};
     HWND share_button_{nullptr};
     HWND share_status_{nullptr};
 
     HWND connection_heading_{nullptr};
     HWND connection_mode_label_{nullptr};
-    HWND connection_mode_combo_{nullptr};
+    HWND connection_mode_button_{nullptr};
+    HWND connection_mode_popup_{nullptr};
+    HWND connection_mode_list_{nullptr};
     HWND host_label_{nullptr};
     HWND host_edit_{nullptr};
-    HWND port_label_{nullptr};
-    HWND port_edit_{nullptr};
+    HWND remote_port_label_{nullptr};
+    HWND remote_port_edit_{nullptr};
     HWND connect_button_{nullptr};
     HWND connection_status_{nullptr};
 
     HWND audio_heading_{nullptr};
     HWND audio_source_label_{nullptr};
-    HWND audio_source_combo_{nullptr};
+    HWND audio_source_button_{nullptr};
+    HWND audio_source_popup_{nullptr};
+    HWND audio_source_list_{nullptr};
     HWND audio_status_{nullptr};
     HWND mute_button_{nullptr};
     HWND volume_slider_{nullptr};
     HWND volume_label_{nullptr};
+    HWND settings_scrollbar_{nullptr};
 
     HWND viewer_heading_{nullptr};
     HWND topmost_checkbox_{nullptr};
@@ -131,6 +147,7 @@ private:
     bool applying_state_{false};
     bool diagnostics_visible_{false};
     int scroll_offset_{0};
+    int scroll_target_offset_{0};
     int content_height_{0};
 };
 

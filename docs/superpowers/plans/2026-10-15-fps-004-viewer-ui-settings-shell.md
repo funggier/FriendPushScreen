@@ -282,3 +282,78 @@ Those remain owned by later FPS tasks.
 8. Physical UX qualification.
 9. Debug/Release + exact-head CI.
 10. Evidence report, GREEN closure, PR/merge.
+
+## Physical-review refinements accepted during FPS-004
+
+The following refinements were added during physical review on the reference Windows machine and are part of the qualified FPS-004 contract.
+
+### Separate local share port from remote connection port
+
+The UI and persistence model use two independent fields:
+
+- Share Port - the local port the future sharing/listen path will use.
+- Remote Port - the port used with the remote Host when connecting.
+
+The previous persisted port= key is accepted as a legacy alias for remote_port so existing FPS-004 test preferences are not discarded.
+
+Neither field opens a socket in FPS-004.
+
+### FriendPushScreen-owned dark theme
+
+FriendPushScreen owns its application-control color palette through src/ui/theme.h and src/ui/theme.cpp.
+
+The program-owned palette covers:
+
+- settings panel background and border
+- top status chrome
+- buttons
+- text/edit fields
+- drop-down button and option list
+- receiver-volume slider
+- settings scrollbar
+- primary/secondary text
+
+The UI does not depend on Windows light/dark control colors for these surfaces.
+
+The OS title bar can still use the supported Windows non-client dark-mode request; application content colors remain owned by FriendPushScreen.
+
+### Visible Settings toggle outside the scroll container
+
+Hide Settings / Settings is a persistent top-chrome button outside the scrollable settings panel.
+
+It and the Tab shortcut operate on the same settings-visible state.
+
+Show/hide forces immediate relayout and redraw of the parent/child hierarchy so reopening the panel does not require an additional click to repaint correctly.
+
+### Program-owned drop-down option popup
+
+Connection Mode and Audio Source use a FriendPushScreen owner-drawn button plus a dedicated owned popup window containing an owner-drawn list.
+
+The popup is owned by the root FriendPushScreen window rather than the scrolling child panel. This guarantees the option list is above Host / Remote Port / Connect and the rest of the settings controls.
+
+### Program-owned settings scrollbar
+
+The native panel `WS_VSCROLL` chrome and Windows trackbar are not used for settings scrolling.
+
+`FriendPushScreenSettingsScrollbar` is a dedicated FriendPushScreen child window that owns track/thumb painting, click/drag behavior and wheel forwarding. Its colors come only from the central FriendPushScreen palette.
+
+Mouse-wheel settings scrolling uses a target offset plus a short timer-driven animation so wheel movement is smoother than direct jump scrolling. Direct scrollbar drag remains immediate and cancels any pending smooth animation.
+
+### Program-owned receiver volume slider
+
+The receiver volume control no longer uses the Windows trackbar.
+
+`FriendPushScreenVolumeSlider` owns its own track/thumb painting, click/drag input and mouse-wheel behavior. Wheel up increases volume and wheel down decreases volume in 5-point increments.
+
+The volume slider is vertically aligned to the same row and height as the Mute / Unmute button.
+
+### Full-width status chrome and visible Settings shortcut
+
+The status strip spans the full client width. The Settings button sits on the same top-chrome row at the right edge and remains above the strip in z-order.
+
+The button text explicitly advertises the keyboard shortcut:
+
+- visible panel: `Hide Settings (Tab)`
+- hidden panel: `Settings (Tab)`
+
+The status summary uses a small left text inset so `Peer:` is not visually flush against the left border.

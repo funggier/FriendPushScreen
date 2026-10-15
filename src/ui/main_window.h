@@ -106,6 +106,7 @@ private:
     HWND hwnd_{nullptr};
     HWND render_hwnd_{nullptr};
     HWND status_bar_{nullptr};
+    HWND settings_toggle_button_{nullptr};
 
     SettingsPanel settings_panel_;
 

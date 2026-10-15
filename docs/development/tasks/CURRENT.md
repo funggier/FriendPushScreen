@@ -17,18 +17,20 @@ Deliver the first viewer-first native Win32 UI shell on top of the FPS-003 D3D11
 ### Required outcomes
 
 - viewer-first D3D11 surface
-- Tab settings overlay
-- scrollable responsive settings
+- Tab settings overlay plus an always-visible `Hide Settings (Tab) / Settings (Tab)` button on the full-width top status row
+- smooth wheel-scrollable responsive settings with a fully program-owned dark scrollbar
 - visible peer/share/connection/audio state
 - fullscreen / borderless / always-on-top
 - keyboard shortcuts
 - safe settings persistence
 - Connection Mode: Auto / LAN / Direct IP-DDNS / Tailscale
-- Host / Port
+- Share Port for the local sharing/listen endpoint
+- Connection Host / Remote Port
 - Connect / Disconnect request-state shell without real networking
 - Sender Audio Source dropdown
-- receiver mute/unmute + local volume
+- receiver mute/unmute + fully program-owned local volume slider
 - capability explanation for unsupported Application Audio
+- FriendPushScreen-owned dark palette for panel/status/buttons/text fields/dropdowns/slider/scrollbar
 - diagnostics preserved under Advanced
 
 ### Safety / scope boundary

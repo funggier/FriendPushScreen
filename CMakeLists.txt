@@ -17,6 +17,7 @@ add_executable(FriendPushScreen WIN32
     src/ui/ui_state.cpp
     src/ui/settings_store.cpp
     src/ui/settings_panel.cpp
+    src/ui/theme.cpp
     src/graphics/d3d11_device.cpp
     src/graphics/placeholder_renderer.cpp
     src/diagnostics/diagnostics_formatter.cpp
@@ -39,6 +40,7 @@ target_link_libraries(FriendPushScreen PRIVATE
     Comctl32
     D3D11
     Dxgi
+    Dwmapi
     Gdi32
     Iphlpapi
     Mf
@@ -46,6 +48,7 @@ target_link_libraries(FriendPushScreen PRIVATE
     Mfuuid
     Ole32
     User32
+    UxTheme
 )
 
 enable_testing()
@@ -73,6 +76,7 @@ add_executable(FriendPushScreenTests
     src/ui/ui_state.cpp
     src/ui/settings_store.cpp
     src/ui/settings_panel.cpp
+    src/ui/theme.cpp
 )
 target_include_directories(FriendPushScreenTests PRIVATE
     tests
@@ -82,7 +86,9 @@ fps_apply_warnings(FriendPushScreenTests)
 target_link_libraries(FriendPushScreenTests PRIVATE
     Advapi32
     Dxgi
+    Dwmapi
     User32
+    UxTheme
     Iphlpapi
     Mf
     Mfplat

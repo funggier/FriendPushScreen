@@ -1,8 +1,11 @@
 #include "ui/main_window.h"
 
 #include "diagnostics/diagnostics_service.h"
+#include "ui/theme.h"
 
 #include <commdlg.h>
+#include <dwmapi.h>
+#include <uxtheme.h>
 
 #include <algorithm>
 #include <array>
@@ -22,6 +25,8 @@ constexpr int kOuterPadding = 12;
 constexpr int kStatusHeight = 30;
 constexpr int kPanelMaxWidth = 520;
 constexpr int kPanelMinWidth = 340;
+constexpr int kSettingsToggleButtonId = 2201;
+constexpr int kSettingsToggleWidth = 160;
 
 LONG_PTR ViewerWindowStyle(
     bool borderless,
@@ -110,7 +115,7 @@ void MainWindow::SetStatusText(
     }
 
     std::wstring title{
-        L"FriendPushScreen — "};
+        L"FriendPushScreen - "};
     title.append(text);
 
     SetWindowTextW(
@@ -212,6 +217,14 @@ bool MainWindow::Create(
         return false;
     }
 
+    const BOOL use_dark_mode = TRUE;
+    constexpr DWORD kImmersiveDarkModeAttribute = 20;
+    DwmSetWindowAttribute(
+        hwnd_,
+        kImmersiveDarkModeAttribute,
+        &use_dark_mode,
+        sizeof(use_dark_mode));
+
     render_hwnd_ = CreateWindowExW(
         0,
         L"STATIC",
@@ -229,13 +242,15 @@ bool MainWindow::Create(
         nullptr);
 
     status_bar_ = CreateWindowExW(
-        WS_EX_CLIENTEDGE,
+        0,
         L"STATIC",
-        L"Peer: Offline  |  "
+        L"  Peer: Offline  |  "
         L"Connection: Disconnected  |  "
         L"Sharing: Not sharing",
         WS_CHILD |
             WS_VISIBLE |
+            WS_BORDER |
+            WS_CLIPSIBLINGS |
             SS_LEFT |
             SS_CENTERIMAGE,
         0,
@@ -247,8 +262,29 @@ bool MainWindow::Create(
         instance,
         nullptr);
 
+    settings_toggle_button_ = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"Hide Settings (Tab)",
+        WS_CHILD |
+            WS_VISIBLE |
+            WS_TABSTOP |
+            WS_CLIPSIBLINGS |
+            BS_OWNERDRAW,
+        0,
+        0,
+        1,
+        1,
+        hwnd_,
+        reinterpret_cast<HMENU>(
+            static_cast<INT_PTR>(
+                kSettingsToggleButtonId)),
+        instance,
+        nullptr);
+
     if (render_hwnd_ == nullptr ||
         status_bar_ == nullptr ||
+        settings_toggle_button_ == nullptr ||
         !settings_panel_.Create(
             hwnd_,
             instance)) {
@@ -268,6 +304,17 @@ bool MainWindow::Create(
         reinterpret_cast<WPARAM>(
             font),
         TRUE);
+
+    SendMessageW(
+        settings_toggle_button_,
+        WM_SETFONT,
+        reinterpret_cast<WPARAM>(
+            font),
+        TRUE);
+
+    theme::ApplyDarkBorder(status_bar_);
+    theme::ApplyDarkBorder(
+        settings_toggle_button_);
 
     settings_panel_.SetCommandCallback(
         [this](const UiCommand& command) {
@@ -341,42 +388,52 @@ void MainWindow::LayoutChildren() {
                 width -
                     (2 * kOuterPadding)));
 
+    const int status_y = 0;
+    const int toggle_y = status_y;
+    const int toggle_x =
+        std::max(
+            kOuterPadding,
+            width -
+                kOuterPadding -
+                kSettingsToggleWidth);
+    const int panel_y =
+        kStatusHeight +
+        kOuterPadding;
+    const int panel_height =
+        std::max(
+            1,
+            height -
+                panel_y -
+                kOuterPadding);
+
     if (settings_visible_) {
         settings_panel_.SetBounds(
             width -
                 panel_width -
                 kOuterPadding,
-            kOuterPadding,
+            panel_y,
             panel_width,
-            std::max(
-                1,
-                height -
-                    (2 * kOuterPadding)));
+            panel_height);
     }
 
     settings_panel_.Show(
         settings_visible_);
 
-    const int status_width =
-        settings_visible_
-            ? std::max(
-                  220,
-                  width -
-                      panel_width -
-                      (3 * kOuterPadding))
-            : std::min(
-                  std::max(
-                      1,
-                      width -
-                          (2 * kOuterPadding)),
-                  760);
-
     SetWindowPos(
         status_bar_,
         HWND_TOP,
-        kOuterPadding,
-        kOuterPadding,
-        status_width,
+        0,
+        status_y,
+        width,
+        kStatusHeight,
+        SWP_NOACTIVATE);
+
+    SetWindowPos(
+        settings_toggle_button_,
+        HWND_TOP,
+        toggle_x,
+        toggle_y,
+        kSettingsToggleWidth,
         kStatusHeight,
         SWP_NOACTIVATE);
 
@@ -393,6 +450,18 @@ void MainWindow::LayoutChildren() {
                 SWP_NOACTIVATE);
     }
 
+    SetWindowPos(
+        settings_toggle_button_,
+        HWND_TOP,
+        0,
+        0,
+        0,
+        0,
+        SWP_NOMOVE |
+            SWP_NOSIZE |
+            SWP_NOACTIVATE |
+            SWP_SHOWWINDOW);
+
     if (resize_callback_) {
         resize_callback_(
             static_cast<UINT>(
@@ -405,7 +474,7 @@ void MainWindow::LayoutChildren() {
 std::wstring MainWindow::BuildStatusSummary(
     const UiState& state) const {
     std::wstring text =
-        L"Peer: Offline  |  Connection: ";
+        L"  Peer: Offline  |  Connection: ";
 
     switch (state.connection_state) {
     case ConnectionUiState::Disconnected:
@@ -446,8 +515,20 @@ std::wstring MainWindow::BuildStatusSummary(
 
 void MainWindow::ApplyUiState(
     const UiState& state) {
+    const bool visibility_changed =
+        settings_visible_ !=
+        state.preferences.settings_visible;
+
     settings_visible_ =
         state.preferences.settings_visible;
+
+    if (settings_toggle_button_ != nullptr) {
+        SetWindowTextW(
+            settings_toggle_button_,
+            settings_visible_
+                ? L"Hide Settings (Tab)"
+                : L"Settings (Tab)");
+    }
 
     settings_panel_.ApplyState(state);
 
@@ -462,6 +543,19 @@ void MainWindow::ApplyUiState(
 
     ApplyWindowState(state);
     LayoutChildren();
+
+    if (visibility_changed &&
+        hwnd_ != nullptr) {
+        RedrawWindow(
+            hwnd_,
+            nullptr,
+            nullptr,
+            RDW_INVALIDATE |
+                RDW_ERASE |
+                RDW_FRAME |
+                RDW_ALLCHILDREN |
+                RDW_UPDATENOW);
+    }
 }
 
 void MainWindow::ApplyAlwaysOnTop(
@@ -768,6 +862,34 @@ LRESULT MainWindow::HandleMessage(
         }
         return 0;
 
+    case WM_COMMAND:
+        if (LOWORD(wparam) ==
+                kSettingsToggleButtonId &&
+            HIWORD(wparam) ==
+                BN_CLICKED) {
+            Emit(UiCommand{
+                UiCommandType::ToggleSettings
+            });
+            return 0;
+        }
+        break;
+
+    case WM_DRAWITEM: {
+        const auto* item =
+            reinterpret_cast<DRAWITEMSTRUCT*>(
+                lparam);
+
+        if (item != nullptr &&
+            item->CtlType == ODT_BUTTON &&
+            item->CtlID ==
+                kSettingsToggleButtonId) {
+            theme::DrawButton(*item);
+            return TRUE;
+        }
+
+        break;
+    }
+
     case WM_CTLCOLORSTATIC:
         if (reinterpret_cast<HWND>(
                 lparam) ==
@@ -778,14 +900,13 @@ LRESULT MainWindow::HandleMessage(
 
             SetTextColor(
                 dc,
-                RGB(235, 235, 235));
+                theme::kTextPrimary);
             SetBkColor(
                 dc,
-                RGB(24, 30, 38));
+                theme::kPanelBackground);
 
             return reinterpret_cast<LRESULT>(
-                GetStockObject(
-                    BLACK_BRUSH));
+                theme::PanelBrush());
         }
         break;
 

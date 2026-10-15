@@ -25,9 +25,14 @@ UiState MakeStateFromPreferences(
     UiState state =
         MakeDefaultUiState(windows_build);
 
-    preferences.port =
+    preferences.share_port =
         std::clamp<std::uint32_t>(
-            preferences.port,
+            preferences.share_port,
+            1,
+            65535);
+    preferences.remote_port =
+        std::clamp<std::uint32_t>(
+            preferences.remote_port,
             1,
             65535);
     preferences.receiver_volume =
