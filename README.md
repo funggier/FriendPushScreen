@@ -2,7 +2,7 @@
 
 FriendPushScreen is a Windows real-time screen-sharing project for two peers who want higher-quality, lower-latency video sharing while continuing to use an external service such as Discord for voice and chat.
 
-> **Current state:** engineering baseline / pre-implementation. The repository currently contains the V1 specification and project-development structure; it does **not** yet contain a working screen-sharing application.
+> **Current state:** native Windows application baseline qualified through FPS-003. The repository now builds a launchable Win32/D3D11 diagnostics application. Screen sharing itself is not implemented yet; capture, codec execution, and network-video milestones remain ahead.
 
 ## V1 product boundary
 
@@ -94,6 +94,12 @@ funggier/FriendPushScreen
 
 Visibility: public
 
+## License
+
+FriendPushScreen is licensed under the MIT License. See `LICENSE`.
+
+Third-party components, if introduced later, remain subject to their own licenses and must pass the project's licensing/compliance gate before integration.
+
 ## Current task
 
 See:
@@ -103,4 +109,4 @@ See:
 - `docs/development/QUALIFICATION-MATRIX.md`
 - `docs/architecture/DECISION-GATES.md`
 
-No build instructions are published yet because product implementation has not started. The first implementation-oriented work begins only after the engineering baseline is qualified.
+Build instructions are available in `docs/BUILDING.md`. The current executable provides the native Win32/D3D11 application shell and hardware diagnostics foundation; real screen-sharing work starts in the later capture/codec/network tasks.

@@ -1,59 +1,50 @@
 # Current Development Task
 
-## FPS-002 — Reference Baseline & Technical Spike
+## FPS-003 — Windows App Skeleton & Hardware Diagnostics
 
 **Status:** GREEN / CLOSED
 
-**Branch:** `fps-002-reference-baseline-spike`
+**Branch:** `fps-003-native-windows-app-design`
 
 **Started:** 2026-10-14
 
-**Closed:** 2026-10-14
+**Closed:** 2026-10-15
 
-**GitHub Issue:** #3 — FPS-002 — Reference Baseline & Technical Spike
+**GitHub Issue:** #5 — FPS-003 — Windows App Skeleton & Hardware Diagnostics
 
-### Goal
+### Outcome
 
-Collect real-machine evidence needed to choose FriendPushScreen implementation paths without turning assumptions into architecture.
+FriendPushScreen now has its first native Windows executable and diagnostics foundation:
 
-### Probe scope
-
-- Windows / CPU / GPU baseline
-- Tailscale installation, peer state, and path diagnostics
-- Sunshine / Moonlight installation and available version evidence
-- Onten OTN-332 / generic video-capture device detection and runtime modes where possible
-- WDA_EXCLUDEFROMCAPTURE feasibility on the target Windows baseline
-- hardware encode/decode capability evidence available on the current machine
-- determine which remaining measurements require a second peer or a later throwaway harness
-
-### Rules
-
-- No production application code.
-- Any temporary probe code must be labeled throwaway and must not become product code automatically.
-- Do not close a decision gate from documentation alone when the gate calls for runtime measurements.
-- Record NOT TESTED / BLOCKED separately from FAIL.
-
-### Completion gate
-
-FPS-002 is GREEN only when the available reference-machine probes are recorded with reproducible evidence and every unresolved item is explicitly assigned to a later qualification step.
+- C++20 / Win32
+- D3D11 / DXGI placeholder renderer
+- native OS/CPU/memory/GPU/monitor/window diagnostics
+- Media Foundation capture-device and codec-capability enumeration
+- native network/Tailscale presence diagnostics
+- asynchronous single-flight diagnostics refresh
+- privacy-safe UTF-8 Save Diagnostics
+- CTest coverage
+- Windows x64 Debug/Release CI
+- MIT License
 
 ### Evidence
 
-`docs/development/reports/FPS-20261014-002-reference-baseline-technical-spike.md`
+`docs/development/reports/FPS-20261014-003-windows-app-skeleton-hardware-diagnostics.md`
 
-### Qualification ruling
+Implementation-qualified commit:
 
-The project currently has one Windows development machine plus a smartphone, not a second physical Windows peer. FPS-002 therefore uses the local Windows machine as the reference qualification baseline. Two-peer Direct/DERP and end-to-end stream measurements are deferred to FPS-009/FPS-010 network qualification and are not required to close FPS-002.
+`741b206ed29fe8ac9b3b637015519d5b4f4b9096`
 
-This ruling changes the development qualification method only. It does not remove the eventual two-peer sharing requirement from FriendPushScreen V1.
+GitHub Actions implementation run:
 
-### Expected outputs
+`38631397900 — Windows Build — success`
 
-- `docs/development/reports/FPS-20261014-002-reference-baseline-technical-spike.md`
-- architecture-gate recommendations, without premature irreversible choices
+### Scope preserved
+
+FPS-003 does not implement real capture frames, video encode/decode execution, network video transport, audio streaming, or remote control.
 
 ### Next planned task
 
-`FPS-003 — Windows App Skeleton & Hardware Diagnostics`
+`FPS-004 — Viewer UI & Settings Shell`
 
-No development task is ACTIVE after FPS-002 closure.
+No development task is ACTIVE after FPS-003 closure.
