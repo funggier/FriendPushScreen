@@ -47,6 +47,7 @@ add_executable(FriendPushScreen WIN32
     src/media/video_loop_metrics.cpp
     src/media/mf_d3d11_device_manager.cpp
     src/media/mft_video_media_type.cpp
+    src/media/mft_video_transform_activation.cpp
 )
 target_include_directories(FriendPushScreen PRIVATE
     src
@@ -71,6 +72,24 @@ target_link_libraries(FriendPushScreen PRIVATE
     User32
     UxTheme
     WindowsApp
+)
+
+
+add_executable(FriendPushScreenCodecProbe
+    tools/codec_probe/main.cpp
+    src/media/video_codec_model.cpp
+    src/media/mft_video_codec_catalog.cpp
+    src/media/mft_video_transform_activation.cpp
+)
+target_include_directories(FriendPushScreenCodecProbe PRIVATE
+    src
+)
+fps_apply_warnings(FriendPushScreenCodecProbe)
+target_link_libraries(FriendPushScreenCodecProbe PRIVATE
+    Mf
+    Mfplat
+    Mfuuid
+    Ole32
 )
 
 enable_testing()
@@ -113,6 +132,7 @@ add_executable(FriendPushScreenTests
     src/media/video_loop_metrics.cpp
     src/media/mf_d3d11_device_manager.cpp
     src/media/mft_video_media_type.cpp
+    src/media/mft_video_transform_activation.cpp
     src/graphics/d3d11_device.cpp
     src/graphics/preview_renderer.cpp
     src/ui/main_window.cpp
