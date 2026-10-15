@@ -2,53 +2,49 @@
 
 ## FPS-003 — Windows App Skeleton & Hardware Diagnostics
 
-**Status:** ACTIVE — TASK 1 TOOLCHAIN BASELINE
+**Status:** GREEN / CLOSED
 
 **Branch:** `fps-003-native-windows-app-design`
 
 **Started:** 2026-10-14
 
+**Closed:** 2026-10-15
+
 **GitHub Issue:** #5 — FPS-003 — Windows App Skeleton & Hardware Diagnostics
 
-### Goal
+### Outcome
 
-Create the first real FriendPushScreen Windows executable and native diagnostics foundation.
+FriendPushScreen now has its first native Windows executable and diagnostics foundation:
 
-### Approved architectural direction
+- C++20 / Win32
+- D3D11 / DXGI placeholder renderer
+- native OS/CPU/memory/GPU/monitor/window diagnostics
+- Media Foundation capture-device and codec-capability enumeration
+- native network/Tailscale presence diagnostics
+- asynchronous single-flight diagnostics refresh
+- privacy-safe UTF-8 Save Diagnostics
+- CTest coverage
+- Windows x64 Debug/Release CI
+- MIT License
 
-- C++20
-- Win32 application shell
-- D3D11 / DXGI rendering foundation
-- CMake
-- MSVC
-- Media Foundation for native media capability/device enumeration
-- no Qt dependency in the V1 baseline
-- no FFmpeg runtime dependency
+### Evidence
 
-### Written design
+`docs/development/reports/FPS-20261014-003-windows-app-skeleton-hardware-diagnostics.md`
 
-`docs/superpowers/specs/2026-10-14-fps-003-native-windows-app-design.md`
+Implementation-qualified commit:
 
-### Approved design
+`741b206ed29fe8ac9b3b637015519d5b4f4b9096`
 
-`docs/superpowers/specs/2026-10-14-fps-003-native-windows-app-design.md`
+GitHub Actions implementation run:
 
-User approved the written FPS-003 design on 2026-10-14.
+`38631397900 — Windows Build — success`
 
-### Implementation plan
+### Scope preserved
 
-`docs/superpowers/plans/2026-10-14-fps-003-native-windows-app-implementation.md`
+FPS-003 does not implement real capture frames, video encode/decode execution, network video transport, audio streaming, or remote control.
 
-### Execution
+### Next planned task
 
-User approved the implementation plan and selected Native execution on 2026-10-14.
+`FPS-004 — Viewer UI & Settings Shell`
 
-Current step: Task 1 — Toolchain Prerequisite, CMake Baseline, and Test Harness.
-
-### Important implementation prerequisite
-
-The reference machine has Visual Studio 2026, MSVC and CMake, but the standard Windows SDK Include/Lib directories are currently missing. A complete Windows SDK must be installed or repaired before product code compilation begins.
-
-### Scope boundary
-
-FPS-003 does not implement real capture, video encode/decode, network video transport, audio streaming, or remote control.
+No development task is ACTIVE after FPS-003 closure.

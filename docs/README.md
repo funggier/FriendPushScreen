@@ -6,6 +6,11 @@ This directory separates stable product intent from current execution state.
 
 - `development-plan/ScreenLink_V1_Architecture_and_Development_Plan_TH.md` — V1 product specification, architecture blueprint, milestone sequence, risks, and acceptance criteria.
 
+## Build and runtime baseline
+
+- `BUILDING.md` — Windows x64 prerequisites and CMake build/test commands.
+- `development/reports/FPS-20261014-003-windows-app-skeleton-hardware-diagnostics.md` — FPS-003 native application qualification evidence.
+
 ## Current development state
 
 - `development/tasks/CURRENT.md` — exactly what is active now.

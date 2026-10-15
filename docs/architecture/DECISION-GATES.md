@@ -61,9 +61,19 @@ The API boundary must remain vendor-neutral. Backend technology is selected from
 
 ## DG-005 — UI/application framework
 
+**Status:** RESOLVED by FPS-003
+
 **Owner:** FPS-003
 
-The existing specification mentions Qt deployment considerations but does not establish an irreversible framework decision. FPS-003 must choose a Windows application stack based on capture/render integration, deployment burden, supported OS versions, and maintainability.
+Selected V1 baseline:
+
+- C++20
+- Win32 application shell
+- D3D11 / DXGI rendering foundation
+- CMake / MSVC
+- no Qt runtime dependency
+
+**FPS-003 evidence (2026-10-15):** the native application builds in Debug/Release locally and on Windows GitHub Actions, launches on the Windows 10 reference machine, initializes a D3D11 hardware swap chain, survives resize/minimize/maximize/close smoke tests, and keeps UI separate from platform/media diagnostics. DG-005 is RESOLVED for V1.
 
 ## DG-006 — Licensing/compliance boundary
 
