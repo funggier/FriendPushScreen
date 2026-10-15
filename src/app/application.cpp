@@ -408,6 +408,8 @@ Application::CreateCaptureSession(
 }
 
 void Application::StopCaptureSession() {
+    codec_loop_.reset();
+    codec_failed_ = false;
     if (capture_session_ != nullptr) {
         capture_session_->Stop();
         capture_session_.reset();
@@ -552,56 +554,64 @@ void Application::ToggleCapturePreview() {
 }
 
 void Application::TickCapturePreview() {
-    if (!renderer_initialized_ ||
-        capture_session_ == nullptr) {
-        return;
-    }
-
+    if (!renderer_initialized_ || capture_session_ == nullptr) return;
     capture::CapturedFrame frame{};
-
-    if (capture_session_->TryAcquireFrame(
-            frame) &&
-        frame.IsValid()) {
-        if (renderer_.RenderFrame(frame)) {
-            last_preview_frame_ =
-                std::move(frame);
-        } else {
-            capture_status_ =
-                "Preview renderer failed";
-            last_preview_frame_ = {};
-            renderer_.RenderPlaceholder();
-            UpdateCaptureUi();
-        }
-    }
-
-    const auto state =
-        capture_session_->State();
-
-    if (state == last_capture_state_) {
-        return;
-    }
-
-    last_capture_state_ = state;
-    capture_status_ =
-        capture_session_->StatusText();
-
-    if (state ==
-            capture::CaptureSessionState::
-                SourceLost ||
-        state ==
-            capture::CaptureSessionState::
-                Error) {
+    const bool acquired = capture_session_->TryAcquireFrame(frame) && frame.IsValid();
+    const auto state = capture_session_->State();
+    if (state == capture::CaptureSessionState::SourceLost || state == capture::CaptureSessionState::Error) {
+        codec_loop_.reset();
         last_preview_frame_ = {};
         renderer_.RenderPlaceholder();
-    }
-
-    if (state ==
-        capture::CaptureSessionState::SourceLost) {
-        RefreshCaptureSources();
+        if (state != last_capture_state_) {
+            last_capture_state_ = state;
+            capture_status_ = capture_session_->StatusText();
+            UpdateCaptureUi();
+            if (state == capture::CaptureSessionState::SourceLost) RefreshCaptureSources();
+        }
         return;
     }
-
-    UpdateCaptureUi();
+    last_capture_state_ = state;
+    if (codec_failed_) return;
+    const auto sink = [this](const capture::CapturedFrame& decoded) {
+        if (!renderer_.RenderFrame(decoded)) return false;
+        last_preview_frame_ = decoded;
+        return true;
+    };
+    bool ok = true;
+    if (raw_preview_) {
+        if (acquired) ok = sink(frame);
+        capture_status_ = "Raw capture preview (diagnostic)";
+    } else {
+        if (acquired) {
+            const auto width = (frame.width + 1U) & ~1U;
+            const auto height = (frame.height + 1U) & ~1U;
+            if (!codec_loop_ || codec_loop_->Width() != width || codec_loop_->Height() != height) {
+                codec_loop_ = std::make_unique<media::VideoLocalLoop>();
+                media::VideoCodecConfig config;
+                config.width = width; config.height = height;
+                ok = codec_loop_->Initialize(renderer_.Device(), config,
+                    force_software_codec_ ? media::VideoBackendPolicy::ForceSoftware :
+                        media::VideoBackendPolicy::PreferHardware);
+            }
+            if (ok) ok = codec_loop_->Push(frame, sink);
+        }
+        if (ok && codec_loop_) ok = codec_loop_->Poll(sink);
+        if (codec_loop_) capture_status_ = codec_loop_->Status();
+        else capture_status_ = "Waiting for capture to start H.264 local loop";
+    }
+    if (!ok) {
+        codec_failed_ = true;
+        capture_status_ = codec_loop_ ? codec_loop_->Status() : "Preview renderer failed";
+        last_preview_frame_ = {};
+        renderer_.RenderPlaceholder();
+        diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Error, "codec", capture_status_);
+        UpdateCaptureUi();
+        return;
+    }
+    if (GetTickCount64() - last_codec_status_tick_ >= 1000) {
+        last_codec_status_tick_ = GetTickCount64();
+        UpdateCaptureUi();
+    }
 }
 
 void Application::HandleUiCommand(
@@ -816,6 +826,11 @@ int Application::Run(
         runtime_hr != RPC_E_CHANGED_MODE) {
         return 3;
     }
+
+    wchar_t option[2]{};
+    raw_preview_ = GetEnvironmentVariableW(L"FPS_RAW_PREVIEW", option, 2) == 1 && option[0] == L'1';
+    option[0] = 0;
+    force_software_codec_ = GetEnvironmentVariableW(L"FPS_FORCE_SOFTWARE_CODEC", option, 2) == 1 && option[0] == L'1';
 
     const auto os =
         platform::windows::

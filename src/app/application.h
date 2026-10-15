@@ -8,6 +8,7 @@
 #include "capture/capture_source.h"
 #include "diagnostics/diagnostics_service.h"
 #include "graphics/preview_renderer.h"
+#include "media/video_local_loop.h"
 #include "ui/main_window.h"
 #include "ui/ui_command.h"
 #include "ui/ui_state.h"
@@ -85,6 +86,11 @@ private:
             capture::CaptureSessionState::
                 Stopped};
 
+    std::unique_ptr<media::VideoLocalLoop> codec_loop_;
+    bool codec_failed_{false};
+    bool raw_preview_{false};
+    bool force_software_codec_{false};
+    ULONGLONG last_codec_status_tick_{0};
     bool renderer_initialized_{false};
     std::wstring renderer_status_;
 };

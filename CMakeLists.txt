@@ -48,6 +48,10 @@ add_executable(FriendPushScreen WIN32
     src/media/mf_d3d11_device_manager.cpp
     src/media/mft_video_media_type.cpp
     src/media/mft_video_transform_activation.cpp
+    src/media/mft_transform_session.cpp
+    src/media/mf_video_codec.cpp
+    src/media/video_local_loop.cpp
+    src/graphics/d3d11_video_converter.cpp
 )
 target_include_directories(FriendPushScreen PRIVATE
     src
@@ -55,6 +59,8 @@ target_include_directories(FriendPushScreen PRIVATE
 )
 fps_apply_warnings(FriendPushScreen)
 target_link_libraries(FriendPushScreen PRIVATE
+    OleAut32
+    Ole32
     Advapi32
     Comdlg32
     Comctl32
@@ -77,6 +83,7 @@ target_link_libraries(FriendPushScreen PRIVATE
 
 add_executable(FriendPushScreenCodecProbe
     tools/codec_probe/main.cpp
+    tools/codec_probe/d3d11_inventory.cpp
     src/media/video_codec_model.cpp
     src/media/mft_video_codec_catalog.cpp
     src/media/mft_video_transform_activation.cpp
@@ -86,11 +93,40 @@ target_include_directories(FriendPushScreenCodecProbe PRIVATE
 )
 fps_apply_warnings(FriendPushScreenCodecProbe)
 target_link_libraries(FriendPushScreenCodecProbe PRIVATE
+    D3D11
+    Dxgi
+    Dxguid
     Mf
     Mfplat
     Mfuuid
     Ole32
 )
+
+# Physical D3D11 checks run explicitly; generic CI may have no video processor.
+add_executable(FriendPushScreenConversionTests
+    tests/video_conversion_runtime_tests.cpp
+    src/graphics/d3d11_video_converter.cpp
+)
+target_include_directories(FriendPushScreenConversionTests PRIVATE src tests)
+fps_apply_warnings(FriendPushScreenConversionTests)
+target_link_libraries(FriendPushScreenConversionTests PRIVATE D3D11 Dxgi)
+
+add_executable(FriendPushScreenCodecLoopProbe
+    tools/codec_loop_probe/main.cpp
+    src/media/mf_video_codec.cpp
+    src/media/mft_transform_session.cpp
+    src/media/mft_video_transform_activation.cpp
+    src/media/mft_video_codec_catalog.cpp
+    src/media/mft_video_media_type.cpp
+    src/media/mf_d3d11_device_manager.cpp
+    src/media/video_codec_model.cpp
+    src/media/video_frame_clock.cpp
+    src/media/encoded_access_unit_queue.cpp
+    src/graphics/d3d11_video_converter.cpp
+)
+target_include_directories(FriendPushScreenCodecLoopProbe PRIVATE src)
+fps_apply_warnings(FriendPushScreenCodecLoopProbe)
+target_link_libraries(FriendPushScreenCodecLoopProbe PRIVATE D3D11 Dxgi Mf Mfplat Mfuuid Ole32 OleAut32)
 
 enable_testing()
 
@@ -140,6 +176,11 @@ add_executable(FriendPushScreenTests
     src/ui/settings_store.cpp
     src/ui/settings_panel.cpp
     src/ui/theme.cpp
+    src/media/mft_transform_session.cpp
+    src/media/mf_video_codec.cpp
+    src/media/video_local_loop.cpp
+    src/graphics/d3d11_video_converter.cpp
+    tests/video_local_loop_tests.cpp
 )
 target_include_directories(FriendPushScreenTests PRIVATE
     tests
@@ -148,6 +189,8 @@ target_include_directories(FriendPushScreenTests PRIVATE
 )
 fps_apply_warnings(FriendPushScreenTests)
 target_link_libraries(FriendPushScreenTests PRIVATE
+    Ole32
+    OleAut32
     Advapi32
     Dxgi
     Dwmapi
@@ -167,3 +210,37 @@ target_link_libraries(FriendPushScreenTests PRIVATE
 )
 
 add_test(NAME FriendPushScreenTests COMMAND FriendPushScreenTests)
+
+add_executable(FriendPushScreenCaptureLoopProbe
+    tools/capture_loop_probe/main.cpp
+    src/media/video_local_loop.cpp
+    src/media/mf_video_codec.cpp
+    src/media/mft_transform_session.cpp
+    src/media/mft_video_transform_activation.cpp
+    src/media/mft_video_codec_catalog.cpp
+    src/media/mft_video_media_type.cpp
+    src/media/mf_d3d11_device_manager.cpp
+    src/media/video_codec_model.cpp
+    src/media/video_frame_clock.cpp
+    src/media/encoded_access_unit_queue.cpp
+    src/media/video_loop_metrics.cpp
+    src/media/capture_device_probe.cpp
+    src/capture/capture_source.cpp
+    src/capture/capture_source_catalog.cpp
+    src/capture/desktop_duplication_capture.cpp
+    src/capture/windows_graphics_capture.cpp
+    src/capture/media_foundation_capture.cpp
+    src/platform/windows/monitor_probe.cpp
+    src/platform/windows/window_probe.cpp
+    src/platform/windows/runtime_paths.cpp
+    src/diagnostics/logger.cpp
+    src/graphics/d3d11_device.cpp
+    src/graphics/d3d11_video_converter.cpp
+    src/graphics/preview_renderer.cpp
+    src/ui/theme.cpp
+)
+target_include_directories(FriendPushScreenCaptureLoopProbe PRIVATE src)
+fps_apply_warnings(FriendPushScreenCaptureLoopProbe)
+target_link_libraries(FriendPushScreenCaptureLoopProbe PRIVATE
+    D3D11 D3DCompiler Dxgi Dxguid Mf Mfplat Mfreadwrite Mfuuid
+    Ole32 OleAut32 User32 Gdi32 Dwmapi WindowsApp Psapi Comctl32 UxTheme Winmm)

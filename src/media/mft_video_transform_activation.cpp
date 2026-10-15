@@ -250,8 +250,8 @@ HRESULT ActivateMftVideoCodecDescriptor(
             continue;
         }
 
+        // ComPtr assignment retains the activation before the enumeration releases it.
         activation = item;
-        item->AddRef();
         transform =
             std::move(
                 candidate_transform);

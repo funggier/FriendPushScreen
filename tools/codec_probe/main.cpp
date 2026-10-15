@@ -113,6 +113,8 @@ void Probe(
 
 }  // namespace
 
+void ProbeD3D11DecoderInventory();
+
 int main() {
     const HRESULT co_hr =
         CoInitializeEx(
@@ -164,6 +166,8 @@ int main() {
             codec,
             fps::media::VideoCodecDirection::Decode);
     }
+
+    ProbeD3D11DecoderInventory();
 
     MFShutdown();
 
