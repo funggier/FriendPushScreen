@@ -27,7 +27,10 @@ Deliver one native capture-source model for Monitor, Window, and generic Windows
 - runtime video-device mode enumeration
 - source-loss/device-removal behavior without automatic source substitution
 - source refresh/reappearance handling
+- persisted `Show Cursor` sender option, default ON, with live DDA/WGC cursor policy
 - Settings remains an overlay; opening Settings must not resize the preview surface
+- windowed status chrome reserves its own top strip so incoming content is never obscured
+- F11 hides status chrome/Settings button and expands preview to the full client area
 - evidence for DG-002 and DG-003
 
 ### Safety / scope boundary
@@ -50,7 +53,9 @@ FPS-005 becomes GREEN only after:
 - Window preview when WGC backend is available in the local toolchain/runtime
 - real Media Foundation capture-device preview
 - source-loss/hot-plug evidence where practical
+- physical cursor-visible preview plus live `Show Cursor` ON/OFF/persistence evidence
 - Settings overlay leaves preview surface dimensions unchanged
+- windowed viewer begins below status chrome and F11 viewer fills the full client area
 - Debug + Release local build/test
 - exact-commit Windows CI
 - qualification evidence report

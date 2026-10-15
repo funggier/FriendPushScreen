@@ -1,12 +1,23 @@
 #include "app/application.h"
 
+#include "capture/capture_source_catalog.h"
+
+#include "capture/desktop_duplication_capture.h"
+
+#include "capture/media_foundation_capture.h"
+
+#include "capture/windows_graphics_capture.h"
+
 #include "diagnostics/diagnostics_formatter.h"
 #include "diagnostics/logger.h"
 #include "platform/windows/os_probe.h"
 #include "ui/settings_store.h"
 
 #include <objbase.h>
+#include <roapi.h>
 
+#include <algorithm>
+#include <utility>
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -120,6 +131,7 @@ bool IsPreferenceCommand(
     ui::UiCommandType type) {
     switch (type) {
     case ui::UiCommandType::ToggleSettings:
+    case ui::UiCommandType::ToggleShowCursor:
     case ui::UiCommandType::SetConnectionMode:
     case ui::UiCommandType::SetHost:
     case ui::UiCommandType::SetSharePort:
@@ -272,6 +284,304 @@ void Application::PersistUiPreferences() {
 void Application::ApplyUiState() {
     main_window_.ApplyUiState(
         ui_state_);
+    UpdateCaptureUi();
+}
+
+void Application::UpdateCaptureUi() {
+    bool preview_active = false;
+
+    if (capture_session_ != nullptr) {
+        const auto state =
+            capture_session_->State();
+
+        preview_active =
+            state ==
+                capture::CaptureSessionState::Starting ||
+            state ==
+                capture::CaptureSessionState::Previewing;
+    }
+
+    main_window_.SetCaptureSources(
+        capture_sources_,
+        selected_source_id_,
+        preview_active,
+        capture_status_);
+}
+
+void Application::RefreshCaptureSources() {
+    auto refreshed =
+        capture::BuildCaptureSourceCatalog(
+            main_window_.Handle());
+
+    if (selected_source_.has_value()) {
+        auto selected =
+            std::find_if(
+                refreshed.begin(),
+                refreshed.end(),
+                [this](const auto& source) {
+                    return source.id ==
+                        selected_source_id_;
+                });
+
+        if (selected != refreshed.end()) {
+            selected_source_ = *selected;
+        } else {
+            auto unavailable =
+                *selected_source_;
+            unavailable.availability =
+                capture::CaptureAvailability::
+                    Unavailable;
+            selected_source_ = unavailable;
+            refreshed.push_back(
+                std::move(unavailable));
+
+            if (capture_session_ != nullptr &&
+                capture_session_->State() ==
+                    capture::CaptureSessionState::
+                        SourceLost) {
+                capture_status_ =
+                    capture_session_->
+                        StatusText();
+            }
+        }
+    }
+
+    capture_sources_ =
+        std::move(refreshed);
+
+    UpdateCaptureUi();
+}
+
+std::unique_ptr<capture::ICaptureSession>
+Application::CreateCaptureSession(
+    const capture::CaptureSourceDescriptor& source) {
+    std::unique_ptr<capture::ICaptureSession>
+        session;
+
+    switch (source.kind) {
+    case capture::CaptureSourceKind::Monitor:
+        session = std::make_unique<
+            capture::DesktopDuplicationCaptureSession>(
+                source,
+                renderer_.Device());
+        break;
+
+    case capture::CaptureSourceKind::Window:
+        session = std::make_unique<
+            capture::WindowsGraphicsCaptureSession>(
+                source,
+                renderer_.Device());
+        break;
+
+    case capture::CaptureSourceKind::VideoDevice:
+        session = std::make_unique<
+            capture::MediaFoundationCaptureSession>(
+                source);
+        break;
+    }
+
+    if (session != nullptr) {
+        session->SetCursorCaptureEnabled(
+            ui_state_.preferences.show_cursor);
+    }
+
+    return session;
+}
+
+void Application::StopCaptureSession() {
+    if (capture_session_ != nullptr) {
+        capture_session_->Stop();
+        capture_session_.reset();
+    }
+
+    last_preview_frame_ = {};
+    last_capture_state_ =
+        capture::CaptureSessionState::Stopped;
+}
+
+void Application::SelectCaptureSource(
+    std::string_view source_id) {
+    const auto found =
+        std::find_if(
+            capture_sources_.begin(),
+            capture_sources_.end(),
+            [source_id](const auto& source) {
+                return source.id == source_id;
+            });
+
+    if (found == capture_sources_.end()) {
+        capture_status_ =
+            "Selected source is no longer available";
+        UpdateCaptureUi();
+        return;
+    }
+
+    if (found->availability !=
+        capture::CaptureAvailability::Available) {
+        capture_status_ =
+            "Selected source is unavailable";
+        UpdateCaptureUi();
+        return;
+    }
+
+    if (capture_session_ != nullptr) {
+        StopCaptureSession();
+        if (renderer_initialized_) {
+            renderer_.RenderPlaceholder();
+        }
+    }
+
+    selected_source_ = *found;
+    selected_source_id_ = found->id;
+    capture_status_ =
+        "Ready to preview";
+
+    UpdateCaptureUi();
+}
+
+void Application::StartCapturePreview() {
+    if (!selected_source_.has_value()) {
+        capture_status_ =
+            "Select a source before previewing";
+        UpdateCaptureUi();
+        return;
+    }
+
+    if (selected_source_->availability !=
+        capture::CaptureAvailability::Available) {
+        capture_status_ =
+            "Selected source is unavailable";
+        UpdateCaptureUi();
+        return;
+    }
+
+    StopCaptureSession();
+
+    capture_status_ =
+        "Starting local preview...";
+
+    capture_session_ =
+        CreateCaptureSession(
+            *selected_source_);
+
+    if (capture_session_ == nullptr) {
+        capture_status_ =
+            "No capture backend is available for this source";
+        UpdateCaptureUi();
+        return;
+    }
+
+    if (!capture_session_->Start()) {
+        capture_status_ =
+            capture_session_->StatusText();
+        last_capture_state_ =
+            capture_session_->State();
+        capture_session_.reset();
+        if (renderer_initialized_) {
+            renderer_.RenderPlaceholder();
+        }
+        UpdateCaptureUi();
+        return;
+    }
+
+    last_capture_state_ =
+        capture_session_->State();
+    capture_status_ =
+        capture_session_->StatusText();
+
+    if (renderer_initialized_) {
+        renderer_.RenderPlaceholder();
+    }
+
+    UpdateCaptureUi();
+}
+
+void Application::StopCapturePreview() {
+    StopCaptureSession();
+
+    if (renderer_initialized_) {
+        renderer_.RenderPlaceholder();
+    }
+
+    capture_status_ =
+        selected_source_.has_value()
+            ? "Ready to preview"
+            : "No source selected";
+
+    UpdateCaptureUi();
+}
+
+void Application::ToggleCapturePreview() {
+    bool preview_active = false;
+
+    if (capture_session_ != nullptr) {
+        const auto state =
+            capture_session_->State();
+        preview_active =
+            state ==
+                capture::CaptureSessionState::Starting ||
+            state ==
+                capture::CaptureSessionState::Previewing;
+    }
+
+    if (preview_active) {
+        StopCapturePreview();
+    } else {
+        StartCapturePreview();
+    }
+}
+
+void Application::TickCapturePreview() {
+    if (!renderer_initialized_ ||
+        capture_session_ == nullptr) {
+        return;
+    }
+
+    capture::CapturedFrame frame{};
+
+    if (capture_session_->TryAcquireFrame(
+            frame) &&
+        frame.IsValid()) {
+        if (renderer_.RenderFrame(frame)) {
+            last_preview_frame_ =
+                std::move(frame);
+        } else {
+            capture_status_ =
+                "Preview renderer failed";
+            last_preview_frame_ = {};
+            renderer_.RenderPlaceholder();
+            UpdateCaptureUi();
+        }
+    }
+
+    const auto state =
+        capture_session_->State();
+
+    if (state == last_capture_state_) {
+        return;
+    }
+
+    last_capture_state_ = state;
+    capture_status_ =
+        capture_session_->StatusText();
+
+    if (state ==
+            capture::CaptureSessionState::
+                SourceLost ||
+        state ==
+            capture::CaptureSessionState::
+                Error) {
+        last_preview_frame_ = {};
+        renderer_.RenderPlaceholder();
+    }
+
+    if (state ==
+        capture::CaptureSessionState::SourceLost) {
+        RefreshCaptureSources();
+        return;
+    }
+
+    UpdateCaptureUi();
 }
 
 void Application::HandleUiCommand(
@@ -300,6 +610,29 @@ void Application::HandleUiCommand(
                     ? "share requested; "
                       "media pipeline not active"
                     : "share request cancelled");
+        break;
+
+    case ui::UiCommandType::SelectCaptureSource:
+        SelectCaptureSource(command.text);
+        return;
+
+    case ui::UiCommandType::ToggleCapturePreview:
+        ToggleCapturePreview();
+        return;
+
+    case ui::UiCommandType::RefreshCaptureSources:
+        RefreshCaptureSources();
+        return;
+
+    case ui::UiCommandType::ToggleShowCursor:
+        ui::ToggleShowCursor(ui_state_);
+        if (capture_session_ != nullptr) {
+            capture_session_->
+                SetCursorCaptureEnabled(
+                    ui_state_.preferences.
+                        show_cursor);
+        }
+        state_changed = true;
         break;
 
     case ui::UiCommandType::
@@ -452,13 +785,17 @@ void Application::HandleUiCommand(
 int Application::Run(
     HINSTANCE instance,
     int show_command) {
-    const HRESULT com_hr =
-        CoInitializeEx(
-            nullptr,
-            COINIT_APARTMENTTHREADED);
+    const HRESULT runtime_hr =
+        RoInitialize(
+            RO_INIT_SINGLETHREADED);
 
     const bool should_uninitialize =
-        SUCCEEDED(com_hr);
+        SUCCEEDED(runtime_hr);
+
+    if (FAILED(runtime_hr) &&
+        runtime_hr != RPC_E_CHANGED_MODE) {
+        return 3;
+    }
 
     const auto os =
         platform::windows::
@@ -488,14 +825,18 @@ int Application::Run(
             renderer_.Resize(
                 width,
                 height);
-            renderer_.Render();
+
+            if (last_preview_frame_.IsValid()) {
+                renderer_.RenderFrame(
+                    last_preview_frame_);
+            } else {
+                renderer_.RenderPlaceholder();
+            }
         });
 
     main_window_.SetFrameCallback(
         [this]() {
-            if (renderer_initialized_) {
-                renderer_.Render();
-            }
+            TickCapturePreview();
         });
 
     main_window_.SetUiCommandCallback(
@@ -513,7 +854,7 @@ int Application::Run(
             instance,
             show_command)) {
         if (should_uninitialize) {
-            CoUninitialize();
+            RoUninitialize();
         }
 
         return 1;
@@ -545,7 +886,7 @@ int Application::Run(
                     client.top));
         }
 
-        renderer_.Render();
+        renderer_.RenderPlaceholder();
     }
 
     ApplyUiState();
@@ -555,6 +896,7 @@ int Application::Run(
     // Audio preference moved from a newer OS).
     PersistUiPreferences();
 
+    RefreshCaptureSources();
     RefreshDiagnostics();
 
     MSG message{};
@@ -572,8 +914,10 @@ int Application::Run(
         }
 
         if (result == -1) {
+            StopCaptureSession();
+
             if (should_uninitialize) {
-                CoUninitialize();
+                RoUninitialize();
             }
 
             return 2;
@@ -589,11 +933,13 @@ int Application::Run(
         DispatchMessageW(&message);
     }
 
+    StopCaptureSession();
+
     diagnostics_service_.WaitForIdle(
         std::chrono::seconds{5});
 
     if (should_uninitialize) {
-        CoUninitialize();
+        RoUninitialize();
     }
 
     return static_cast<int>(

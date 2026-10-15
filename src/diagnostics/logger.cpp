@@ -1,5 +1,7 @@
 #include "diagnostics/logger.h"
 
+#include "platform/windows/runtime_paths.h"
+
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
@@ -11,21 +13,10 @@ namespace fps::diagnostics {
 namespace {
 
 std::filesystem::path DefaultLogPath() {
-    char* local_app_data = nullptr;
-    std::size_t size = 0;
-    if (_dupenv_s(&local_app_data, &size, "LOCALAPPDATA") != 0 ||
-        local_app_data == nullptr ||
-        size <= 1) {
-        std::free(local_app_data);
-        return std::filesystem::path{"FriendPushScreen.log"};
-    }
-
-    const std::filesystem::path base{local_app_data};
-    std::free(local_app_data);
-    return base
-        / "FriendPushScreen"
-        / "logs"
-        / "FriendPushScreen.log";
+    return platform::windows::
+        DefaultDataRoot() /
+        "logs" /
+        "FriendPushScreen.log";
 }
 
 const char* LevelName(LogLevel level) {

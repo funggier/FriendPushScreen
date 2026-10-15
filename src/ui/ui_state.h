@@ -39,6 +39,7 @@ struct UiPreferences {
     std::string host;
     std::uint32_t share_port{42800};
     std::uint32_t remote_port{42800};
+    bool show_cursor{true};
 
     AudioSourceKind audio_source{AudioSourceKind::None};
     bool receiver_muted{false};
@@ -78,6 +79,7 @@ void SetFullscreen(UiState& state, bool fullscreen);
 void ToggleDiagnosticsVisible(UiState& state);
 void ToggleShareRequest(UiState& state);
 void ToggleConnectionRequest(UiState& state);
+void ToggleShowCursor(UiState& state);
 void ToggleReceiverMute(UiState& state);
 void SetReceiverVolume(UiState& state, int volume);
 

@@ -12,11 +12,24 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace fps::ui {
 
 std::wstring NormalizeWin32MultilineText(
     std::wstring_view text);
+
+struct ViewerViewport {
+    int x{0};
+    int y{0};
+    int width{0};
+    int height{0};
+};
+
+ViewerViewport CalculateViewerViewport(
+    int client_width,
+    int client_height,
+    int status_height);
 
 class MainWindow {
 public:
@@ -60,6 +73,12 @@ public:
         std::wstring_view text);
 
     void SetCollecting(bool collecting);
+
+    void SetCaptureSources(
+        const std::vector<capture::CaptureSourceDescriptor>& sources,
+        std::string_view selected_source_id,
+        bool preview_active,
+        std::string_view status_text);
 
     std::optional<std::filesystem::path>
     PromptDiagnosticsSavePath();

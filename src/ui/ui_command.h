@@ -7,6 +7,10 @@ namespace fps::ui {
 enum class UiCommandType {
     ToggleSettings,
     ToggleShareRequest,
+    SelectCaptureSource,
+    ToggleCapturePreview,
+    RefreshCaptureSources,
+    ToggleShowCursor,
     ToggleConnectionRequest,
     SetConnectionMode,
     SetHost,

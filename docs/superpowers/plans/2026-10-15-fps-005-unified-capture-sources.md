@@ -19,7 +19,9 @@ and prove local preview from the reference Windows 10 machine without introducin
 
 The user chooses a source directly from one source selector. The UI must not require a separate source-type selection first.
 
-Opening the Settings overlay must never reduce the viewer/render-surface dimensions. Settings and top status chrome remain overlays above the full-client preview surface.
+Opening the Settings overlay must never reduce the viewer/render-surface dimensions. Settings remains an overlay above the preview surface.
+
+The top status chrome is different: in normal windowed mode it owns a fixed strip above the viewer so it never obscures the top of the incoming image. The preview surface starts immediately below that strip. In F11 fullscreen, the status strip and its Settings button are hidden and the preview surface expands to the full client area.
 
 ## Architecture
 
@@ -96,9 +98,20 @@ but expose one selectable list.
 
 FPS-005 preview is local only.
 
-The selected source frame replaces the placeholder render content while maintaining aspect ratio inside the full viewer window.
+### Sender cursor visibility
 
-Settings stays overlayed and does not resize the preview.
+The Share/Source UI exposes a persisted `Show Cursor` checkbox. It defaults to enabled.
+
+- Monitor / DDA: cursor position and shape are captured as frame metadata and composited into the preview when enabled.
+- Window / WGC: the same preference drives `IGraphicsCaptureSession2::IsCursorCaptureEnabled` when supported by the runtime.
+- Video-device / Capture Card sources are unaffected because they do not contain the local desktop cursor.
+- Changing the option while preview is active takes effect immediately; it does not restart or change the selected source.
+
+The cursor representation belongs to captured-frame policy rather than to the preview UI alone so FPS-006 can preserve the same sender choice before encoding.
+
+The selected source frame replaces the placeholder render content while maintaining aspect ratio inside the active viewer viewport.
+
+In windowed mode the viewport excludes the top status strip. In F11 fullscreen the viewport uses the complete client area. Settings stays overlayed and does not resize the preview.
 
 ## Source lifecycle
 
@@ -164,6 +177,9 @@ Physical/local:
 - capture-card preview through Media Foundation
 - source removal/loss behavior where practical
 - Settings overlay does not alter preview surface size
+- windowed status chrome does not cover the preview
+- F11 hides status chrome and uses the full client area
+- `Show Cursor` defaults ON, can be toggled live, persists, and controls DDA/WGC cursor policy
 
 Build gates:
 
