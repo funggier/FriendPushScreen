@@ -305,6 +305,7 @@ void Application::UpdateCaptureUi() {
         capture_sources_,
         selected_source_id_,
         preview_active,
+        ui_state_.preferences.show_cursor,
         capture_status_);
 }
 

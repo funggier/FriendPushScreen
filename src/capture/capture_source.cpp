@@ -32,6 +32,14 @@ std::string CaptureSourceKindName(
     return "Source";
 }
 
+bool CaptureSourceSupportsCursor(
+    CaptureSourceKind kind) {
+    return kind ==
+               CaptureSourceKind::Monitor ||
+        kind ==
+               CaptureSourceKind::Window;
+}
+
 std::string MakeMonitorSourceId(
     const std::string& device_name) {
     return "monitor:" + device_name;

@@ -8,6 +8,7 @@
 
 using fps::capture::BuildCaptureSourceCatalogFromProbes;
 using fps::capture::CaptureSourceKind;
+using fps::capture::CaptureSourceSupportsCursor;
 using fps::capture::MakeMonitorSourceId;
 using fps::capture::MakeVideoDeviceSourceId;
 using fps::capture::MakeWindowSourceId;
@@ -92,6 +93,16 @@ void RunCaptureSourceCatalogTests() {
             window.native_handle)
             .find("0x1234ABCD") !=
         std::string::npos);
+
+    FPS_EXPECT_TRUE(
+        CaptureSourceSupportsCursor(
+            CaptureSourceKind::Monitor));
+    FPS_EXPECT_TRUE(
+        CaptureSourceSupportsCursor(
+            CaptureSourceKind::Window));
+    FPS_EXPECT_TRUE(
+        !CaptureSourceSupportsCursor(
+            CaptureSourceKind::VideoDevice));
 
     const auto second_catalog =
         BuildCaptureSourceCatalogFromProbes(

@@ -50,6 +50,7 @@ public:
         const std::vector<capture::CaptureSourceDescriptor>& sources,
         std::string_view selected_source_id,
         bool preview_active,
+        bool show_cursor,
         std::string_view status_text);
 
 private:

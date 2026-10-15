@@ -32,6 +32,9 @@ struct CaptureSourceDescriptor {
 std::string CaptureSourceKindName(
     CaptureSourceKind kind);
 
+bool CaptureSourceSupportsCursor(
+    CaptureSourceKind kind);
+
 std::string MakeMonitorSourceId(
     const std::string& device_name);
 

@@ -1744,7 +1744,6 @@ void SettingsPanel::ApplyDefaultFont() {
         source_label_,
         show_cursor_checkbox_,
         source_button_,
-        source_list_,
         source_preview_button_,
         source_refresh_button_,
         source_status_,
@@ -1870,17 +1869,13 @@ void SettingsPanel::LayoutControls() {
         field_width,
         18);
 
-    const int show_cursor_width = 120;
     move(
         show_cursor_checkbox_,
-        kPadding +
-            std::max(
-                0,
-                field_width -
-                    show_cursor_width),
-        74,
-        show_cursor_width,
-        22);
+        kPadding,
+        132,
+        field_width,
+        26);
+
 
     move(
         source_button_,
@@ -1902,7 +1897,7 @@ void SettingsPanel::LayoutControls() {
     move(
         source_status_,
         kPadding,
-        132,
+        162,
         source_status_width,
         32);
     move(
@@ -1910,7 +1905,7 @@ void SettingsPanel::LayoutControls() {
         kPadding +
             source_status_width +
             kGap,
-        132,
+        162,
         source_preview_width,
         kButtonHeight);
     move(
@@ -1918,14 +1913,14 @@ void SettingsPanel::LayoutControls() {
         kPadding +
             field_width -
             source_refresh_width,
-        132,
+        162,
         source_refresh_width,
         kButtonHeight);
 
     move(
         share_port_label_,
         kPadding,
-        174,
+        204,
         120,
         18);
 
@@ -1933,7 +1928,7 @@ void SettingsPanel::LayoutControls() {
     move(
         share_port_edit_,
         kPadding,
-        194,
+        224,
         share_port_width,
         kFieldHeight);
     move(
@@ -1941,7 +1936,7 @@ void SettingsPanel::LayoutControls() {
         kPadding +
             share_port_width +
             kGap,
-        194,
+        224,
         std::max(
             120,
             field_width -
@@ -1951,26 +1946,26 @@ void SettingsPanel::LayoutControls() {
     move(
         share_status_,
         kPadding,
-        232,
+        262,
         field_width,
         40);
 
     move(
         connection_heading_,
         kPadding,
-        286,
+        316,
         field_width,
         20);
     move(
         connection_mode_label_,
         kPadding,
-        312,
+        342,
         field_width,
         18);
     move(
         connection_mode_button_,
         kPadding,
-        332,
+        362,
         field_width,
         kFieldHeight);
 
@@ -1989,7 +1984,7 @@ void SettingsPanel::LayoutControls() {
     move(
         host_label_,
         kPadding,
-        372,
+        402,
         host_width,
         18);
     move(
@@ -1997,13 +1992,13 @@ void SettingsPanel::LayoutControls() {
         kPadding +
             host_width +
             kGap,
-        372,
+        402,
         port_width,
         18);
     move(
         host_edit_,
         kPadding,
-        392,
+        422,
         host_width,
         kFieldHeight);
     move(
@@ -2011,44 +2006,44 @@ void SettingsPanel::LayoutControls() {
         kPadding +
             host_width +
             kGap,
-        392,
+        422,
         port_width,
         kFieldHeight);
     move(
         connect_button_,
         kPadding,
-        430,
+        460,
         field_width,
         kButtonHeight);
     move(
         connection_status_,
         kPadding,
-        470,
+        500,
         field_width,
         48);
 
     move(
         audio_heading_,
         kPadding,
-        530,
+        560,
         field_width,
         20);
     move(
         audio_source_label_,
         kPadding,
-        556,
+        586,
         field_width,
         18);
     move(
         audio_source_button_,
         kPadding,
-        576,
+        606,
         field_width,
         kFieldHeight);
     move(
         audio_status_,
         kPadding,
-        616,
+        646,
         field_width,
         56);
 
@@ -2056,7 +2051,7 @@ void SettingsPanel::LayoutControls() {
     move(
         mute_button_,
         kPadding,
-        682,
+        712,
         mute_width,
         kButtonHeight);
     move(
@@ -2064,7 +2059,7 @@ void SettingsPanel::LayoutControls() {
         kPadding +
             mute_width +
             kGap,
-        682,
+        712,
         std::max(
             100,
             field_width -
@@ -2074,45 +2069,45 @@ void SettingsPanel::LayoutControls() {
     move(
         volume_label_,
         kPadding,
-        722,
+        752,
         field_width,
         20);
 
     move(
         viewer_heading_,
         kPadding,
-        762,
+        792,
         field_width,
         20);
     move(
         topmost_checkbox_,
         kPadding,
-        788,
+        818,
         field_width,
         26);
     move(
         borderless_checkbox_,
         kPadding,
-        818,
+        848,
         field_width,
         26);
     move(
         fullscreen_button_,
         kPadding,
-        852,
+        882,
         field_width,
         kButtonHeight);
 
     move(
         advanced_heading_,
         kPadding,
-        906,
+        936,
         field_width,
         20);
     move(
         diagnostics_toggle_,
         kPadding,
-        932,
+        962,
         field_width,
         kButtonHeight);
 
@@ -2120,7 +2115,7 @@ void SettingsPanel::LayoutControls() {
         move(
             diagnostics_edit_,
             kPadding,
-            974,
+            1004,
             field_width,
             280);
 
@@ -2132,7 +2127,7 @@ void SettingsPanel::LayoutControls() {
         move(
             refresh_button_,
             kPadding,
-            1264,
+            1294,
             button_width,
             kButtonHeight);
         move(
@@ -2140,13 +2135,13 @@ void SettingsPanel::LayoutControls() {
             kPadding +
                 button_width +
                 kGap,
-            1264,
+            1294,
             button_width,
             kButtonHeight);
 
-        content_height_ = 1312;
+        content_height_ = 1342;
     } else {
-        content_height_ = 982;
+        content_height_ = 1012;
     }
 
     SetWindowPos(
@@ -2894,6 +2889,7 @@ void SettingsPanel::SetCaptureSources(
     const std::vector<capture::CaptureSourceDescriptor>& sources,
     std::string_view selected_source_id,
     bool preview_active,
+    bool show_cursor,
     std::string_view status_text) {
     if (source_list_ == nullptr ||
         source_button_ == nullptr ||
@@ -2916,6 +2912,7 @@ void SettingsPanel::SetCaptureSources(
 
     int selected_index = -1;
     bool selected_available = false;
+    bool selected_cursor_supported = true;
     std::wstring selected_label;
 
     for (std::size_t index = 0;
@@ -2952,6 +2949,9 @@ void SettingsPanel::SetCaptureSources(
             selected_available =
                 source.availability ==
                 capture::CaptureAvailability::Available;
+            selected_cursor_supported =
+                capture::CaptureSourceSupportsCursor(
+                    source.kind);
         }
     }
 
@@ -2987,6 +2987,30 @@ void SettingsPanel::SetCaptureSources(
                 selected_available
             ? TRUE
             : FALSE);
+
+    const bool cursor_applicable =
+        selected_index < 0 ||
+        selected_cursor_supported;
+
+    EnableWindow(
+        show_cursor_checkbox_,
+        cursor_applicable
+            ? TRUE
+            : FALSE);
+
+    SetWindowTextW(
+        show_cursor_checkbox_,
+        cursor_applicable
+            ? L"Show Cursor"
+            : L"Show Cursor (N/A)");
+
+    SendMessageW(
+        show_cursor_checkbox_,
+        BM_SETCHECK,
+        show_cursor
+            ? BST_CHECKED
+            : BST_UNCHECKED,
+        0);
 
     const std::wstring status =
         status_text.empty()

@@ -104,7 +104,7 @@ The Share/Source UI exposes a persisted `Show Cursor` checkbox. It defaults to e
 
 - Monitor / DDA: cursor position and shape are captured as frame metadata and composited into the preview when enabled.
 - Window / WGC: the same preference drives `IGraphicsCaptureSession2::IsCursorCaptureEnabled` when supported by the runtime.
-- Video-device / Capture Card sources are unaffected because they do not contain the local desktop cursor.
+- Video-device / Capture Card sources do not contain the local desktop cursor; the UI disables the checkbox and labels it as not applicable while a VideoDevice source is selected.
 - Changing the option while preview is active takes effect immediately; it does not restart or change the selected source.
 
 The cursor representation belongs to captured-frame policy rather than to the preview UI alone so FPS-006 can preserve the same sender choice before encoding.

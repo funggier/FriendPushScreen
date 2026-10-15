@@ -27,7 +27,7 @@ Deliver one native capture-source model for Monitor, Window, and generic Windows
 - runtime video-device mode enumeration
 - source-loss/device-removal behavior without automatic source substitution
 - source refresh/reappearance handling
-- persisted `Show Cursor` sender option, default ON, with live DDA/WGC cursor policy
+- persisted `Show Cursor` sender option, default ON, with live DDA/WGC cursor policy; disabled as not-applicable for VideoDevice sources
 - Settings remains an overlay; opening Settings must not resize the preview surface
 - windowed status chrome reserves its own top strip so incoming content is never obscured
 - F11 hides status chrome/Settings button and expands preview to the full client area
