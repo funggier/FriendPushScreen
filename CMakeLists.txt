@@ -45,6 +45,8 @@ add_executable(FriendPushScreen WIN32
     src/media/encoded_access_unit_queue.cpp
     src/media/mft_video_codec_catalog.cpp
     src/media/video_loop_metrics.cpp
+    src/media/mf_d3d11_device_manager.cpp
+    src/media/mft_video_media_type.cpp
 )
 target_include_directories(FriendPushScreen PRIVATE
     src
@@ -86,6 +88,7 @@ add_executable(FriendPushScreenTests
     tests/runtime_paths_tests.cpp
     tests/video_pipeline_model_tests.cpp
     tests/video_loop_metrics_tests.cpp
+    tests/mft_video_media_type_tests.cpp
     src/capture/capture_source.cpp
     src/capture/capture_source_catalog.cpp
     src/capture/desktop_duplication_capture.cpp
@@ -108,6 +111,8 @@ add_executable(FriendPushScreenTests
     src/media/encoded_access_unit_queue.cpp
     src/media/mft_video_codec_catalog.cpp
     src/media/video_loop_metrics.cpp
+    src/media/mf_d3d11_device_manager.cpp
+    src/media/mft_video_media_type.cpp
     src/graphics/d3d11_device.cpp
     src/graphics/preview_renderer.cpp
     src/ui/main_window.cpp
