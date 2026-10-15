@@ -1,67 +1,80 @@
 # Current Development Task
 
-## FPS-005 — Unified Capture Sources
+## FPS-006 — Encode / Decode / Local Loopback
 
-**Status:** GREEN / CLOSED
+**Status:** ACTIVE
 
-**Branch:** `fps-005-unified-capture-sources`
+**Branch:** `fps-006-encode-decode-local-loopback`
 
-**Started:** 2026-10-15
+**Started:** 2026-10-16
 
-**GitHub Issue:** #11 — FPS-005 — Unified Capture Sources
+**GitHub Issue:** #14 — FPS-006 — Encode / Decode / Local Loopback
+
+### Base
+
+`c9c0af087fe039ae1a8c8f695411560b147f3ef4` — FPS-005 GREEN merge.
 
 ### Goal
 
-Deliver one native capture-source model for Monitor, Window, and generic Windows video capture devices, then prove local preview on the reference Windows 10 machine.
+Insert the vendor-neutral V1 video codec layer between the qualified FPS-005 capture pipeline and the existing D3D11 viewer, then prove a sustained local capture → encode → bounded queue → decode → render loop.
 
 ### Required outcomes
 
-- one source catalog covering Screens / Windows / Devices
-- direct source selection without a source-type-first workflow
-- stable source IDs and availability state
-- unified capture-session abstraction
-- unified captured-frame metadata
-- Monitor preview through native D3D11 Desktop Duplication baseline
-- Window preview through Windows Graphics Capture when local SDK/runtime support is available
-- generic Capture Card preview through Media Foundation
-- runtime video-device mode enumeration
-- source-loss/device-removal behavior without automatic source substitution
-- source refresh/reappearance handling
-- persisted `Show Cursor` sender option, default ON, with live DDA/WGC cursor policy; disabled as not-applicable for VideoDevice sources
-- Settings remains an overlay; opening Settings must not resize the preview surface
-- windowed status chrome reserves its own top strip so incoming content is never obscured
-- F11 hides status chrome/Settings button and expands preview to the full client area
-- evidence for DG-002 and DG-003
+- vendor-neutral encoder / decoder abstraction
+- Media Foundation MFT runtime selection from capability, not CPU/GPU vendor assumptions
+- H.264 required compatibility baseline
+- real hardware H.264 encode/decode path
+- explicitly forced software H.264 fallback path
+- D3D11 BGRA → NV12 conversion for encoder input
+- decoded NV12 → BGRA handoff to the existing PreviewRenderer
+- FriendPushScreen-owned monotonic codec sequence/timestamps
+- bounded encoded-access-unit queue
+- stale/dependency recovery policy using keyframe/IDR recovery rather than unbounded growth
+- codec-loop state and errors independent from future network state
+- internal encode/decode/end-to-end latency + queue/drop metrics
+- sustained 1920x1080 @ 60 fps hardware local-loop evidence
+- HEVC / AV1 capability evidence where available
+- preserve FPS-005 full-frame aspect-fit viewer
+- preserve windowed status-strip geometry and Settings overlay behavior
+- resolve DG-004 from runtime/physical evidence
 
 ### Safety / scope boundary
 
-FPS-005 must not implement video encoding/decoding, network media transport, control protocol, audio capture/playback, secure handshake, or feedback-mask qualification.
+FPS-006 must not implement:
 
-No device-specific Onten code path is allowed.
+- network media transport
+- secure peer/session handshake
+- control protocol
+- audio capture/codec/playback
+- feedback protection
+- network-driven bitrate adaptation
+- two-peer codec negotiation
+
+Those remain FPS-006A / FPS-007 / FPS-008 / FPS-009+.
 
 ### Plan
 
-`docs/superpowers/plans/2026-10-15-fps-005-unified-capture-sources.md`
+`docs/superpowers/plans/2026-10-16-fps-006-encode-decode-local-loopback.md`
 
 ### Qualification
 
-FPS-005 becomes GREEN only after:
+FPS-006 becomes GREEN only after:
 
-- source-catalog/state unit tests
-- monitor/window/device enumeration evidence
-- real local Monitor preview
-- Window preview when WGC backend is available in the local toolchain/runtime
-- real Media Foundation capture-device preview
-- source-loss/hot-plug evidence where practical
-- physical cursor-visible preview plus live `Show Cursor` ON/OFF/persistence evidence
-- Settings overlay leaves preview surface dimensions unchanged
-- windowed viewer begins below status chrome and F11 viewer fills the full client area
+- codec-selection and state unit tests
+- frame-clock monotonicity tests
+- bounded queue / overflow recovery tests
+- real H.264 hardware encode/decode activation
+- real local capture → encode → decode → render
+- forced software H.264 fallback evidence
+- sustained 1080p60 hardware loop with bounded queue
+- latency / FPS / drop / queue-depth metrics
+- CPU/GPU/process-resource observations
+- FPS-005 viewer layout/aspect-fit regression checks
 - Debug + Release local build/test
 - exact-commit Windows CI
-- qualification evidence report
+- dated qualification evidence report
+- DG-004 decision update
 
-### Next after FPS-005
+### Next after FPS-006
 
-`FPS-006 — Encode / Decode / Local Loopback`
-
-No development task is ACTIVE after FPS-005 closure.
+`FPS-006A — Audio Capture / Encode / Local Loopback`
