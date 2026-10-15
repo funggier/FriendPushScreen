@@ -3,6 +3,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+#include "ui/settings_panel.h"
+#include "ui/ui_command.h"
+#include "ui/ui_state.h"
+
 #include <filesystem>
 #include <functional>
 #include <optional>
@@ -11,29 +15,60 @@
 
 namespace fps::ui {
 
-std::wstring NormalizeWin32MultilineText(std::wstring_view text);
+std::wstring NormalizeWin32MultilineText(
+    std::wstring_view text);
 
 class MainWindow {
 public:
-    using ResizeCallback = std::function<void(UINT, UINT)>;
-    using FrameCallback = std::function<void()>;
-    using CommandCallback = std::function<void()>;
+    using ResizeCallback =
+        std::function<void(UINT, UINT)>;
+    using FrameCallback =
+        std::function<void()>;
+    using UiCommandCallback =
+        std::function<void(const UiCommand&)>;
+    using CommandCallback =
+        std::function<void()>;
 
-    bool Create(HINSTANCE instance, int show_command);
+    bool Create(
+        HINSTANCE instance,
+        int show_command);
 
-    HWND Handle() const noexcept { return hwnd_; }
-    HWND RenderHandle() const noexcept { return render_hwnd_; }
+    HWND Handle() const noexcept {
+        return hwnd_;
+    }
 
-    void SetResizeCallback(ResizeCallback callback);
-    void SetFrameCallback(FrameCallback callback);
-    void SetRefreshCallback(CommandCallback callback);
-    void SetSaveCallback(CommandCallback callback);
-    void SetDiagnosticsReadyCallback(CommandCallback callback);
+    HWND RenderHandle() const noexcept {
+        return render_hwnd_;
+    }
 
-    void SetStatusText(std::wstring_view text);
-    bool SetDiagnosticsText(std::wstring_view text);
+    void SetResizeCallback(
+        ResizeCallback callback);
+
+    void SetFrameCallback(
+        FrameCallback callback);
+
+    void SetUiCommandCallback(
+        UiCommandCallback callback);
+
+    void SetDiagnosticsReadyCallback(
+        CommandCallback callback);
+
+    void SetStatusText(
+        std::wstring_view text);
+
+    bool SetDiagnosticsText(
+        std::wstring_view text);
+
     void SetCollecting(bool collecting);
-    std::optional<std::filesystem::path> PromptDiagnosticsSavePath();
+
+    std::optional<std::filesystem::path>
+    PromptDiagnosticsSavePath();
+
+    void ApplyUiState(
+        const UiState& state);
+
+    bool HandleShortcut(
+        const MSG& message);
 
 private:
     static LRESULT CALLBACK WindowProc(
@@ -50,17 +85,44 @@ private:
 
     void LayoutChildren();
 
+    void Emit(UiCommand command);
+
+    void ApplyWindowState(
+        const UiState& state);
+
+    void ApplyBorderless(bool borderless);
+
+    void EnterFullscreen(
+        const UiState& state);
+
+    void ExitFullscreen(
+        const UiState& state);
+
+    void ApplyAlwaysOnTop(bool enabled);
+
+    std::wstring BuildStatusSummary(
+        const UiState& state) const;
+
     HWND hwnd_{nullptr};
     HWND render_hwnd_{nullptr};
-    HWND diagnostics_hwnd_{nullptr};
-    HWND refresh_button_{nullptr};
-    HWND save_button_{nullptr};
+    HWND status_bar_{nullptr};
+
+    SettingsPanel settings_panel_;
 
     ResizeCallback resize_callback_;
     FrameCallback frame_callback_;
-    CommandCallback refresh_callback_;
-    CommandCallback save_callback_;
+    UiCommandCallback ui_command_callback_;
     CommandCallback diagnostics_ready_callback_;
+
+    bool settings_visible_{true};
+
+    bool applied_fullscreen_{false};
+    bool applied_borderless_{false};
+    bool applied_topmost_{false};
+
+    WINDOWPLACEMENT windowed_placement_{
+        sizeof(WINDOWPLACEMENT)};
+    bool have_windowed_placement_{false};
 };
 
 }  // namespace fps::ui

@@ -64,6 +64,31 @@ void ToggleSettingsVisible(UiState& state) {
         !state.preferences.settings_visible;
 }
 
+void ToggleAlwaysOnTop(UiState& state) {
+    state.preferences.always_on_top =
+        !state.preferences.always_on_top;
+}
+
+void ToggleBorderless(UiState& state) {
+    state.preferences.borderless =
+        !state.preferences.borderless;
+}
+
+void ToggleFullscreen(UiState& state) {
+    state.fullscreen = !state.fullscreen;
+}
+
+void SetFullscreen(
+    UiState& state,
+    bool fullscreen) {
+    state.fullscreen = fullscreen;
+}
+
+void ToggleDiagnosticsVisible(UiState& state) {
+    state.diagnostics_visible =
+        !state.diagnostics_visible;
+}
+
 void ToggleShareRequest(UiState& state) {
     switch (state.share_state) {
     case ShareUiState::NotSharing:

@@ -34,6 +34,26 @@ void RunUiStateTests() {
     ToggleSettingsVisible(state);
     FPS_EXPECT_TRUE(state.preferences.settings_visible);
 
+    ToggleAlwaysOnTop(state);
+    FPS_EXPECT_TRUE(state.preferences.always_on_top);
+    ToggleAlwaysOnTop(state);
+    FPS_EXPECT_TRUE(!state.preferences.always_on_top);
+
+    ToggleBorderless(state);
+    FPS_EXPECT_TRUE(state.preferences.borderless);
+    ToggleBorderless(state);
+    FPS_EXPECT_TRUE(!state.preferences.borderless);
+
+    ToggleFullscreen(state);
+    FPS_EXPECT_TRUE(state.fullscreen);
+    SetFullscreen(state, false);
+    FPS_EXPECT_TRUE(!state.fullscreen);
+
+    ToggleDiagnosticsVisible(state);
+    FPS_EXPECT_TRUE(state.diagnostics_visible);
+    ToggleDiagnosticsVisible(state);
+    FPS_EXPECT_TRUE(!state.diagnostics_visible);
+
     ToggleShareRequest(state);
     FPS_EXPECT_EQ(
         state.share_state,

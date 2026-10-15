@@ -71,6 +71,11 @@ UiPreferences PersistentPreferencesFromState(
     const UiState& state);
 
 void ToggleSettingsVisible(UiState& state);
+void ToggleAlwaysOnTop(UiState& state);
+void ToggleBorderless(UiState& state);
+void ToggleFullscreen(UiState& state);
+void SetFullscreen(UiState& state, bool fullscreen);
+void ToggleDiagnosticsVisible(UiState& state);
 void ToggleShareRequest(UiState& state);
 void ToggleConnectionRequest(UiState& state);
 void ToggleReceiverMute(UiState& state);
