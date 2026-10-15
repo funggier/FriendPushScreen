@@ -1,50 +1,79 @@
 # Current Development Task
 
-## FPS-003 — Windows App Skeleton & Hardware Diagnostics
+## V1 Architecture Amendment — Audio + Connectivity
 
 **Status:** GREEN / CLOSED
 
-**Branch:** `fps-003-native-windows-app-design`
+**Branch:** `fps-v1-audio-connectivity-amendment`
 
-**Started:** 2026-10-14
+**Started:** 2026-10-15
 
 **Closed:** 2026-10-15
 
-**GitHub Issue:** #5 — FPS-003 — Windows App Skeleton & Hardware Diagnostics
+**GitHub Issue:** #7 — V1 Architecture Amendment — Audio + Connectivity
 
 ### Outcome
 
-FriendPushScreen now has its first native Windows executable and diagnostics foundation:
+FriendPushScreen V1 is no longer video-only.
 
-- C++20 / Win32
-- D3D11 / DXGI placeholder renderer
-- native OS/CPU/memory/GPU/monitor/window diagnostics
-- Media Foundation capture-device and codec-capability enumeration
-- native network/Tailscale presence diagnostics
-- asynchronous single-flight diagnostics refresh
-- privacy-safe UTF-8 Save Diagnostics
-- CTest coverage
-- Windows x64 Debug/Release CI
-- MIT License
+Approved V1 architecture now includes:
 
-### Evidence
+- optional shared machine audio
+- sender `Audio Source` dropdown
+- `No Audio`
+- Desktop / System Audio through WASAPI loopback
+- explicit render/output-device loopback
+- Windows capture/input audio endpoints, including capture-card audio when exposed by Windows
+- capability-dependent Application Audio
+- receiver-local mute/unmute
+- receiver-local volume
+- LAN connection mode
+- Direct IP / DDNS connection mode
+- Tailscale connection mode
+- Auto connection mode
+- one route-independent FriendPushScreen control/video/audio session architecture
+- secure Direct Internet requirement
+- one-public-UDP-port operational target when the selected transport permits it
+- dual-instance localhost/LAN-stack development on one physical Windows machine
 
-`docs/development/reports/FPS-20261014-003-windows-app-skeleton-hardware-diagnostics.md`
+### Authoritative amendment
 
-Implementation-qualified commit:
+`docs/superpowers/specs/2026-10-15-v1-audio-connectivity-amendment.md`
 
-`741b206ed29fe8ac9b3b637015519d5b4f4b9096`
+Where the older V1 master specification conflicts with this amendment, the amendment is authoritative.
 
-GitHub Actions implementation run:
+### Reference-machine compatibility ruling
 
-`38631397900 — Windows Build — success`
+Current reference machine:
 
-### Scope preserved
+```text
+Windows 10 build 19045
+```
 
-FPS-003 does not implement real capture frames, video encode/decode execution, network video transport, audio streaming, or remote control.
+Microsoft's documented native process-loopback API requires build 20348+.
+
+Therefore on the current reference machine:
+
+- Desktop/System Audio remains a V1 supported target
+- render endpoint loopback remains a V1 supported target
+- capture/input device audio remains a V1 supported target
+- native Application Audio through the official process-loopback API must report Unsupported
+
+FriendPushScreen must not fake Application Audio support or use undocumented process injection solely to bypass this runtime limit.
+
+### Roadmap effect
+
+- FPS-004 now owns the connection/audio UI state shell
+- FPS-006 remains video local loopback
+- FPS-006A is inserted for Audio Capture / Encode / Local Loopback
+- FPS-008 expands control protocol to audio/connectivity state
+- FPS-009 becomes secure media transport for control/video/audio
+- FPS-010 qualifies LAN / Direct IP-DDNS / Tailscale
+- FPS-011 through FPS-016 include audio/connectivity acceptance where applicable
+- existing FPS-001 through FPS-003 GREEN qualification remains unchanged
 
 ### Next planned task
 
 `FPS-004 — Viewer UI & Settings Shell`
 
-No development task is ACTIVE after FPS-003 closure.
+No development task is ACTIVE after this architecture amendment closes.

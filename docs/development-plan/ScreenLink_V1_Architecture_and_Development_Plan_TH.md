@@ -4,8 +4,9 @@
 > **วันที่จัดทำ:** 2026-08-26  
 > **ชื่อโครงการ:** `ScreenLink` เป็นชื่อชั่วคราวสำหรับใช้ในเอกสารนี้ สามารถเปลี่ยนชื่อภายหลังได้  
 > **เป้าหมายหลัก:** โปรแกรมแชร์ภาพหน้าจอแบบ Real-time สำหรับ Windows จำนวน 2 คน เน้นภาพคม ลื่น latency ต่ำ ใช้งานง่าย และสามารถแชร์พร้อมกันสองฝั่งได้  
-> **ขอบเขต V1:** **Video Only** — ไม่มีระบบเสียงในตัว  
+> **ขอบเขต V1:** **Video + Optional Shared Audio** — ส่งภาพพร้อมเสียงจาก System/Device/Application ตาม capability ของ Windows
 > **ระบบสนทนา:** ใช้ Discord หรือระบบภายนอกต่อไป ไม่สร้าง Voice Chat ใหม่ใน V1
+> **V1 Amendment 2026-10-15:** `docs/superpowers/specs/2026-10-15-v1-audio-connectivity-amendment.md` เป็น authoritative amendment สำหรับ Audio + LAN/Direct IP-DDNS/Tailscale; หากข้อความเดิมขัดกับ amendment ให้ยึด amendment
 
 ---
 
@@ -20,7 +21,8 @@ Discord
 └─ Voice / Chat
 
 ScreenLink
-└─ High-quality low-latency video sharing
+├─ High-quality low-latency video sharing
+└─ Optional shared machine audio
 ```
 
 ผู้ใช้แต่ละฝั่งสามารถเป็นทั้ง:
@@ -98,6 +100,17 @@ ScreenLink V1 จะถูกออกแบบให้ **สองเครื
 - Window capture
 - Capture Card capture
 - Generic Windows video capture device support
+- Optional shared audio
+- Audio Source dropdown ฝั่ง Sender
+- Desktop / System Audio ผ่าน WASAPI loopback
+- Audio จาก Windows capture/input endpoints เช่น capture-card audio
+- Application audio เมื่อ Windows runtime รองรับ process-loopback API
+- Remote Audio Mute / Unmute ฝั่ง Receiver
+- Remote Audio Volume ฝั่ง Receiver
+- Connection Mode: Auto / LAN / Direct IP-DDNS / Tailscale
+- Host / Port configuration
+- Secure Direct Internet session ก่อนรับ control/media data
+- Single-machine dual-instance development/qualification
 - Onten OTN-332 เป็น reference capture card สำหรับทดสอบ
 - Hardware encoding
 - Hardware decoding
@@ -135,12 +148,10 @@ ScreenLink V1 จะถูกออกแบบให้ **สองเครื
 
 เพื่อป้องกัน scope creep สิ่งต่อไปนี้ **ห้ามดึงเข้ามาใน V1** เว้นแต่พบว่าเป็น prerequisite จริง:
 
-- Audio streaming
-- Microphone
 - Voice chat
 - Echo cancellation
-- Audio from capture card
-- System audio
+- Conference-call / voice-processing system
+- Dedicated microphone-chat UX (microphone-class endpoint อาจถูกเลือกเป็น generic capture audio source ได้)
 - Remote keyboard control
 - Remote mouse control
 - Gamepad forwarding
@@ -1148,6 +1159,8 @@ Direct · 12 ms
 ---
 
 # 30. Networking Strategy for V1
+
+> **Amended 2026-10-15:** V1 รองรับ `Auto / LAN / Direct IP-DDNS / Tailscale` ผ่าน secure FriendPushScreen session architecture เดียวกัน โดย Direct Internet เป็น first-class V1 path และ target การใช้งานคือ configurable single UDP port เมื่อ transport ที่เลือกอนุญาต รายละเอียด authoritative อยู่ที่ `docs/superpowers/specs/2026-10-15-v1-audio-connectivity-amendment.md`
 
 ## 30.1 Recommended Initial Transport Environment
 
@@ -2714,6 +2727,20 @@ V1 ไม่ถือว่าสมบูรณ์เพียงเพรา�
 - [ ] B → A
 - [ ] A ↔ B
 
+### Audio
+
+- [ ] No Audio ไม่ส่ง audio packets
+- [ ] Desktop / System Audio
+- [ ] explicit output-device loopback
+- [ ] capture/input endpoint audio เมื่อมีอุปกรณ์
+- [ ] capture-card audio เมื่อ Windows expose เป็น audio endpoint
+- [ ] Application Audio บน Windows runtime ที่รองรับ หรือแสดง Unsupported อย่างถูกต้องบน runtime ที่ไม่รองรับ
+- [ ] sender เปลี่ยน Audio Source โดยไม่หยุด video share
+- [ ] receiver mute/unmute
+- [ ] receiver local volume
+- [ ] audio source lost/restart ไม่ทำให้ application crash
+- [ ] A/V drift อยู่ในขอบเขตที่ qualification กำหนด
+
 ### UX
 
 - [ ] Tab
@@ -2730,6 +2757,8 @@ V1 ไม่ถือว่าสมบูรณ์เพียงเพรา�
 - [ ] peer reconnect
 - [ ] source lost
 - [ ] capture card reconnect
+- [ ] audio source reconnect
+- [ ] audio endpoint removed/default-device changed
 
 ### Safety
 
@@ -2758,7 +2787,7 @@ V1 Complete เมื่อ:
 13. reconnect จาก network interruption ได้
 14. device/source failure ไม่ทำให้ application crash
 15. Share ไม่เปิดเองหลัง restart
-16. ไม่มี audio subsystem ใน binary path ที่ถือเป็น V1 feature
+16. Audio subsystem ผ่าน qualification: System/Device source, capability-aware Application source, receiver mute/volume, source switching และ recovery
 17. installer/uninstaller ทำงาน
 18. diagnostics เพียงพอสำหรับแก้ปัญหา
 19. documentation สำหรับ install/connect/share ครบ
@@ -3037,8 +3066,8 @@ No Signal
 
 หลัง V1 เท่านั้น:
 
-- source/system audio
-- capture card HDMI audio
+- multi-source audio mixing
+- advanced audio DSP / AEC / voice processing
 - remote control
 - clipboard
 - invite code
@@ -3147,7 +3176,7 @@ Low-latency Viewer
 
 # 102. Final V1 Statement
 
-**ScreenLink V1 คือโปรแกรมแชร์ภาพแบบ real-time สำหรับ Windows 10/11 จำนวนสองคน ที่ทั้งสองฝ่ายสามารถแชร์และดูพร้อมกันได้ โดยรองรับ Monitor, Window และ Capture Card, ทำ hardware video acceleration แบบ vendor-neutral, เชื่อม P2P เป็นหลัก, ป้องกัน feedback loop อัตโนมัติ และมี Viewer UI ที่เรียบที่สุดเท่าที่ทำได้**
+**ScreenLink V1 คือโปรแกรมแชร์ภาพและ optional shared audio แบบ real-time สำหรับ Windows 10/11 จำนวนสองคน ที่ทั้งสองฝ่ายสามารถแชร์และดูพร้อมกันได้ โดยรองรับ Monitor, Window และ Capture Card, ทำ hardware video acceleration แบบ vendor-neutral, รองรับ LAN / Direct IP-DDNS / Tailscale ผ่าน secure session architecture เดียวกัน, ป้องกัน feedback loop อัตโนมัติ และมี Viewer UI ที่เรียบที่สุดเท่าที่ทำได้**
 
 V1 จะถือว่าสำเร็จเมื่อมันสามารถแทนการใช้ Discord Screen Share สำหรับกรณี “เพื่อนสองคนต้องการดูจอกันคุณภาพสูงแบบ real-time” ได้อย่างสม่ำเสมอ โดย Discord ยังคงทำหน้าที่ Voice/Chat แยกต่างหาก
 

@@ -2,7 +2,7 @@
 
 These choices are intentionally unresolved. The owning task must gather evidence before selecting an option.
 
-## DG-001 — Network video transport
+## DG-001 — Network media transport
 
 **Owner:** FPS-002 evidence → FPS-009 decision
 
@@ -14,14 +14,18 @@ Candidates include:
 
 Decision inputs:
 
-- end-to-end latency and queue behavior
+- end-to-end video/audio latency and bounded queue behavior
 - packet loss/recovery behavior
+- control/video/audio multiplexing
+- one-public-UDP-port feasibility for Direct IP/DDNS
+- LAN / Direct IP-DDNS / Tailscale route independence
 - Direct P2P practicality
 - security/session identity requirements
+- A/V timestamp/jitter behavior
 - maintenance burden
 - GPL/license/distribution consequences
 
-**Rule:** no permanent transport choice before reference-stack benchmark and licensing review.
+**Rule:** no permanent transport choice before benchmark, secure-Direct-Internet review, audio/video multiplexing evidence, and licensing review.
 
 **FPS-002 evidence (2026-10-14):** Tailscale is operational with UDP available and stable mapping indication, but no second physical Windows peer is available. Sunshine/Moonlight were not installed locally. FPS-002 closes on the local reference baseline; two-peer Direct/DERP and end-to-end stream measurements are explicitly deferred to FPS-009/FPS-010. DG-001 stays OPEN.
 
@@ -82,3 +86,61 @@ Selected V1 baseline:
 Any reuse/link/fork decision involving GPL or third-party components must have an explicit distribution/compliance conclusion before it becomes part of the release path.
 
 **FPS-002 evidence (2026-10-14):** current upstream metadata identifies Sunshine as GPL-3.0-only and Moonlight Qt as GPL-3.0+. The reuse/fork/link boundary remains OPEN and must be resolved before integration.
+
+## DG-007 — Audio capture / codec policy
+
+**Owner:** V1 Audio + Connectivity amendment → FPS-006A evidence → FPS-009 integration
+
+Capture direction:
+
+- WASAPI shared-mode loopback for Desktop/System Audio
+- explicit render-endpoint loopback
+- WASAPI capture endpoints for capture/input device audio
+- native process-loopback only when the Windows runtime supports it
+
+Current compatibility fact:
+
+- current reference machine = Windows 10 build 19045
+- Microsoft process-loopback API requires build 20348+
+- therefore Application Audio is capability-dependent and must report Unsupported on the current reference machine rather than fake support
+
+Preferred network-audio codec direction:
+
+- Opus
+- 48 kHz
+- 10/20 ms real-time framing
+- mono/stereo according to source
+
+Decision inputs:
+
+- local capture/playback latency
+- encoder/decoder latency and resource use
+- drift/underflow behavior
+- device/source switching
+- process-loopback compatibility
+- codec packaging and licensing
+- network loss/jitter behavior
+
+**Rule:** Opus is the preferred evaluation baseline, not a permanent dependency until FPS-006A/FPS-009 evidence and DG-006 licensing review are complete.
+
+## DG-008 — Direct Internet security / peer identity
+
+**Owner:** V1 Audio + Connectivity amendment → FPS-008 protocol → FPS-009 transport → FPS-010 connectivity
+
+Direct IP/DDNS is a first-class V1 mode.
+
+A public forwarded port must not accept unauthenticated plaintext control or media.
+
+Required properties:
+
+- mature authenticated encryption / secure transport
+- replay-resistant handshake
+- peer/session identity
+- first-trust pairing/authorization
+- stored peer identity verification on reconnect
+- no custom cryptographic primitive
+- compatible with the one-public-UDP-port operational target when practical
+
+Tailscale may supply encrypted routing, but application peer authorization must remain route-independent.
+
+**Rule:** Direct Internet cannot become GREEN until secure handshake and peer identity are proven on the exact transport selected by DG-001.

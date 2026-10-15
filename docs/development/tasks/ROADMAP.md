@@ -7,19 +7,20 @@ This roadmap converts the V1 master specification into execution-sized FPS tasks
 | FPS-001 | Engineering Baseline | Repository/workspace/task/qualification structure | GREEN |
 | FPS-002 | Reference Baseline & Technical Spike | Local reference-machine qualification: Tailscale baseline, capture-card modes, WDA behavior, simultaneous hardware encode/decode | GREEN |
 | FPS-003 | Windows App Skeleton & Hardware Diagnostics | Launchable native Win32/D3D11 app plus capability inventory | GREEN |
-| FPS-004 | Viewer UI & Settings Shell | Viewer-first UI, settings overlay, state visibility | PLANNED |
+| FPS-004 | Viewer UI & Settings Shell | Viewer/settings shell plus Connection Mode, Host/Port, sender Audio Source dropdown, receiver mute/volume state | PLANNED |
 | FPS-005 | Unified Capture Sources | Monitor, Window, and generic Capture Card preview through one source abstraction | PLANNED |
-| FPS-006 | Encode / Decode / Local Loopback | Hardware paths plus H.264 fallback and stable 1080p60 local loop | PLANNED |
+| FPS-006 | Encode / Decode / Local Loopback | Hardware video paths plus H.264 fallback and stable 1080p60 local loop | PLANNED |
+| FPS-006A | Audio Capture / Encode / Local Loopback | WASAPI System/Device sources, process-loopback capability, local audio codec loop, receiver playback/mute/volume | PLANNED |
 | FPS-007 | Feedback Protection | Capture exclusion where supported plus black-mask fallback | PLANNED |
-| FPS-008 | Control Protocol | Versioned handshake, peer/share state, capabilities, heartbeat, reconnect semantics | PLANNED |
-| FPS-009 | Transport Decision & Network Video | Evidence-backed reuse/fork/native decision and bounded low-latency transport | PLANNED |
-| FPS-010 | Internet / P2P Integration | Direct/Relay diagnostics, Tailscale-aware connectivity, reconnect | PLANNED |
-| FPS-011 | One-Way Production Flow | Daily-usable A → B sharing across all V1 source types | PLANNED |
-| FPS-012 | Two-Way Sharing | Stable simultaneous encode/decode A ↔ B with feedback protection | PLANNED |
-| FPS-013 | Quality Controller | Conservative bitrate/FPS/resolution adaptation with hysteresis | PLANNED |
-| FPS-014 | Recovery Qualification | Network, peer, source, device, sleep/wake and related fault recovery | PLANNED |
-| FPS-015 | Installer & Distribution | Windows x64 install/uninstall, runtime packaging, notices/compliance | PLANNED |
-| FPS-016 | V1 Acceptance & Release | Full compatibility, UX, safety, recovery and documentation acceptance | PLANNED |
+| FPS-008 | Control Protocol | Versioned handshake, connection/audio/video capabilities, peer/share/audio state, heartbeat, reconnect semantics | PLANNED |
+| FPS-009 | Media Transport Decision & Network Streaming | Evidence-backed secure low-latency control/video/audio transport; one-port feasibility; timing/multiplexing | PLANNED |
+| FPS-010 | Connectivity Modes | Dual-instance localhost, LAN, Direct IP/DDNS, Tailscale, secure Direct Internet, reconnect/path diagnostics | PLANNED |
+| FPS-011 | One-Way Production Flow | Daily-usable A → B video plus optional shared audio across all V1 source types | PLANNED |
+| FPS-012 | Two-Way Sharing | Stable A ↔ B video/audio streams with independent source state, receiver mute/volume, and feedback protection | PLANNED |
+| FPS-013 | Quality Controller | Conservative video adaptation with hysteresis while preserving control/audio continuity and bounded audio QoS | PLANNED |
+| FPS-014 | Recovery Qualification | Network, peer, video/audio source, endpoint/device, sleep/wake and related fault recovery | PLANNED |
+| FPS-015 | Installer & Distribution | Windows x64 install/uninstall, runtime/audio codec packaging, firewall guidance, notices/compliance | PLANNED |
+| FPS-016 | V1 Acceptance & Release | Full video/audio/connectivity compatibility, UX, safety, recovery and documentation acceptance | PLANNED |
 
 ## Roadmap rules
 
