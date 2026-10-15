@@ -10,6 +10,7 @@ void RunMainWindowLayoutTests();
 void RunPreviewRendererTests();
 void RunRuntimePathsTests();
 void RunVideoPipelineModelTests();
+void RunVideoLoopMetricsTests();
 
 int main() {
     FPS_EXPECT_TRUE(true);
@@ -24,5 +25,6 @@ int main() {
     RunPreviewRendererTests();
     RunRuntimePathsTests();
     RunVideoPipelineModelTests();
+    RunVideoLoopMetricsTests();
     return fps::test::FailureCount() == 0 ? 0 : 1;
 }
