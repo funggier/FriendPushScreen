@@ -1,79 +1,62 @@
 # Current Development Task
 
-## V1 Architecture Amendment — Audio + Connectivity
+## FPS-004 — Viewer UI & Settings Shell
 
 **Status:** GREEN / CLOSED
 
-**Branch:** `fps-v1-audio-connectivity-amendment`
+**Branch:** `fps-004-viewer-ui-settings-shell`
 
 **Started:** 2026-10-15
 
-**Closed:** 2026-10-15
+**GitHub Issue:** #9 — FPS-004 — Viewer UI & Settings Shell
 
-**GitHub Issue:** #7 — V1 Architecture Amendment — Audio + Connectivity
+### Goal
 
-### Outcome
+Deliver the first viewer-first native Win32 UI shell on top of the FPS-003 D3D11/diagnostics baseline.
 
-FriendPushScreen V1 is no longer video-only.
+### Required outcomes
 
-Approved V1 architecture now includes:
+- viewer-first D3D11 surface
+- Tab settings overlay plus an always-visible `Hide Settings (Tab) / Settings (Tab)` button on the full-width top status row
+- smooth wheel-scrollable responsive settings with a fully program-owned dark scrollbar
+- visible peer/share/connection/audio state
+- fullscreen / borderless / always-on-top
+- keyboard shortcuts
+- safe settings persistence
+- Connection Mode: LAN / Direct IP-DDNS / Tailscale
+- Share Port for the local sharing/listen endpoint
+- Connection Host / Remote Port
+- Connect / Disconnect request-state shell without real networking
+- Sender Audio Source dropdown
+- receiver mute/unmute + fully program-owned local volume slider
+- capability explanation for unsupported Application Audio
+- FriendPushScreen-owned dark palette for panel/status/buttons/text fields/dropdowns/slider/scrollbar
+- canonical oak-gradient monitor icon embedded in the executable and native window class
+- diagnostics preserved under Advanced
 
-- optional shared machine audio
-- sender `Audio Source` dropdown
-- `No Audio`
-- Desktop / System Audio through WASAPI loopback
-- explicit render/output-device loopback
-- Windows capture/input audio endpoints, including capture-card audio when exposed by Windows
-- capability-dependent Application Audio
-- receiver-local mute/unmute
-- receiver-local volume
-- LAN connection mode
-- Direct IP / DDNS connection mode
-- Tailscale connection mode
-- Auto connection mode
-- one route-independent FriendPushScreen control/video/audio session architecture
-- secure Direct Internet requirement
-- one-public-UDP-port operational target when the selected transport permits it
-- dual-instance localhost/LAN-stack development on one physical Windows machine
+### Safety / scope boundary
 
-### Authoritative amendment
+FPS-004 must not implement real capture, audio capture/playback, codec execution, network media, control protocol or secure handshake.
 
-`docs/superpowers/specs/2026-10-15-v1-audio-connectivity-amendment.md`
+Share and Connect controls must not claim a real active media/network session.
 
-Where the older V1 master specification conflicts with this amendment, the amendment is authoritative.
+### Plan
 
-### Reference-machine compatibility ruling
+`docs/superpowers/plans/2026-10-15-fps-004-viewer-ui-settings-shell.md`
 
-Current reference machine:
+### Qualification
 
-```text
-Windows 10 build 19045
-```
+FPS-004 becomes GREEN only after:
 
-Microsoft's documented native process-loopback API requires build 20348+.
+- UI/state unit tests
+- settings-persistence tests
+- physical Windows UX evidence
+- D3D11 Hardware render preserved
+- Debug + Release local build/test
+- exact-commit Windows CI
 
-Therefore on the current reference machine:
+### Next after FPS-004
 
-- Desktop/System Audio remains a V1 supported target
-- render endpoint loopback remains a V1 supported target
-- capture/input device audio remains a V1 supported target
-- native Application Audio through the official process-loopback API must report Unsupported
+`FPS-005 — Unified Capture Sources`
 
-FriendPushScreen must not fake Application Audio support or use undocumented process injection solely to bypass this runtime limit.
-
-### Roadmap effect
-
-- FPS-004 now owns the connection/audio UI state shell
-- FPS-006 remains video local loopback
-- FPS-006A is inserted for Audio Capture / Encode / Local Loopback
-- FPS-008 expands control protocol to audio/connectivity state
-- FPS-009 becomes secure media transport for control/video/audio
-- FPS-010 qualifies LAN / Direct IP-DDNS / Tailscale
-- FPS-011 through FPS-016 include audio/connectivity acceptance where applicable
-- existing FPS-001 through FPS-003 GREEN qualification remains unchanged
-
-### Next planned task
-
-`FPS-004 — Viewer UI & Settings Shell`
-
-No development task is ACTIVE after this architecture amendment closes.
+No development task is ACTIVE after FPS-004 closure.

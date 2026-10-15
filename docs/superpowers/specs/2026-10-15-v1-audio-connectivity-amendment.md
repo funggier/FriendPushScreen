@@ -4,7 +4,7 @@
 
 **Date:** 2026-10-15
 
-**Issue:** #7 — V1 Architecture Amendment — Audio + Connectivity
+**Issue:** #7 â€” V1 Architecture Amendment â€” Audio + Connectivity
 
 **Branch:** `fps-v1-audio-connectivity-amendment`
 
@@ -44,7 +44,6 @@ The UI and runtime model expose:
 
 ```text
 Connection Mode
-- Auto
 - LAN
 - Direct IP / DDNS
 - Tailscale
@@ -131,19 +130,7 @@ The single-port goal is a deployment requirement, not permission to invent custo
 
 If measured transport/security constraints require more than one port, FPS-009 must document the evidence and obtain an explicit architecture decision.
 
-### 2.4 Auto mode
-
-Auto mode operates only on configured/known peer endpoint candidates. It does not perform broad public matchmaking or unauthenticated Internet scanning.
-
-Preferred candidate order:
-
-1. known LAN endpoint when reachable
-2. configured Direct IP/DDNS endpoint
-3. configured Tailscale endpoint
-
-The user can always choose a connection mode explicitly.
-
-### 2.5 Direct Internet is first-class V1
+### 2.4 Direct Internet is first-class V1
 
 Direct IP/DDNS is not a debugging-only fallback.
 
@@ -198,7 +185,7 @@ A second physical Windows PC is not required for ordinary development tasks.
 
 FriendPushScreen must support a dual-instance development mode.
 
-### Level 1 — localhost
+### Level 1 â€” localhost
 
 ```text
 Instance A
@@ -219,13 +206,13 @@ This qualifies:
 - local encode/decode integration
 - two independent application states
 
-### Level 2 — local machine LAN stack
+### Level 2 â€” local machine LAN stack
 
 Two instances may communicate through the machine's own LAN address and distinct ports.
 
 This exercises more of the normal Windows network stack than an in-memory loop.
 
-### Level 3 — isolated peer simulation
+### Level 3 â€” isolated peer simulation
 
 When needed, a Windows Sandbox or VM may act as a second logical peer on the same physical computer.
 
@@ -579,7 +566,7 @@ FPS-004 must reserve final UI state for:
 
 ### Connection
 
-- mode dropdown: Auto / LAN / Direct IP-DDNS / Tailscale
+- mode dropdown: LAN / Direct IP-DDNS / Tailscale
 - Host
 - Port
 - Connect / Disconnect state
@@ -631,7 +618,7 @@ The existing task numbering is preserved.
 
 One inserted task is added without renumbering later tasks:
 
-### FPS-004 — Viewer UI & Settings Shell
+### FPS-004 â€” Viewer UI & Settings Shell
 
 Add:
 
@@ -644,17 +631,17 @@ Add:
 
 No audio capture/network media yet.
 
-### FPS-005 — Unified Capture Sources
+### FPS-005 â€” Unified Capture Sources
 
 Remains focused on video capture.
 
 Audio-device enumeration may be displayed by shared diagnostics but does not expand the video source abstraction.
 
-### FPS-006 — Encode / Decode / Local Loopback
+### FPS-006 â€” Encode / Decode / Local Loopback
 
 Remains the video local-loop milestone.
 
-### FPS-006A — Audio Capture / Encode / Local Loopback
+### FPS-006A â€” Audio Capture / Encode / Local Loopback
 
 New task.
 
@@ -671,11 +658,11 @@ Required outcomes:
 - local mute/volume behavior
 - latency, underflow, drift, resource evidence
 
-### FPS-007 — Feedback Protection
+### FPS-007 â€” Feedback Protection
 
 Video feedback protection remains unchanged.
 
-### FPS-008 — Control Protocol
+### FPS-008 â€” Control Protocol
 
 Expanded to include:
 
@@ -685,7 +672,7 @@ Expanded to include:
 - audio stream state
 - audio format negotiation
 
-### FPS-009 — Media Transport Decision & Network Streaming
+### FPS-009 â€” Media Transport Decision & Network Streaming
 
 Broaden from network video to network media.
 
@@ -698,7 +685,7 @@ Must decide:
 - audio/video packet timing
 - licensing
 
-### FPS-010 — Connectivity Modes
+### FPS-010 â€” Connectivity Modes
 
 Broaden to qualify:
 
@@ -711,11 +698,11 @@ Broaden to qualify:
 - secure Direct Internet
 - reconnect/path diagnostics
 
-### FPS-011 — One-Way Production Flow
+### FPS-011 â€” One-Way Production Flow
 
 A -> B production flow includes optional audio.
 
-### FPS-012 — Two-Way Sharing
+### FPS-012 â€” Two-Way Sharing
 
 Each direction has independent:
 
@@ -723,11 +710,11 @@ Each direction has independent:
 - audio source/state
 - receiver-local mute/volume
 
-### FPS-013 — Quality Controller
+### FPS-013 â€” Quality Controller
 
 Add audio continuity priority and audio/network metrics.
 
-### FPS-014 — Recovery Qualification
+### FPS-014 â€” Recovery Qualification
 
 Add:
 
@@ -737,11 +724,11 @@ Add:
 - audio decoder/render failure
 - audio restart without video restart
 
-### FPS-015 — Installer & Distribution
+### FPS-015 â€” Installer & Distribution
 
 Must package and document any approved audio codec/runtime dependency and its license notices.
 
-### FPS-016 — V1 Acceptance & Release
+### FPS-016 â€” V1 Acceptance & Release
 
 Must include audio and all three connectivity paths.
 
@@ -857,10 +844,10 @@ Still evidence-gated:
 
 Microsoft Learn references used for this amendment:
 
-- WASAPI Loopback Recording — system/render-endpoint loopback capture
-- Application Loopback Audio Capture sample — process-tree audio capture
-- `AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK` — documented minimum supported client: Windows build 20348
-- `AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS` — process-tree include/exclude parameters
-- WASAPI Audio Sessions — session grouping/control semantics
+- WASAPI Loopback Recording â€” system/render-endpoint loopback capture
+- Application Loopback Audio Capture sample â€” process-tree audio capture
+- `AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK` â€” documented minimum supported client: Windows build 20348
+- `AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS` â€” process-tree include/exclude parameters
+- WASAPI Audio Sessions â€” session grouping/control semantics
 
 Implementation must re-check current SDK/runtime documentation when FPS-006A begins rather than treating this 2026-10-15 compatibility note as permanent platform truth.
