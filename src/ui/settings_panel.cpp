@@ -35,6 +35,10 @@ constexpr int kDiagnosticsToggleId = 2112;
 constexpr int kRefreshButtonId = 2113;
 constexpr int kSaveButtonId = 2114;
 constexpr int kSettingsScrollbarId = 2116;
+constexpr int kSourceId = 2117;
+constexpr int kRefreshSourcesId = 2118;
+constexpr int kPreviewSourceId = 2119;
+constexpr int kShowCursorId = 2120;
 
 constexpr int kPadding = 16;
 constexpr int kGap = 8;
@@ -70,6 +74,7 @@ constexpr UINT kDropSelectionMessage =
     WM_APP + 0x41;
 constexpr WPARAM kDropKindConnection = 1;
 constexpr WPARAM kDropKindAudio = 2;
+constexpr WPARAM kDropKindSource = 3;
 
 struct DropPopupInit {
     HWND notify{nullptr};
@@ -1133,6 +1138,45 @@ void ApplyProgramOwnedControlFrame(HWND hwnd) {
         theme::ApplyDarkBorder(hwnd);
     }
 }
+std::wstring Utf8ToWide(
+    std::string_view value) {
+    if (value.empty()) {
+        return {};
+    }
+
+    const int required =
+        MultiByteToWideChar(
+            CP_UTF8,
+            MB_ERR_INVALID_CHARS,
+            value.data(),
+            static_cast<int>(
+                value.size()),
+            nullptr,
+            0);
+
+    if (required <= 0) {
+        return L"[invalid UTF-8]";
+    }
+
+    std::wstring output(
+        static_cast<std::size_t>(
+            required),
+        L'\0');
+
+    if (MultiByteToWideChar(
+            CP_UTF8,
+            MB_ERR_INVALID_CHARS,
+            value.data(),
+            static_cast<int>(
+                value.size()),
+            output.data(),
+            required) != required) {
+        return L"[invalid UTF-8]";
+    }
+
+    return output;
+}
+
 std::wstring NormalizeMultiline(
     std::wstring_view text) {
     std::wstring output;
@@ -1407,6 +1451,36 @@ void SettingsPanel::InitializeControls(
 
     share_heading_ =
         CreateLabel(instance, L"SHARE");
+    source_label_ =
+        CreateLabel(
+            instance,
+            L"Source");
+    show_cursor_checkbox_ =
+        CreateButton(
+            instance,
+            kShowCursorId,
+            L"Show Cursor",
+            BS_AUTOCHECKBOX);
+    source_button_ =
+        CreateButton(
+            instance,
+            kSourceId,
+            L"Select Source  \u25BE");
+    source_preview_button_ =
+        CreateButton(
+            instance,
+            kPreviewSourceId,
+            L"Preview");
+    source_refresh_button_ =
+        CreateButton(
+            instance,
+            kRefreshSourcesId,
+            L"Refresh");
+    source_status_ =
+        CreateLabel(
+            instance,
+            L"No source selected");
+
     share_port_label_ =
         CreateLabel(instance, L"Share Port");
     share_port_edit_ =
@@ -1441,6 +1515,18 @@ void SettingsPanel::InitializeControls(
 
     const HWND root_owner =
         GetAncestor(hwnd_, GA_ROOT);
+
+    source_popup_ =
+        CreateDropPopup(
+            instance,
+            root_owner,
+            hwnd_,
+            kDropKindSource,
+            &source_list_);
+
+    ShowWindow(
+        source_popup_,
+        SW_HIDE);
 
     connection_mode_popup_ =
         CreateDropPopup(
@@ -1655,6 +1741,12 @@ void SettingsPanel::ApplyDefaultFont() {
     const std::vector<HWND> controls{
         title_label_,
         share_heading_,
+        source_label_,
+        show_cursor_checkbox_,
+        source_button_,
+        source_preview_button_,
+        source_refresh_button_,
+        source_status_,
         share_port_label_,
         share_port_edit_,
         share_button_,
@@ -1771,9 +1863,64 @@ void SettingsPanel::LayoutControls() {
         field_width,
         20);
     move(
-        share_port_label_,
+        source_label_,
         kPadding,
         78,
+        field_width,
+        18);
+
+    move(
+        show_cursor_checkbox_,
+        kPadding,
+        132,
+        field_width,
+        26);
+
+
+    move(
+        source_button_,
+        kPadding,
+        98,
+        field_width,
+        kFieldHeight);
+
+    const int source_preview_width = 96;
+    const int source_refresh_width = 76;
+    const int source_status_width =
+        std::max(
+            100,
+            field_width -
+                source_preview_width -
+                source_refresh_width -
+                (2 * kGap));
+
+    move(
+        source_status_,
+        kPadding,
+        162,
+        source_status_width,
+        32);
+    move(
+        source_preview_button_,
+        kPadding +
+            source_status_width +
+            kGap,
+        162,
+        source_preview_width,
+        kButtonHeight);
+    move(
+        source_refresh_button_,
+        kPadding +
+            field_width -
+            source_refresh_width,
+        162,
+        source_refresh_width,
+        kButtonHeight);
+
+    move(
+        share_port_label_,
+        kPadding,
+        204,
         120,
         18);
 
@@ -1781,7 +1928,7 @@ void SettingsPanel::LayoutControls() {
     move(
         share_port_edit_,
         kPadding,
-        98,
+        224,
         share_port_width,
         kFieldHeight);
     move(
@@ -1789,7 +1936,7 @@ void SettingsPanel::LayoutControls() {
         kPadding +
             share_port_width +
             kGap,
-        98,
+        224,
         std::max(
             120,
             field_width -
@@ -1799,26 +1946,26 @@ void SettingsPanel::LayoutControls() {
     move(
         share_status_,
         kPadding,
-        136,
+        262,
         field_width,
         40);
 
     move(
         connection_heading_,
         kPadding,
-        190,
+        316,
         field_width,
         20);
     move(
         connection_mode_label_,
         kPadding,
-        216,
+        342,
         field_width,
         18);
     move(
         connection_mode_button_,
         kPadding,
-        236,
+        362,
         field_width,
         kFieldHeight);
 
@@ -1837,7 +1984,7 @@ void SettingsPanel::LayoutControls() {
     move(
         host_label_,
         kPadding,
-        276,
+        402,
         host_width,
         18);
     move(
@@ -1845,13 +1992,13 @@ void SettingsPanel::LayoutControls() {
         kPadding +
             host_width +
             kGap,
-        276,
+        402,
         port_width,
         18);
     move(
         host_edit_,
         kPadding,
-        296,
+        422,
         host_width,
         kFieldHeight);
     move(
@@ -1859,44 +2006,44 @@ void SettingsPanel::LayoutControls() {
         kPadding +
             host_width +
             kGap,
-        296,
+        422,
         port_width,
         kFieldHeight);
     move(
         connect_button_,
         kPadding,
-        334,
+        460,
         field_width,
         kButtonHeight);
     move(
         connection_status_,
         kPadding,
-        374,
+        500,
         field_width,
         48);
 
     move(
         audio_heading_,
         kPadding,
-        434,
+        560,
         field_width,
         20);
     move(
         audio_source_label_,
         kPadding,
-        460,
+        586,
         field_width,
         18);
     move(
         audio_source_button_,
         kPadding,
-        480,
+        606,
         field_width,
         kFieldHeight);
     move(
         audio_status_,
         kPadding,
-        520,
+        646,
         field_width,
         56);
 
@@ -1904,7 +2051,7 @@ void SettingsPanel::LayoutControls() {
     move(
         mute_button_,
         kPadding,
-        586,
+        712,
         mute_width,
         kButtonHeight);
     move(
@@ -1912,7 +2059,7 @@ void SettingsPanel::LayoutControls() {
         kPadding +
             mute_width +
             kGap,
-        586,
+        712,
         std::max(
             100,
             field_width -
@@ -1922,45 +2069,45 @@ void SettingsPanel::LayoutControls() {
     move(
         volume_label_,
         kPadding,
-        626,
+        752,
         field_width,
         20);
 
     move(
         viewer_heading_,
         kPadding,
-        666,
+        792,
         field_width,
         20);
     move(
         topmost_checkbox_,
         kPadding,
-        692,
+        818,
         field_width,
         26);
     move(
         borderless_checkbox_,
         kPadding,
-        722,
+        848,
         field_width,
         26);
     move(
         fullscreen_button_,
         kPadding,
-        756,
+        882,
         field_width,
         kButtonHeight);
 
     move(
         advanced_heading_,
         kPadding,
-        810,
+        936,
         field_width,
         20);
     move(
         diagnostics_toggle_,
         kPadding,
-        836,
+        962,
         field_width,
         kButtonHeight);
 
@@ -1968,7 +2115,7 @@ void SettingsPanel::LayoutControls() {
         move(
             diagnostics_edit_,
             kPadding,
-            878,
+            1004,
             field_width,
             280);
 
@@ -1980,7 +2127,7 @@ void SettingsPanel::LayoutControls() {
         move(
             refresh_button_,
             kPadding,
-            1168,
+            1294,
             button_width,
             kButtonHeight);
         move(
@@ -1988,13 +2135,13 @@ void SettingsPanel::LayoutControls() {
             kPadding +
                 button_width +
                 kGap,
-            1168,
+            1294,
             button_width,
             kButtonHeight);
 
-        content_height_ = 1216;
+        content_height_ = 1342;
     } else {
-        content_height_ = 886;
+        content_height_ = 1012;
     }
 
     SetWindowPos(
@@ -2296,6 +2443,12 @@ std::uint32_t SettingsPanel::ReadPort(HWND edit) const {
 }
 
 void SettingsPanel::HideDropLists() {
+    if (source_popup_ != nullptr) {
+        ShowWindow(
+            source_popup_,
+            SW_HIDE);
+    }
+
     if (connection_mode_popup_ != nullptr) {
         ShowWindow(
             connection_mode_popup_,
@@ -2317,7 +2470,10 @@ void SettingsPanel::ToggleDropList(HWND list) {
     HWND button = nullptr;
     HWND popup = nullptr;
 
-    if (list == connection_mode_list_) {
+    if (list == source_list_) {
+        button = source_button_;
+        popup = source_popup_;
+    } else if (list == connection_mode_list_) {
         button = connection_mode_button_;
         popup = connection_mode_popup_;
     } else if (list == audio_source_list_) {
@@ -2646,6 +2802,14 @@ const bool share_requested =
         volume_text.c_str());
 
     SendMessageW(
+        show_cursor_checkbox_,
+        BM_SETCHECK,
+        state.preferences.show_cursor
+            ? BST_CHECKED
+            : BST_UNCHECKED,
+        0);
+
+    SendMessageW(
         topmost_checkbox_,
         BM_SETCHECK,
         state.preferences.always_on_top
@@ -2719,6 +2883,143 @@ void SettingsPanel::SetCollecting(
         collecting
             ? L"Collecting..."
             : L"Refresh");
+}
+
+void SettingsPanel::SetCaptureSources(
+    const std::vector<capture::CaptureSourceDescriptor>& sources,
+    std::string_view selected_source_id,
+    bool preview_active,
+    bool show_cursor,
+    std::string_view status_text) {
+    if (source_list_ == nullptr ||
+        source_button_ == nullptr ||
+        source_preview_button_ == nullptr ||
+        source_status_ == nullptr) {
+        return;
+    }
+
+    HideDropLists();
+
+    SendMessageW(
+        source_list_,
+        LB_RESETCONTENT,
+        0,
+        0);
+
+    capture_source_ids_.clear();
+    capture_source_ids_.reserve(
+        sources.size());
+
+    int selected_index = -1;
+    bool selected_available = false;
+    bool selected_cursor_supported = true;
+    std::wstring selected_label;
+
+    for (std::size_t index = 0;
+         index < sources.size();
+         ++index) {
+        const auto& source =
+            sources[index];
+
+        std::wstring label =
+            Utf8ToWide(
+                source.display_name);
+
+        if (source.availability ==
+            capture::CaptureAvailability::Unavailable) {
+            label += L" [Unavailable]";
+        }
+
+        SendMessageW(
+            source_list_,
+            LB_ADDSTRING,
+            0,
+            reinterpret_cast<LPARAM>(
+                label.c_str()));
+
+        capture_source_ids_.push_back(
+            source.id);
+
+        if (source.id ==
+            selected_source_id) {
+            selected_index =
+                static_cast<int>(
+                    index);
+            selected_label = label;
+            selected_available =
+                source.availability ==
+                capture::CaptureAvailability::Available;
+            selected_cursor_supported =
+                capture::CaptureSourceSupportsCursor(
+                    source.kind);
+        }
+    }
+
+    if (selected_index >= 0) {
+        SendMessageW(
+            source_list_,
+            LB_SETCURSEL,
+            static_cast<WPARAM>(
+                selected_index),
+            0);
+
+        selected_label += L"  \u25BE";
+        SetWindowTextW(
+            source_button_,
+            selected_label.c_str());
+    } else {
+        SetWindowTextW(
+            source_button_,
+            sources.empty()
+                ? L"No Sources  \u25BE"
+                : L"Select Source  \u25BE");
+    }
+
+    SetWindowTextW(
+        source_preview_button_,
+        preview_active
+            ? L"Stop Preview"
+            : L"Preview");
+
+    EnableWindow(
+        source_preview_button_,
+        selected_index >= 0 &&
+                selected_available
+            ? TRUE
+            : FALSE);
+
+    const bool cursor_applicable =
+        selected_index < 0 ||
+        selected_cursor_supported;
+
+    EnableWindow(
+        show_cursor_checkbox_,
+        cursor_applicable
+            ? TRUE
+            : FALSE);
+
+    SetWindowTextW(
+        show_cursor_checkbox_,
+        cursor_applicable
+            ? L"Show Cursor"
+            : L"Show Cursor (N/A)");
+
+    SendMessageW(
+        show_cursor_checkbox_,
+        BM_SETCHECK,
+        show_cursor
+            ? BST_CHECKED
+            : BST_UNCHECKED,
+        0);
+
+    const std::wstring status =
+        status_text.empty()
+            ? L"No source selected"
+            : Utf8ToWide(status_text);
+
+    SetWindowTextW(
+        source_status_,
+        status.c_str());
 }
 
 LRESULT CALLBACK SettingsPanel::WindowProc(
@@ -2904,6 +3205,24 @@ LRESULT SettingsPanel::HandleMessage(
         }
 
         if (wparam ==
+            kDropKindSource) {
+            if (selection >=
+                static_cast<int>(
+                    capture_source_ids_.size())) {
+                return 0;
+            }
+
+            Emit(UiCommand{
+                UiCommandType::SelectCaptureSource,
+                selection,
+                capture_source_ids_[
+                    static_cast<std::size_t>(
+                        selection)]
+            });
+            return 0;
+        }
+
+        if (wparam ==
             kDropKindConnection) {
             if (selection > 2) {
                 return 0;
@@ -2940,6 +3259,12 @@ LRESULT SettingsPanel::HandleMessage(
             HIWORD(wparam);
 
         if (notification == BN_CLICKED) {
+            if (id == kSourceId) {
+                ToggleDropList(
+                    source_list_);
+                return 0;
+            }
+
             if (id == kConnectionModeId) {
                 ToggleDropList(
                     connection_mode_list_);
@@ -2955,6 +3280,27 @@ LRESULT SettingsPanel::HandleMessage(
             HideDropLists();
 
             switch (id) {
+            case kShowCursorId:
+                Emit(UiCommand{
+                    UiCommandType::
+                        ToggleShowCursor
+                });
+                return 0;
+
+            case kPreviewSourceId:
+                Emit(UiCommand{
+                    UiCommandType::
+                        ToggleCapturePreview
+                });
+                return 0;
+
+            case kRefreshSourcesId:
+                Emit(UiCommand{
+                    UiCommandType::
+                        RefreshCaptureSources
+                });
+                return 0;
+
             case kShareButtonId:
                 Emit(UiCommand{
                     UiCommandType::

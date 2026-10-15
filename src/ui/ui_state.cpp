@@ -124,6 +124,11 @@ void ToggleConnectionRequest(UiState& state) {
     }
 }
 
+void ToggleShowCursor(UiState& state) {
+    state.preferences.show_cursor =
+        !state.preferences.show_cursor;
+}
+
 void ToggleReceiverMute(UiState& state) {
     state.preferences.receiver_muted =
         !state.preferences.receiver_muted;

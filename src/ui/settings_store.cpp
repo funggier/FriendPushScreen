@@ -1,5 +1,7 @@
 #include "ui/settings_store.h"
 
+#include "platform/windows/runtime_paths.h"
+
 #include <charconv>
 #include <cstdlib>
 #include <fstream>
@@ -200,6 +202,9 @@ std::string SerializePreferences(
     out << "remote_port="
         << preferences.remote_port
         << "\n";
+    out << "show_cursor="
+        << BoolText(preferences.show_cursor)
+        << "\n";
     out << "audio_source="
         << AudioSourceText(
                preferences.audio_source)
@@ -285,6 +290,11 @@ UiPreferences ParsePreferences(
                         parsed >= 1 &&
                         parsed <= 65535) {
                         result.remote_port = parsed;
+                    }
+                } else if (key == "show_cursor") {
+                    bool parsed = false;
+                    if (ParseBool(value, parsed)) {
+                        result.show_cursor = parsed;
                     }
                 } else if (key == "audio_source") {
                     AudioSourceKind parsed{};
@@ -399,26 +409,8 @@ UiPreferences LoadPreferences(
 }
 
 std::filesystem::path DefaultSettingsPath() {
-    char* local_app_data = nullptr;
-    std::size_t size = 0;
-
-    if (_dupenv_s(
-            &local_app_data,
-            &size,
-            "LOCALAPPDATA") != 0 ||
-        local_app_data == nullptr ||
-        size <= 1) {
-        std::free(local_app_data);
-        return std::filesystem::path{
-            "FriendPushScreen-settings.ini"};
-    }
-
-    const std::filesystem::path base{
-        local_app_data};
-    std::free(local_app_data);
-
-    return base /
-        "FriendPushScreen" /
+    return platform::windows::
+        DefaultDataRoot() /
         "settings.ini";
 }
 

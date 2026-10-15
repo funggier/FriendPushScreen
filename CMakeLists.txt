@@ -10,6 +10,7 @@ add_compile_definitions(UNICODE _UNICODE NOMINMAX)
 
 include(cmake/warnings.cmake)
 
+
 add_executable(FriendPushScreen WIN32
     resources/FriendPushScreen.rc
     src/app/main.cpp
@@ -19,8 +20,14 @@ add_executable(FriendPushScreen WIN32
     src/ui/settings_store.cpp
     src/ui/settings_panel.cpp
     src/ui/theme.cpp
+    src/capture/capture_source.cpp
+    src/capture/capture_source_catalog.cpp
+    src/capture/desktop_duplication_capture.cpp
+    src/capture/windows_graphics_capture.cpp
+    src/capture/media_foundation_capture.cpp
     src/graphics/d3d11_device.cpp
     src/graphics/placeholder_renderer.cpp
+    src/graphics/preview_renderer.cpp
     src/diagnostics/diagnostics_formatter.cpp
     src/diagnostics/diagnostics_service.cpp
     src/diagnostics/logger.cpp
@@ -30,6 +37,7 @@ add_executable(FriendPushScreen WIN32
     src/platform/windows/monitor_probe.cpp
     src/platform/windows/window_probe.cpp
     src/platform/windows/network_probe.cpp
+    src/platform/windows/runtime_paths.cpp
     src/media/capture_device_probe.cpp
     src/media/codec_capability_probe.cpp
 )
@@ -43,16 +51,19 @@ target_link_libraries(FriendPushScreen PRIVATE
     Comdlg32
     Comctl32
     D3D11
+    D3DCompiler
     Dxgi
     Dwmapi
     Gdi32
     Iphlpapi
     Mf
     Mfplat
+    Mfreadwrite
     Mfuuid
     Ole32
     User32
     UxTheme
+    WindowsApp
 )
 
 enable_testing()
@@ -64,6 +75,15 @@ add_executable(FriendPushScreenTests
     tests/diagnostics_service_tests.cpp
     tests/ui_state_tests.cpp
     tests/settings_store_tests.cpp
+    tests/capture_source_catalog_tests.cpp
+    tests/main_window_layout_tests.cpp
+    tests/preview_renderer_tests.cpp
+    tests/runtime_paths_tests.cpp
+    src/capture/capture_source.cpp
+    src/capture/capture_source_catalog.cpp
+    src/capture/desktop_duplication_capture.cpp
+    src/capture/windows_graphics_capture.cpp
+    src/capture/media_foundation_capture.cpp
     src/diagnostics/diagnostics_formatter.cpp
     src/diagnostics/diagnostics_service.cpp
     src/diagnostics/logger.cpp
@@ -73,9 +93,11 @@ add_executable(FriendPushScreenTests
     src/platform/windows/monitor_probe.cpp
     src/platform/windows/window_probe.cpp
     src/platform/windows/network_probe.cpp
+    src/platform/windows/runtime_paths.cpp
     src/media/capture_device_probe.cpp
     src/media/codec_capability_probe.cpp
     src/graphics/d3d11_device.cpp
+    src/graphics/preview_renderer.cpp
     src/ui/main_window.cpp
     src/ui/ui_state.cpp
     src/ui/settings_store.cpp
@@ -94,11 +116,14 @@ target_link_libraries(FriendPushScreenTests PRIVATE
     Dwmapi
     User32
     UxTheme
+    WindowsApp
     Iphlpapi
     Mf
     Mfplat
+    Mfreadwrite
     Mfuuid
     D3D11
+    D3DCompiler
     Gdi32
     Comdlg32
     Comctl32

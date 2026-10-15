@@ -88,6 +88,12 @@ void RunUiStateTests() {
     ToggleReceiverMute(state);
     FPS_EXPECT_TRUE(!state.preferences.receiver_muted);
 
+    FPS_EXPECT_TRUE(state.preferences.show_cursor);
+    ToggleShowCursor(state);
+    FPS_EXPECT_TRUE(!state.preferences.show_cursor);
+    ToggleShowCursor(state);
+    FPS_EXPECT_TRUE(state.preferences.show_cursor);
+
     FPS_EXPECT_TRUE(!SupportsApplicationAudio(19045));
     FPS_EXPECT_TRUE(!SupportsApplicationAudio(20347));
     FPS_EXPECT_TRUE(SupportsApplicationAudio(20348));

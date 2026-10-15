@@ -7,16 +7,33 @@
 #include "ui/ui_command.h"
 #include "ui/ui_state.h"
 
+#include <deque>
 #include <filesystem>
 #include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace fps::ui {
 
 std::wstring NormalizeWin32MultilineText(
     std::wstring_view text);
+
+struct ViewerViewport {
+    int x{0};
+    int y{0};
+    int width{0};
+    int height{0};
+};
+
+ViewerViewport CalculateViewerViewport(
+    int client_width,
+    int client_height,
+    int status_height);
+
+bool ShouldDeferUiCommand(
+    UiCommandType type);
 
 class MainWindow {
 public:
@@ -61,6 +78,13 @@ public:
 
     void SetCollecting(bool collecting);
 
+    void SetCaptureSources(
+        const std::vector<capture::CaptureSourceDescriptor>& sources,
+        std::string_view selected_source_id,
+        bool preview_active,
+        bool show_cursor,
+        std::string_view status_text);
+
     std::optional<std::filesystem::path>
     PromptDiagnosticsSavePath();
 
@@ -86,6 +110,7 @@ private:
     void LayoutChildren();
 
     void Emit(UiCommand command);
+    void DispatchDeferredUiCommand();
 
     void ApplyWindowState(
         const UiState& state);
@@ -114,6 +139,7 @@ private:
     FrameCallback frame_callback_;
     UiCommandCallback ui_command_callback_;
     CommandCallback diagnostics_ready_callback_;
+    std::deque<UiCommand> deferred_ui_commands_;
 
     bool settings_visible_{true};
 

@@ -3,11 +3,15 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+#include "capture/capture_source.h"
+
 #include "ui/ui_command.h"
 #include "ui/ui_state.h"
 
 #include <functional>
+#include <string>
 #include <string_view>
+#include <vector>
 
 namespace fps::ui {
 
@@ -41,6 +45,13 @@ public:
         std::wstring_view text);
 
     void SetCollecting(bool collecting);
+
+    void SetCaptureSources(
+        const std::vector<capture::CaptureSourceDescriptor>& sources,
+        std::string_view selected_source_id,
+        bool preview_active,
+        bool show_cursor,
+        std::string_view status_text);
 
 private:
     static LRESULT CALLBACK WindowProc(
@@ -103,6 +114,14 @@ private:
     HWND title_label_{nullptr};
 
     HWND share_heading_{nullptr};
+    HWND source_label_{nullptr};
+    HWND show_cursor_checkbox_{nullptr};
+    HWND source_button_{nullptr};
+    HWND source_popup_{nullptr};
+    HWND source_list_{nullptr};
+    HWND source_preview_button_{nullptr};
+    HWND source_refresh_button_{nullptr};
+    HWND source_status_{nullptr};
     HWND share_port_label_{nullptr};
     HWND share_port_edit_{nullptr};
     HWND share_button_{nullptr};
@@ -141,6 +160,8 @@ private:
     HWND diagnostics_edit_{nullptr};
     HWND refresh_button_{nullptr};
     HWND save_button_{nullptr};
+
+    std::vector<std::string> capture_source_ids_;
 
     CommandCallback command_callback_;
 

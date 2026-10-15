@@ -1,62 +1,67 @@
 # Current Development Task
 
-## FPS-004 — Viewer UI & Settings Shell
+## FPS-005 — Unified Capture Sources
 
 **Status:** GREEN / CLOSED
 
-**Branch:** `fps-004-viewer-ui-settings-shell`
+**Branch:** `fps-005-unified-capture-sources`
 
 **Started:** 2026-10-15
 
-**GitHub Issue:** #9 — FPS-004 — Viewer UI & Settings Shell
+**GitHub Issue:** #11 — FPS-005 — Unified Capture Sources
 
 ### Goal
 
-Deliver the first viewer-first native Win32 UI shell on top of the FPS-003 D3D11/diagnostics baseline.
+Deliver one native capture-source model for Monitor, Window, and generic Windows video capture devices, then prove local preview on the reference Windows 10 machine.
 
 ### Required outcomes
 
-- viewer-first D3D11 surface
-- Tab settings overlay plus an always-visible `Hide Settings (Tab) / Settings (Tab)` button on the full-width top status row
-- smooth wheel-scrollable responsive settings with a fully program-owned dark scrollbar
-- visible peer/share/connection/audio state
-- fullscreen / borderless / always-on-top
-- keyboard shortcuts
-- safe settings persistence
-- Connection Mode: LAN / Direct IP-DDNS / Tailscale
-- Share Port for the local sharing/listen endpoint
-- Connection Host / Remote Port
-- Connect / Disconnect request-state shell without real networking
-- Sender Audio Source dropdown
-- receiver mute/unmute + fully program-owned local volume slider
-- capability explanation for unsupported Application Audio
-- FriendPushScreen-owned dark palette for panel/status/buttons/text fields/dropdowns/slider/scrollbar
-- canonical oak-gradient monitor icon embedded in the executable and native window class
-- diagnostics preserved under Advanced
+- one source catalog covering Screens / Windows / Devices
+- direct source selection without a source-type-first workflow
+- stable source IDs and availability state
+- unified capture-session abstraction
+- unified captured-frame metadata
+- Monitor preview through native D3D11 Desktop Duplication baseline
+- Window preview through Windows Graphics Capture when local SDK/runtime support is available
+- generic Capture Card preview through Media Foundation
+- runtime video-device mode enumeration
+- source-loss/device-removal behavior without automatic source substitution
+- source refresh/reappearance handling
+- persisted `Show Cursor` sender option, default ON, with live DDA/WGC cursor policy; disabled as not-applicable for VideoDevice sources
+- Settings remains an overlay; opening Settings must not resize the preview surface
+- windowed status chrome reserves its own top strip so incoming content is never obscured
+- F11 hides status chrome/Settings button and expands preview to the full client area
+- evidence for DG-002 and DG-003
 
 ### Safety / scope boundary
 
-FPS-004 must not implement real capture, audio capture/playback, codec execution, network media, control protocol or secure handshake.
+FPS-005 must not implement video encoding/decoding, network media transport, control protocol, audio capture/playback, secure handshake, or feedback-mask qualification.
 
-Share and Connect controls must not claim a real active media/network session.
+No device-specific Onten code path is allowed.
 
 ### Plan
 
-`docs/superpowers/plans/2026-10-15-fps-004-viewer-ui-settings-shell.md`
+`docs/superpowers/plans/2026-10-15-fps-005-unified-capture-sources.md`
 
 ### Qualification
 
-FPS-004 becomes GREEN only after:
+FPS-005 becomes GREEN only after:
 
-- UI/state unit tests
-- settings-persistence tests
-- physical Windows UX evidence
-- D3D11 Hardware render preserved
+- source-catalog/state unit tests
+- monitor/window/device enumeration evidence
+- real local Monitor preview
+- Window preview when WGC backend is available in the local toolchain/runtime
+- real Media Foundation capture-device preview
+- source-loss/hot-plug evidence where practical
+- physical cursor-visible preview plus live `Show Cursor` ON/OFF/persistence evidence
+- Settings overlay leaves preview surface dimensions unchanged
+- windowed viewer begins below status chrome and F11 viewer fills the full client area
 - Debug + Release local build/test
 - exact-commit Windows CI
+- qualification evidence report
 
-### Next after FPS-004
+### Next after FPS-005
 
-`FPS-005 — Unified Capture Sources`
+`FPS-006 — Encode / Decode / Local Loopback`
 
-No development task is ACTIVE after FPS-004 closure.
+No development task is ACTIVE after FPS-005 closure.

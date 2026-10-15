@@ -36,6 +36,22 @@ public:
     RendererMode Mode() const noexcept { return mode_; }
     HRESULT LastError() const noexcept { return last_error_; }
 
+    ID3D11Device* Device() const noexcept {
+        return device_.Get();
+    }
+
+    ID3D11DeviceContext* Context() const noexcept {
+        return context_.Get();
+    }
+
+    IDXGISwapChain1* SwapChain() const noexcept {
+        return swap_chain_.Get();
+    }
+
+    ID3D11RenderTargetView* RenderTarget() const noexcept {
+        return render_target_.Get();
+    }
+
 private:
     HRESULT CreateDeviceForDriver(D3D_DRIVER_TYPE driver_type);
     HRESULT CreateSwapChain(HWND hwnd);

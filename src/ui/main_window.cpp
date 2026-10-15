@@ -18,9 +18,13 @@ namespace {
 
 constexpr wchar_t kWindowClassName[] =
     L"FriendPushScreenMainWindow";
+constexpr wchar_t kRenderSurfaceClassName[] =
+    L"FriendPushScreenRenderSurface";
 
 constexpr UINT_PTR kRenderTimerId = 1;
 constexpr UINT kRenderTimerMs = 100;
+constexpr UINT kDeferredUiCommandMessage =
+    WM_APP + 0x70;
 
 constexpr int kOuterPadding = 12;
 constexpr int kStatusHeight = 30;
@@ -54,7 +58,76 @@ bool KeyWasAlreadyDown(
          (1ULL << 30)) != 0;
 }
 
+
+LRESULT CALLBACK RenderSurfaceProc(
+    HWND hwnd,
+    UINT message,
+    WPARAM wparam,
+    LPARAM lparam) {
+    switch (message) {
+    case WM_ERASEBKGND:
+        // D3D owns this surface. Do not let GDI erase
+        // the last presented swap-chain image.
+        return 1;
+
+    case WM_PAINT: {
+        PAINTSTRUCT paint{};
+        BeginPaint(hwnd, &paint);
+        EndPaint(hwnd, &paint);
+        return 0;
+    }
+
+    default:
+        break;
+    }
+
+    return DefWindowProcW(
+        hwnd,
+        message,
+        wparam,
+        lparam);
+}
+
 }  // namespace
+
+ViewerViewport CalculateViewerViewport(
+    int client_width,
+    int client_height,
+    int status_height) {
+    const int safe_width =
+        std::max(0, client_width);
+    const int safe_height =
+        std::max(0, client_height);
+    const int safe_status_height =
+        std::clamp(
+            status_height,
+            0,
+            safe_height);
+
+    return ViewerViewport{
+        0,
+        safe_status_height,
+        safe_width,
+        std::max(
+            0,
+            safe_height -
+                safe_status_height)};
+}
+
+bool ShouldDeferUiCommand(
+    UiCommandType type) {
+    switch (type) {
+    case UiCommandType::SelectCaptureSource:
+    case UiCommandType::ToggleCapturePreview:
+    case UiCommandType::RefreshCaptureSources:
+    case UiCommandType::ToggleShowCursor:
+        return true;
+    default:
+        return false;
+    }
+}
+
+
 
 std::wstring NormalizeWin32MultilineText(
     std::wstring_view text) {
@@ -104,6 +177,42 @@ void MainWindow::SetDiagnosticsReadyCallback(
 
 void MainWindow::Emit(
     UiCommand command) {
+    if (!ui_command_callback_) {
+        return;
+    }
+
+    if (hwnd_ != nullptr &&
+        ShouldDeferUiCommand(
+            command.type)) {
+        deferred_ui_commands_.
+            push_back(
+                std::move(command));
+
+        if (PostMessageW(
+                hwnd_,
+                kDeferredUiCommandMessage,
+                0,
+                0) != FALSE) {
+            return;
+        }
+
+        command = std::move(
+            deferred_ui_commands_.back());
+        deferred_ui_commands_.pop_back();
+    }
+
+    ui_command_callback_(command);
+}
+
+void MainWindow::DispatchDeferredUiCommand() {
+    if (deferred_ui_commands_.empty()) {
+        return;
+    }
+
+    UiCommand command = std::move(
+        deferred_ui_commands_.front());
+    deferred_ui_commands_.pop_front();
+
     if (ui_command_callback_) {
         ui_command_callback_(command);
     }
@@ -134,6 +243,20 @@ void MainWindow::SetCollecting(
     bool collecting) {
     settings_panel_.
         SetCollecting(collecting);
+}
+
+void MainWindow::SetCaptureSources(
+    const std::vector<capture::CaptureSourceDescriptor>& sources,
+    std::string_view selected_source_id,
+    bool preview_active,
+    bool show_cursor,
+    std::string_view status_text) {
+    settings_panel_.SetCaptureSources(
+        sources,
+        selected_source_id,
+        preview_active,
+        show_cursor,
+        status_text);
 }
 
 std::optional<std::filesystem::path>
@@ -221,6 +344,25 @@ bool MainWindow::Create(
         return false;
     }
 
+    WNDCLASSEXW render_class{};
+    render_class.cbSize =
+        sizeof(render_class);
+    render_class.lpfnWndProc =
+        RenderSurfaceProc;
+    render_class.hInstance = instance;
+    render_class.hCursor =
+        LoadCursorW(nullptr, IDC_ARROW);
+    render_class.hbrBackground = nullptr;
+    render_class.lpszClassName =
+        kRenderSurfaceClassName;
+
+    if (RegisterClassExW(
+            &render_class) == 0 &&
+        GetLastError() !=
+            ERROR_CLASS_ALREADY_EXISTS) {
+        return false;
+    }
+
     hwnd_ = CreateWindowExW(
         0,
         kWindowClassName,
@@ -250,7 +392,7 @@ bool MainWindow::Create(
 
     render_hwnd_ = CreateWindowExW(
         0,
-        L"STATIC",
+        kRenderSurfaceClassName,
         nullptr,
         WS_CHILD |
             WS_VISIBLE |
@@ -388,13 +530,24 @@ void MainWindow::LayoutChildren() {
                 client.bottom -
                 client.top));
 
+    const bool show_status_chrome =
+        !applied_fullscreen_;
+
+    const ViewerViewport viewer =
+        CalculateViewerViewport(
+            width,
+            height,
+            show_status_chrome
+                ? kStatusHeight
+                : 0);
+
     SetWindowPos(
         render_hwnd_,
         HWND_BOTTOM,
-        0,
-        0,
-        width,
-        height,
+        viewer.x,
+        viewer.y,
+        viewer.width,
+        viewer.height,
         SWP_NOACTIVATE);
 
     int panel_width =
@@ -411,16 +564,8 @@ void MainWindow::LayoutChildren() {
                 width -
                     (2 * kOuterPadding)));
 
-    const int status_y = 0;
-    const int toggle_y = status_y;
-    const int toggle_x =
-        std::max(
-            kOuterPadding,
-            width -
-                kOuterPadding -
-                kSettingsToggleWidth);
     const int panel_y =
-        kStatusHeight +
+        viewer.y +
         kOuterPadding;
     const int panel_height =
         std::max(
@@ -442,23 +587,44 @@ void MainWindow::LayoutChildren() {
     settings_panel_.Show(
         settings_visible_);
 
-    SetWindowPos(
+    ShowWindow(
         status_bar_,
-        HWND_TOP,
-        0,
-        status_y,
-        width,
-        kStatusHeight,
-        SWP_NOACTIVATE);
-
-    SetWindowPos(
+        show_status_chrome
+            ? SW_SHOW
+            : SW_HIDE);
+    ShowWindow(
         settings_toggle_button_,
-        HWND_TOP,
-        toggle_x,
-        toggle_y,
-        kSettingsToggleWidth,
-        kStatusHeight,
-        SWP_NOACTIVATE);
+        show_status_chrome
+            ? SW_SHOW
+            : SW_HIDE);
+
+    if (show_status_chrome) {
+        const int toggle_x =
+            std::max(
+                kOuterPadding,
+                width -
+                    kOuterPadding -
+                    kSettingsToggleWidth);
+
+        SetWindowPos(
+            status_bar_,
+            HWND_TOP,
+            0,
+            0,
+            width,
+            kStatusHeight,
+            SWP_NOACTIVATE);
+
+        SetWindowPos(
+            settings_toggle_button_,
+            HWND_TOP,
+            toggle_x,
+            0,
+            kSettingsToggleWidth,
+            kStatusHeight,
+            SWP_NOACTIVATE |
+                SWP_SHOWWINDOW);
+    }
 
     if (settings_visible_) {
         SetWindowPos(
@@ -473,24 +639,26 @@ void MainWindow::LayoutChildren() {
                 SWP_NOACTIVATE);
     }
 
-    SetWindowPos(
-        settings_toggle_button_,
-        HWND_TOP,
-        0,
-        0,
-        0,
-        0,
-        SWP_NOMOVE |
-            SWP_NOSIZE |
-            SWP_NOACTIVATE |
-            SWP_SHOWWINDOW);
+    if (show_status_chrome) {
+        SetWindowPos(
+            settings_toggle_button_,
+            HWND_TOP,
+            0,
+            0,
+            0,
+            0,
+            SWP_NOMOVE |
+                SWP_NOSIZE |
+                SWP_NOACTIVATE |
+                SWP_SHOWWINDOW);
+    }
 
     if (resize_callback_) {
         resize_callback_(
             static_cast<UINT>(
-                width),
+                viewer.width),
             static_cast<UINT>(
-                height));
+                viewer.height));
     }
 }
 
@@ -932,6 +1100,10 @@ LRESULT MainWindow::HandleMessage(
                 theme::PanelBrush());
         }
         break;
+
+    case kDeferredUiCommandMessage:
+        DispatchDeferredUiCommand();
+        return 0;
 
     case diagnostics::WM_FPS_DIAGNOSTICS_READY:
         if (diagnostics_ready_callback_) {

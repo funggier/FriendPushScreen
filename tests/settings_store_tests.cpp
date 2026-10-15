@@ -19,6 +19,7 @@ void RunSettingsStoreTests() {
     preferences.host = "friend.example.net";
     preferences.share_port = 42801;
     preferences.remote_port = 43123;
+    preferences.show_cursor = false;
     preferences.audio_source =
         AudioSourceKind::System;
     preferences.receiver_muted = true;
@@ -40,6 +41,9 @@ void RunSettingsStoreTests() {
         std::string::npos);
     FPS_EXPECT_TRUE(
         text.find("remote_port=43123") !=
+        std::string::npos);
+    FPS_EXPECT_TRUE(
+        text.find("show_cursor=false") !=
         std::string::npos);
     FPS_EXPECT_TRUE(
         text.find("share_state=") == std::string::npos);
@@ -74,6 +78,9 @@ void RunSettingsStoreTests() {
     FPS_EXPECT_EQ(
         parsed.remote_port,
         preferences.remote_port);
+    FPS_EXPECT_EQ(
+        parsed.show_cursor,
+        preferences.show_cursor);
     FPS_EXPECT_EQ(
         parsed.audio_source,
         preferences.audio_source);
@@ -147,6 +154,7 @@ void RunSettingsStoreTests() {
             std::string{"friend.example.net"});
         FPS_EXPECT_EQ(loaded.share_port, 42801u);
         FPS_EXPECT_EQ(loaded.remote_port, 43123u);
+        FPS_EXPECT_TRUE(!loaded.show_cursor);
         FPS_EXPECT_EQ(loaded.receiver_volume, 42);
 
         std::ifstream input{path, std::ios::binary};
