@@ -2,7 +2,7 @@
 
 ## FPS-005 — Unified Capture Sources
 
-**Status:** ACTIVE
+**Status:** GREEN / CLOSED
 
 **Branch:** `fps-005-unified-capture-sources`
 
@@ -63,3 +63,5 @@ FPS-005 becomes GREEN only after:
 ### Next after FPS-005
 
 `FPS-006 — Encode / Decode / Local Loopback`
+
+No development task is ACTIVE after FPS-005 closure.
