@@ -15,6 +15,7 @@ add_executable(FriendPushScreen WIN32
     src/app/application.cpp
     src/ui/main_window.cpp
     src/ui/ui_state.cpp
+    src/ui/settings_store.cpp
     src/graphics/d3d11_device.cpp
     src/graphics/placeholder_renderer.cpp
     src/diagnostics/diagnostics_formatter.cpp
@@ -53,6 +54,7 @@ add_executable(FriendPushScreenTests
     tests/platform_filter_tests.cpp
     tests/diagnostics_service_tests.cpp
     tests/ui_state_tests.cpp
+    tests/settings_store_tests.cpp
     src/diagnostics/diagnostics_formatter.cpp
     src/diagnostics/diagnostics_service.cpp
     src/diagnostics/logger.cpp
@@ -67,6 +69,7 @@ add_executable(FriendPushScreenTests
     src/graphics/d3d11_device.cpp
     src/ui/main_window.cpp
     src/ui/ui_state.cpp
+    src/ui/settings_store.cpp
 )
 target_include_directories(FriendPushScreenTests PRIVATE
     tests

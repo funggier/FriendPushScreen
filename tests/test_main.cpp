@@ -4,6 +4,7 @@ void RunDiagnosticsFormatterTests();
 void RunPlatformFilterTests();
 void RunDiagnosticsServiceTests();
 void RunUiStateTests();
+void RunSettingsStoreTests();
 
 int main() {
     FPS_EXPECT_TRUE(true);
@@ -12,5 +13,6 @@ int main() {
     RunPlatformFilterTests();
     RunDiagnosticsServiceTests();
     RunUiStateTests();
+    RunSettingsStoreTests();
     return fps::test::FailureCount() == 0 ? 0 : 1;
 }
