@@ -9,14 +9,14 @@ This roadmap converts the V1 master specification into execution-sized FPS tasks
 | FPS-003 | Windows App Skeleton & Hardware Diagnostics | Launchable native Win32/D3D11 app plus capability inventory | GREEN |
 | FPS-004 | Viewer UI & Settings Shell | Viewer/settings shell, Share Port, Connection Host/Remote Port, program-owned dark controls, canonical Windows app icon, sender Audio Source, receiver mute/volume state | GREEN |
 | FPS-005 | Unified Capture Sources | Monitor, Window, and generic Capture Card preview through one source abstraction | GREEN |
-| FPS-006 | Encode / Decode / Local Loopback | Hardware video paths plus H.264 fallback and stable 1080p60 local loop | PLANNED |
+| FPS-006 | Encode / Decode / Local Loopback | Hardware video paths plus H.264 fallback and stable 1080p60 local loop | ACTIVE |
 | FPS-006A | Audio Capture / Encode / Local Loopback | WASAPI System/Device sources, process-loopback capability, local audio codec loop, receiver playback/mute/volume | PLANNED |
 | FPS-007 | Feedback Protection | Capture exclusion where supported plus black-mask fallback | PLANNED |
 | FPS-008 | Control Protocol | Versioned handshake, connection/audio/video capabilities, peer/share/audio state, heartbeat, reconnect semantics | PLANNED |
 | FPS-009 | Media Transport Decision & Network Streaming | Evidence-backed secure low-latency control/video/audio transport; one-port feasibility; timing/multiplexing | PLANNED |
 | FPS-010 | Connectivity Modes | Dual-instance localhost, LAN, Direct IP/DDNS, Tailscale, secure Direct Internet, reconnect/path diagnostics | PLANNED |
 | FPS-011 | One-Way Production Flow | Daily-usable A → B video plus optional shared audio across all V1 source types | PLANNED |
-| FPS-012 | Two-Way Sharing | Stable A ↔ B video/audio streams with independent source state, receiver mute/volume, and feedback protection | PLANNED |
+| FPS-012 | Two-Way Sharing | Stable A ↔ B video/audio streams with independent audio state, receiver mute/volume, and feedback protection | PLANNED |
 | FPS-013 | Quality Controller | Conservative video adaptation with hysteresis while preserving control/audio continuity and bounded audio QoS | PLANNED |
 | FPS-014 | Recovery Qualification | Network, peer, video/audio source, endpoint/device, sleep/wake and related fault recovery | PLANNED |
 | FPS-015 | Installer & Distribution | Windows x64 install/uninstall, runtime/audio codec packaging, firewall guidance, notices/compliance | PLANNED |
