@@ -5,6 +5,7 @@ This directory separates stable product intent from current execution state.
 ## Master specification
 
 - `development-plan/ScreenLink_V1_Architecture_and_Development_Plan_TH.md` — V1 product specification, architecture blueprint, milestone sequence, risks, and acceptance criteria.
+- `superpowers/specs/2026-10-15-v1-audio-connectivity-amendment.md` — authoritative V1 amendment adding shared audio plus LAN / Direct IP-DDNS / Tailscale connectivity.
 
 ## Build and runtime baseline
 
@@ -25,8 +26,9 @@ This directory separates stable product intent from current execution state.
 
 ## Planning
 
+- `superpowers/specs/` — approved architecture/design specifications.
 - `superpowers/plans/` — implementation plans for scoped development tasks.
 
 ## Rule
 
-Do not duplicate the full V1 specification into task files. Task files state current execution and evidence; the master specification remains the product/architecture authority unless an explicit later decision supersedes it.
+Do not duplicate the full V1 specification into task files. Task files state current execution and evidence. The master specification remains the baseline product/architecture authority unless an explicit later approved amendment supersedes it.
