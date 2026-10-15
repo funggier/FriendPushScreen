@@ -322,7 +322,7 @@ void Application::HandleUiCommand(
 
     case ui::UiCommandType::SetConnectionMode:
         if (command.value >= 0 &&
-            command.value <= 3) {
+            command.value <= 2) {
             ui_state_.preferences.
                 connection_mode =
                 static_cast<

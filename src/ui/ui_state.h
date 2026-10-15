@@ -6,7 +6,6 @@
 namespace fps::ui {
 
 enum class ConnectionMode {
-    Auto,
     Lan,
     DirectIpDdNs,
     Tailscale
@@ -36,7 +35,7 @@ struct UiPreferences {
     bool borderless{false};
     bool always_on_top{false};
 
-    ConnectionMode connection_mode{ConnectionMode::Auto};
+    ConnectionMode connection_mode{ConnectionMode::DirectIpDdNs};
     std::string host;
     std::uint32_t share_port{42800};
     std::uint32_t remote_port{42800};

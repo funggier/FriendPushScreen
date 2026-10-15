@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(FriendPushScreen VERSION 0.1.0 LANGUAGES CXX)
+project(FriendPushScreen VERSION 0.1.0 LANGUAGES CXX RC)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,6 +11,7 @@ add_compile_definitions(UNICODE _UNICODE NOMINMAX)
 include(cmake/warnings.cmake)
 
 add_executable(FriendPushScreen WIN32
+    resources/FriendPushScreen.rc
     src/app/main.cpp
     src/app/application.cpp
     src/ui/main_window.cpp
@@ -32,7 +33,10 @@ add_executable(FriendPushScreen WIN32
     src/media/capture_device_probe.cpp
     src/media/codec_capability_probe.cpp
 )
-target_include_directories(FriendPushScreen PRIVATE src)
+target_include_directories(FriendPushScreen PRIVATE
+    src
+    resources
+)
 fps_apply_warnings(FriendPushScreen)
 target_link_libraries(FriendPushScreen PRIVATE
     Advapi32
@@ -81,6 +85,7 @@ add_executable(FriendPushScreenTests
 target_include_directories(FriendPushScreenTests PRIVATE
     tests
     src
+    resources
 )
 fps_apply_warnings(FriendPushScreenTests)
 target_link_libraries(FriendPushScreenTests PRIVATE

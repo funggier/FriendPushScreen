@@ -97,7 +97,7 @@ void RunSettingsStoreTests() {
         FPS_EXPECT_TRUE(corrupt.settings_visible);
         FPS_EXPECT_EQ(
             corrupt.connection_mode,
-            ConnectionMode::Auto);
+            ConnectionMode::DirectIpDdNs);
         FPS_EXPECT_EQ(corrupt.share_port, 42800u);
         FPS_EXPECT_EQ(corrupt.remote_port, 42800u);
         FPS_EXPECT_EQ(corrupt.receiver_volume, 100);
@@ -196,6 +196,29 @@ void RunSettingsStoreTests() {
         FPS_EXPECT_EQ(
             legacy.share_port,
             42800u);
+    }
+
+    {
+        const UiPreferences legacy_auto =
+            ParsePreferences(
+                "version=1\n"
+                "connection_mode=auto\n");
+
+        FPS_EXPECT_EQ(
+            legacy_auto.connection_mode,
+            ConnectionMode::DirectIpDdNs);
+
+        const std::string migrated =
+            SerializePreferences(legacy_auto);
+
+        FPS_EXPECT_TRUE(
+            migrated.find(
+                "connection_mode=auto") ==
+            std::string::npos);
+        FPS_EXPECT_TRUE(
+            migrated.find(
+                "connection_mode=direct_ip_ddns") !=
+            std::string::npos);
     }
 
     FPS_EXPECT_TRUE(

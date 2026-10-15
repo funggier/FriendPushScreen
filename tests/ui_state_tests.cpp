@@ -21,7 +21,7 @@ void RunUiStateTests() {
         ConnectionUiState::Disconnected);
     FPS_EXPECT_EQ(
         state.preferences.connection_mode,
-        ConnectionMode::Auto);
+        ConnectionMode::DirectIpDdNs);
     FPS_EXPECT_EQ(state.preferences.share_port, 42800u);
     FPS_EXPECT_EQ(state.preferences.remote_port, 42800u);
     FPS_EXPECT_EQ(

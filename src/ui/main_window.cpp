@@ -1,6 +1,7 @@
 #include "ui/main_window.h"
 
 #include "diagnostics/diagnostics_service.h"
+#include "resource.h"
 #include "ui/theme.h"
 
 #include <commdlg.h>
@@ -184,6 +185,28 @@ bool MainWindow::Create(
     window_class.hInstance = instance;
     window_class.hCursor =
         LoadCursorW(nullptr, IDC_ARROW);
+    window_class.hIcon =
+        static_cast<HICON>(
+            LoadImageW(
+                instance,
+                MAKEINTRESOURCEW(
+                    IDI_FRIENDPUSHSCREEN),
+                IMAGE_ICON,
+                GetSystemMetrics(SM_CXICON),
+                GetSystemMetrics(SM_CYICON),
+                LR_DEFAULTCOLOR |
+                    LR_SHARED));
+    window_class.hIconSm =
+        static_cast<HICON>(
+            LoadImageW(
+                instance,
+                MAKEINTRESOURCEW(
+                    IDI_FRIENDPUSHSCREEN),
+                IMAGE_ICON,
+                GetSystemMetrics(SM_CXSMICON),
+                GetSystemMetrics(SM_CYSMICON),
+                LR_DEFAULTCOLOR |
+                    LR_SHARED));
     window_class.hbrBackground =
         reinterpret_cast<HBRUSH>(
             GetStockObject(

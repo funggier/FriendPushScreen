@@ -1437,7 +1437,7 @@ void SettingsPanel::InitializeControls(
         CreateButton(
             instance,
             kConnectionModeId,
-            L"Auto  \u25BE");
+            L"Direct IP / DDNS  \u25BE");
 
     const HWND root_owner =
         GetAncestor(hwnd_, GA_ROOT);
@@ -1450,11 +1450,6 @@ void SettingsPanel::InitializeControls(
             kDropKindConnection,
             &connection_mode_list_);
 
-    SendMessageW(
-        connection_mode_list_,
-        LB_ADDSTRING,
-        0,
-        reinterpret_cast<LPARAM>(L"Auto"));
     SendMessageW(
         connection_mode_list_,
         LB_ADDSTRING,
@@ -2434,11 +2429,8 @@ void SettingsPanel::ToggleDropList(HWND list) {
 
 void SettingsPanel::UpdateDropDownText(
     const UiState& state) {
-    const wchar_t* connection = L"Auto";
+    const wchar_t* connection = L"Direct IP / DDNS";
     switch (state.preferences.connection_mode) {
-    case ConnectionMode::Auto:
-        connection = L"Auto";
-        break;
     case ConnectionMode::Lan:
         connection = L"LAN";
         break;
@@ -2907,13 +2899,16 @@ LRESULT SettingsPanel::HandleMessage(
         const int selection =
             static_cast<int>(lparam);
 
-        if (selection < 0 ||
-            selection > 3) {
+        if (selection < 0) {
             return 0;
         }
 
         if (wparam ==
             kDropKindConnection) {
+            if (selection > 2) {
+                return 0;
+            }
+
             Emit(UiCommand{
                 UiCommandType::SetConnectionMode,
                 selection,
@@ -2924,6 +2919,10 @@ LRESULT SettingsPanel::HandleMessage(
 
         if (wparam ==
             kDropKindAudio) {
+            if (selection > 3) {
+                return 0;
+            }
+
             Emit(UiCommand{
                 UiCommandType::SelectAudioSource,
                 selection,

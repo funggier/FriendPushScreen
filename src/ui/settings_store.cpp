@@ -18,8 +18,6 @@ std::string BoolText(bool value) {
 const char* ConnectionModeText(
     ConnectionMode mode) {
     switch (mode) {
-    case ConnectionMode::Auto:
-        return "auto";
     case ConnectionMode::Lan:
         return "lan";
     case ConnectionMode::DirectIpDdNs:
@@ -27,7 +25,7 @@ const char* ConnectionModeText(
     case ConnectionMode::Tailscale:
         return "tailscale";
     }
-    return "auto";
+    return "direct_ip_ddns";
 }
 
 const char* AudioSourceText(
@@ -122,7 +120,9 @@ bool ParseConnectionMode(
     std::string_view value,
     ConnectionMode& output) {
     if (value == "auto") {
-        output = ConnectionMode::Auto;
+        // Legacy FPS-004 value. Auto mode was removed;
+        // migrate it to the explicit Direct IP / DDNS path.
+        output = ConnectionMode::DirectIpDdNs;
         return true;
     }
     if (value == "lan") {

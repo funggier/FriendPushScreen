@@ -117,7 +117,7 @@ A dedicated scrollable overlay container owns the settings controls.
 
 Controls:
 
-- Connection Mode combo: Auto / LAN / Direct IP-DDNS / Tailscale
+- Connection Mode combo: LAN / Direct IP-DDNS / Tailscale
 - Host edit
 - Port edit
 - Connect request button
@@ -233,7 +233,7 @@ On the reference Windows machine:
 - viewer surface renders through D3D11 Hardware
 - Tab hides/shows overlay
 - overlay is scrollable/responsive
-- Connection Mode includes all four modes
+- Connection Mode includes all three explicit modes
 - Host/Port visible
 - Audio Source visible
 - current Windows 10 build shows Application Audio unsupported
@@ -357,3 +357,16 @@ The button text explicitly advertises the keyboard shortcut:
 - hidden panel: `Settings (Tab)`
 
 The status summary uses a small left text inset so `Peer:` is not visually flush against the left border.
+
+### Canonical FriendPushScreen application icon
+
+FriendPushScreen uses one program-owned monitor icon built from layered oak / bronze / amber gradients on a transparent background.
+
+The branding source is reproducible through `tools/branding/generate_icon.py`, which emits:
+
+- `assets/branding/FriendPushScreen-icon.png`
+- `resources/FriendPushScreen.ico`
+
+The ICO contains 16/24/32/48/64/128/256 pixel variants and is embedded through the Win32 resource compiler. The native main-window class loads both large and small resource icons, so the same branding is used by the executable shell association and the window/title-bar icon.
+
+FPS-015 must reuse this canonical ICO for installer/shortcut branding rather than introducing a second icon set.

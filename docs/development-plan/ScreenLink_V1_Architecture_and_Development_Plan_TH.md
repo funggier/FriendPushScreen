@@ -107,7 +107,7 @@ ScreenLink V1 จะถูกออกแบบให้ **สองเครื
 - Application audio เมื่อ Windows runtime รองรับ process-loopback API
 - Remote Audio Mute / Unmute ฝั่ง Receiver
 - Remote Audio Volume ฝั่ง Receiver
-- Connection Mode: Auto / LAN / Direct IP-DDNS / Tailscale
+- Connection Mode: LAN / Direct IP-DDNS / Tailscale
 - Host / Port configuration
 - Secure Direct Internet session ก่อนรับ control/media data
 - Single-machine dual-instance development/qualification
@@ -1160,7 +1160,7 @@ Direct · 12 ms
 
 # 30. Networking Strategy for V1
 
-> **Amended 2026-10-15:** V1 รองรับ `Auto / LAN / Direct IP-DDNS / Tailscale` ผ่าน secure FriendPushScreen session architecture เดียวกัน โดย Direct Internet เป็น first-class V1 path และ target การใช้งานคือ configurable single UDP port เมื่อ transport ที่เลือกอนุญาต รายละเอียด authoritative อยู่ที่ `docs/superpowers/specs/2026-10-15-v1-audio-connectivity-amendment.md`
+> **Amended 2026-10-15:** V1 รองรับ `LAN / Direct IP-DDNS / Tailscale` ผ่าน secure FriendPushScreen session architecture เดียวกัน โดย Direct Internet เป็น first-class V1 path และ target การใช้งานคือ configurable single UDP port เมื่อ transport ที่เลือกอนุญาต รายละเอียด authoritative อยู่ที่ `docs/superpowers/specs/2026-10-15-v1-audio-connectivity-amendment.md`
 
 ## 30.1 Recommended Initial Transport Environment
 

@@ -23,7 +23,7 @@ Deliver the first viewer-first native Win32 UI shell on top of the FPS-003 D3D11
 - fullscreen / borderless / always-on-top
 - keyboard shortcuts
 - safe settings persistence
-- Connection Mode: Auto / LAN / Direct IP-DDNS / Tailscale
+- Connection Mode: LAN / Direct IP-DDNS / Tailscale
 - Share Port for the local sharing/listen endpoint
 - Connection Host / Remote Port
 - Connect / Disconnect request-state shell without real networking
@@ -31,6 +31,7 @@ Deliver the first viewer-first native Win32 UI shell on top of the FPS-003 D3D11
 - receiver mute/unmute + fully program-owned local volume slider
 - capability explanation for unsupported Application Audio
 - FriendPushScreen-owned dark palette for panel/status/buttons/text fields/dropdowns/slider/scrollbar
+- canonical oak-gradient monitor icon embedded in the executable and native window class
 - diagnostics preserved under Advanced
 
 ### Safety / scope boundary
