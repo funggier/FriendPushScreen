@@ -7,6 +7,7 @@
 #include "ui/ui_command.h"
 #include "ui/ui_state.h"
 
+#include <deque>
 #include <filesystem>
 #include <functional>
 #include <optional>
@@ -30,6 +31,9 @@ ViewerViewport CalculateViewerViewport(
     int client_width,
     int client_height,
     int status_height);
+
+bool ShouldDeferUiCommand(
+    UiCommandType type);
 
 class MainWindow {
 public:
@@ -106,6 +110,7 @@ private:
     void LayoutChildren();
 
     void Emit(UiCommand command);
+    void DispatchDeferredUiCommand();
 
     void ApplyWindowState(
         const UiState& state);
@@ -134,6 +139,7 @@ private:
     FrameCallback frame_callback_;
     UiCommandCallback ui_command_callback_;
     CommandCallback diagnostics_ready_callback_;
+    std::deque<UiCommand> deferred_ui_commands_;
 
     bool settings_visible_{true};
 

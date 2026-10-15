@@ -23,6 +23,8 @@ constexpr wchar_t kRenderSurfaceClassName[] =
 
 constexpr UINT_PTR kRenderTimerId = 1;
 constexpr UINT kRenderTimerMs = 100;
+constexpr UINT kDeferredUiCommandMessage =
+    WM_APP + 0x70;
 
 constexpr int kOuterPadding = 12;
 constexpr int kStatusHeight = 30;
@@ -112,6 +114,20 @@ ViewerViewport CalculateViewerViewport(
                 safe_status_height)};
 }
 
+bool ShouldDeferUiCommand(
+    UiCommandType type) {
+    switch (type) {
+    case UiCommandType::SelectCaptureSource:
+    case UiCommandType::ToggleCapturePreview:
+    case UiCommandType::RefreshCaptureSources:
+    case UiCommandType::ToggleShowCursor:
+        return true;
+    default:
+        return false;
+    }
+}
+
+
 
 std::wstring NormalizeWin32MultilineText(
     std::wstring_view text) {
@@ -161,6 +177,42 @@ void MainWindow::SetDiagnosticsReadyCallback(
 
 void MainWindow::Emit(
     UiCommand command) {
+    if (!ui_command_callback_) {
+        return;
+    }
+
+    if (hwnd_ != nullptr &&
+        ShouldDeferUiCommand(
+            command.type)) {
+        deferred_ui_commands_.
+            push_back(
+                std::move(command));
+
+        if (PostMessageW(
+                hwnd_,
+                kDeferredUiCommandMessage,
+                0,
+                0) != FALSE) {
+            return;
+        }
+
+        command = std::move(
+            deferred_ui_commands_.back());
+        deferred_ui_commands_.pop_back();
+    }
+
+    ui_command_callback_(command);
+}
+
+void MainWindow::DispatchDeferredUiCommand() {
+    if (deferred_ui_commands_.empty()) {
+        return;
+    }
+
+    UiCommand command = std::move(
+        deferred_ui_commands_.front());
+    deferred_ui_commands_.pop_front();
+
     if (ui_command_callback_) {
         ui_command_callback_(command);
     }
@@ -1048,6 +1100,10 @@ LRESULT MainWindow::HandleMessage(
                 theme::PanelBrush());
         }
         break;
+
+    case kDeferredUiCommandMessage:
+        DispatchDeferredUiCommand();
+        return 0;
 
     case diagnostics::WM_FPS_DIAGNOSTICS_READY:
         if (diagnostics_ready_callback_) {

@@ -77,6 +77,7 @@ add_executable(FriendPushScreenTests
     tests/settings_store_tests.cpp
     tests/capture_source_catalog_tests.cpp
     tests/main_window_layout_tests.cpp
+    tests/preview_renderer_tests.cpp
     tests/runtime_paths_tests.cpp
     src/capture/capture_source.cpp
     src/capture/capture_source_catalog.cpp

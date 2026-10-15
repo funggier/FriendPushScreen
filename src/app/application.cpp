@@ -20,6 +20,7 @@
 #include <utility>
 #include <chrono>
 #include <cstdint>
+#include <cstdio>
 #include <string>
 
 namespace fps::app {
@@ -37,6 +38,23 @@ const wchar_t* RendererStatusText(
     }
 
     return L"D3D11 Renderer Error";
+}
+
+std::string CaptureFailureText(
+    const capture::ICaptureSession& session) {
+    char code[16]{};
+    std::snprintf(
+        code,
+        sizeof(code),
+        "0x%08X",
+        static_cast<unsigned int>(
+            static_cast<std::uint32_t>(
+                session.LastError())));
+
+    return session.StatusText() +
+        " (" +
+        code +
+        ")";
 }
 
 std::wstring Utf8ToWide(
@@ -474,7 +492,8 @@ void Application::StartCapturePreview() {
 
     if (!capture_session_->Start()) {
         capture_status_ =
-            capture_session_->StatusText();
+            CaptureFailureText(
+                *capture_session_);
         last_capture_state_ =
             capture_session_->State();
         capture_session_.reset();

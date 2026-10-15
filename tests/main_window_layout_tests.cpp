@@ -4,6 +4,24 @@
 
 void RunMainWindowLayoutTests() {
     using fps::ui::CalculateViewerViewport;
+    using fps::ui::ShouldDeferUiCommand;
+    using fps::ui::UiCommandType;
+
+    FPS_EXPECT_TRUE(
+        ShouldDeferUiCommand(
+            UiCommandType::SelectCaptureSource));
+    FPS_EXPECT_TRUE(
+        ShouldDeferUiCommand(
+            UiCommandType::ToggleCapturePreview));
+    FPS_EXPECT_TRUE(
+        ShouldDeferUiCommand(
+            UiCommandType::RefreshCaptureSources));
+    FPS_EXPECT_TRUE(
+        ShouldDeferUiCommand(
+            UiCommandType::ToggleShowCursor));
+    FPS_EXPECT_TRUE(
+        !ShouldDeferUiCommand(
+            UiCommandType::ToggleSettings));
 
     {
         const auto viewport =

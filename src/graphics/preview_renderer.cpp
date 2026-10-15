@@ -76,6 +76,51 @@ bool CompileShader(
 
 }  // namespace
 
+PreviewFit CalculateAspectFit(
+    std::uint32_t view_width,
+    std::uint32_t view_height,
+    std::uint32_t frame_width,
+    std::uint32_t frame_height) {
+    if (view_width == 0 ||
+        view_height == 0 ||
+        frame_width == 0 ||
+        frame_height == 0) {
+        return {};
+    }
+
+    const double scale_x =
+        static_cast<double>(view_width) /
+        static_cast<double>(frame_width);
+    const double scale_y =
+        static_cast<double>(view_height) /
+        static_cast<double>(frame_height);
+    const double scale =
+        std::min(scale_x, scale_y);
+
+    const float width =
+        static_cast<float>(
+            static_cast<double>(
+                frame_width) *
+            scale);
+    const float height =
+        static_cast<float>(
+            static_cast<double>(
+                frame_height) *
+            scale);
+
+    return PreviewFit{
+        (static_cast<float>(view_width) -
+         width) /
+            2.0F,
+        (static_cast<float>(view_height) -
+         height) /
+            2.0F,
+        width,
+        height,
+        scale
+    };
+}
+
 bool PreviewRenderer::Initialize(
     HWND hwnd,
     const RendererCreationPolicy& policy) {
@@ -548,43 +593,25 @@ bool PreviewRenderer::DrawFrame(
         target,
         clear.data());
 
-    const double scale_x =
-        static_cast<double>(view_width_) /
-        static_cast<double>(frame.width);
-    const double scale_y =
-        static_cast<double>(view_height_) /
-        static_cast<double>(frame.height);
-    const double scale =
-        std::min(scale_x, scale_y);
-
-    const float destination_width =
-        static_cast<float>(
-            static_cast<double>(
-                frame.width) *
-            scale);
-    const float destination_height =
-        static_cast<float>(
-            static_cast<double>(
-                frame.height) *
-            scale);
+    const PreviewFit fit =
+        CalculateAspectFit(
+            view_width_,
+            view_height_,
+            frame.width,
+            frame.height);
+    const double scale = fit.scale;
 
     D3D11_VIEWPORT viewport{};
-    viewport.TopLeftX =
-        (static_cast<float>(view_width_) -
-         destination_width) /
-        2.0F;
-    viewport.TopLeftY =
-        (static_cast<float>(view_height_) -
-         destination_height) /
-        2.0F;
+    viewport.TopLeftX = fit.x;
+    viewport.TopLeftY = fit.y;
     viewport.Width =
         std::max(
             1.0F,
-            destination_width);
+            fit.width);
     viewport.Height =
         std::max(
             1.0F,
-            destination_height);
+            fit.height);
     viewport.MinDepth = 0.0F;
     viewport.MaxDepth = 1.0F;
 

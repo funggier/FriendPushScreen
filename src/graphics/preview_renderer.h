@@ -10,6 +10,20 @@
 
 namespace fps::graphics {
 
+struct PreviewFit {
+    float x{0.0F};
+    float y{0.0F};
+    float width{0.0F};
+    float height{0.0F};
+    double scale{0.0};
+};
+
+PreviewFit CalculateAspectFit(
+    std::uint32_t view_width,
+    std::uint32_t view_height,
+    std::uint32_t frame_width,
+    std::uint32_t frame_height);
+
 class PreviewRenderer {
 public:
     bool Initialize(
