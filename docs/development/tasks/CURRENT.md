@@ -2,7 +2,7 @@
 
 ## FPS-004 — Viewer UI & Settings Shell
 
-**Status:** ACTIVE
+**Status:** GREEN / CLOSED
 
 **Branch:** `fps-004-viewer-ui-settings-shell`
 
@@ -58,3 +58,5 @@ FPS-004 becomes GREEN only after:
 ### Next after FPS-004
 
 `FPS-005 — Unified Capture Sources`
+
+No development task is ACTIVE after FPS-004 closure.
