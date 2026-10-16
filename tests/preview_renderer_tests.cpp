@@ -150,6 +150,45 @@ void RunPreviewRendererTests() {
                 for(const auto button:buttons)RemoveWindowSubclass(button,CountSettingsText,992);
                 for(const auto list:lists)RemoveWindowSubclass(list,CountCodecReloads,993);
             }
+            {
+                HWND panel=FindWindowExW(window.Handle(),nullptr,L"FriendPushScreenSettingsPanel",nullptr);
+                HWND diagnostics=nullptr;
+                for(HWND edit=FindWindowExW(panel,nullptr,L"EDIT",nullptr);edit;edit=FindWindowExW(panel,edit,L"EDIT",nullptr)) {
+                    if((GetWindowLongPtrW(edit,GWL_STYLE)&ES_MULTILINE)!=0){diagnostics=edit;break;}
+                }
+                FPS_EXPECT_TRUE(diagnostics!=nullptr);
+                if(diagnostics) {
+                    HDC dc=CreateCompatibleDC(nullptr);RECT bounds{};GetClientRect(diagnostics,&bounds);
+                    BITMAPINFO info{};info.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
+                    info.bmiHeader.biWidth=std::max<LONG>(32,bounds.right);info.bmiHeader.biHeight=-std::max<LONG>(32,bounds.bottom);
+                    info.bmiHeader.biPlanes=1;info.bmiHeader.biBitCount=32;info.bmiHeader.biCompression=BI_RGB;
+                    void* pixels=nullptr;HBITMAP bitmap=CreateDIBSection(dc,&info,DIB_RGB_COLORS,&pixels,nullptr,0);
+                    HGDIOBJ previous=SelectObject(dc,bitmap);
+                    SetBkMode(dc,TRANSPARENT);
+                    const auto brush=SendMessageW(panel,WM_CTLCOLORSTATIC,reinterpret_cast<WPARAM>(dc),reinterpret_cast<LPARAM>(diagnostics));
+                    std::cout<<"diagnostics_readonly_background mode="<<GetBkMode(dc)<<" color="<<GetBkColor(dc)<<'\n';
+                    FPS_EXPECT_EQ(GetBkMode(dc),OPAQUE);
+                    FPS_EXPECT_EQ(GetBkColor(dc),fps::ui::theme::kSurfaceBackground);
+                    FPS_EXPECT_TRUE(reinterpret_cast<HBRUSH>(brush)==fps::ui::theme::SurfaceBrush());
+                    RECT area{0,0,info.bmiHeader.biWidth,-info.bmiHeader.biHeight};
+                    FillRect(dc,&area,fps::ui::theme::SurfaceBrush());
+                    FPS_EXPECT_TRUE(window.SetDiagnosticsText(L"MMMMMMMMMMMMMMMMMMMMMMMMMMMM\r\nMMMMMMMMMMMMMMMMMMMMMMMMMMMM"));
+                    SendMessageW(diagnostics,WM_PRINTCLIENT,reinterpret_cast<WPARAM>(dc),PRF_CLIENT);
+                    FPS_EXPECT_TRUE(window.SetDiagnosticsText(L"I\r\nI"));
+                    SendMessageW(diagnostics,WM_PRINTCLIENT,reinterpret_cast<WPARAM>(dc),PRF_CLIENT);
+                    GdiFlush();
+                    const auto bytes=static_cast<std::size_t>(area.right)*area.bottom*4;
+                    const std::vector<unsigned char> repainted(static_cast<unsigned char*>(pixels),static_cast<unsigned char*>(pixels)+bytes);
+                    FillRect(dc,&area,fps::ui::theme::SurfaceBrush());
+                    SendMessageW(diagnostics,WM_PRINTCLIENT,reinterpret_cast<WPARAM>(dc),PRF_CLIENT);
+                    GdiFlush();
+                    unsigned stale=0;const auto* clean=static_cast<const unsigned char*>(pixels);
+                    for(std::size_t i=0;i<bytes;i+=4)if(repainted[i]!=clean[i]||repainted[i+1]!=clean[i+1]||repainted[i+2]!=clean[i+2])++stale;
+                    std::cout<<"diagnostics_repaint_stale_pixels="<<stale<<'\n';
+                    FPS_EXPECT_EQ(stale,0U);
+                    SelectObject(dc,previous);DeleteObject(bitmap);DeleteDC(dc);
+                }
+            }
             unsigned callbacks=0;window.SetResizeCallback([&](UINT,UINT){++callbacks;});
             fps::ui::UiState state;window.ApplyUiState(state);const auto initial=callbacks;
             state.peer_status="Authenticated peer connected | receiving H.264";window.ApplyUiState(state);

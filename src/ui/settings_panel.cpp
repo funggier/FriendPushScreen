@@ -3186,6 +3186,13 @@ LRESULT SettingsPanel::HandleMessage(
         const HDC dc =
             reinterpret_cast<HDC>(wparam);
         SetTextColor(dc, theme::kTextPrimary);
+        // Read-only EDIT controls use WM_CTLCOLORSTATIC too. An opaque
+        // background erases old glyphs in the exposed rows when scrolling.
+        if (reinterpret_cast<HWND>(lparam) == diagnostics_edit_) {
+            SetBkColor(dc, theme::kSurfaceBackground);
+            SetBkMode(dc, OPAQUE);
+            return reinterpret_cast<LRESULT>(theme::SurfaceBrush());
+        }
         SetBkColor(dc, theme::kPanelBackground);
         SetBkMode(dc, TRANSPARENT);
         return reinterpret_cast<LRESULT>(

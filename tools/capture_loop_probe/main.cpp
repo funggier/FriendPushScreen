@@ -31,7 +31,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
 }
 LRESULT CALLBACK FixtureProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
     if(msg==WM_PAINT) {
-        PAINTSTRUCT ps{};HDC dc=BeginPaint(hwnd,&ps);RECT area{};GetClientRect(hwnd,&area);
+        PAINTSTRUCT ps{};HDC target=BeginPaint(hwnd,&ps);RECT area{};GetClientRect(hwnd,&area);
+        // Capture must see a completed source image, never the background-only
+        // intermediate state of this intentionally animated GDI test fixture.
+        HDC dc=CreateCompatibleDC(target);
+        HBITMAP bitmap=CreateCompatibleBitmap(target,std::max<LONG>(1,area.right),std::max<LONG>(1,area.bottom));
+        if(!dc||!bitmap) {
+            if(bitmap)DeleteObject(bitmap);if(dc)DeleteDC(dc);
+            EndPaint(hwnd,&ps);PostMessageW(hwnd,WM_CLOSE,0,0);return 0;
+        }
+        HGDIOBJ previous=SelectObject(dc,bitmap);
         HBRUSH background=CreateSolidBrush(RGB(24,36,48));FillRect(dc,&area,background);DeleteObject(background);
         const COLORREF colors[]{RGB(255,0,0),RGB(0,255,0),RGB(0,0,255),RGB(255,255,255)};
         for(int i=0;i<4;++i) {
@@ -44,6 +53,8 @@ LRESULT CALLBACK FixtureProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
         TextOutW(dc,24,160,text.c_str(),static_cast<int>(text.size()));
         // The border marks the entire source extent so cropping is visible.
         HBRUSH border=CreateSolidBrush(RGB(255,255,255));FrameRect(dc,&area,border);DeleteObject(border);
+        BitBlt(target,0,0,area.right,area.bottom,dc,0,0,SRCCOPY);
+        SelectObject(dc,previous);DeleteObject(bitmap);DeleteDC(dc);
         EndPaint(hwnd,&ps);return 0;
     }
     return DefWindowProcW(hwnd,msg,wp,lp);
