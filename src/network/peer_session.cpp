@@ -112,7 +112,7 @@ bool PeerSession::OnControl(std::uint64_t id,const ControlMessage& message,std::
     case ControlType::Ping:Send(id,ControlType::Pong,0,message.value);break;
     case ControlType::Pong:break;
     case ControlType::Goodbye:Emit(SessionActionKind::CloseConnection,id);link.closing=true;ClearActive();break;
-    case ControlType::Error:Emit(SessionActionKind::Error,id,{},message.text);break;
+    case ControlType::Error:Emit(SessionActionKind::Error,id,message,message.text);break;
     default:return FailLink(id,"Unsupported control message");
     }
     return true;

@@ -189,6 +189,9 @@ private:
 
     CommandCallback command_callback_;
 
+    bool dropdown_initialized_{false};
+    ConnectionMode applied_connection_mode_{ConnectionMode::DirectIpDdNs};
+    AudioSourceKind applied_audio_source_{AudioSourceKind::None};
     bool applying_state_{false};
     bool diagnostics_visible_{false};
     int scroll_offset_{0};

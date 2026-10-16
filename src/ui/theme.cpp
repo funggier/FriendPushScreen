@@ -18,6 +18,15 @@ LRESULT CALLBACK DarkBorderSubclassProc(
     LPARAM lparam,
     UINT_PTR subclass_id,
     DWORD_PTR) {
+    if(message==WM_ERASEBKGND) {
+        wchar_t name[16]{};GetClassNameW(hwnd,name,16);
+        if(lstrcmpiW(name,L"BUTTON")==0&&(GetWindowLongPtrW(hwnd,GWL_STYLE)&BS_TYPEMASK)==BS_OWNERDRAW) {
+            RECT client{};GetClientRect(hwnd,&client);
+            const bool pressed=(SendMessageW(hwnd,BM_GETSTATE,0,0)&BST_PUSHED)!=0;
+            FillRect(reinterpret_cast<HDC>(wparam),&client,pressed?ButtonPressedBrush():ButtonBrush());
+            return 1;
+        }
+    }
     if (message == WM_NCPAINT) {
         const LRESULT result =
             DefSubclassProc(

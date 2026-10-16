@@ -1239,6 +1239,10 @@ void SetTextIfDifferent(
     }
 }
 
+void SetCheckIfDifferent(HWND control,bool checked) {
+    const auto value=checked?BST_CHECKED:BST_UNCHECKED;
+    if(SendMessageW(control,BM_GETCHECK,0,0)!=value)SendMessageW(control,BM_SETCHECK,value,0);
+}
 std::wstring PortText(
     std::uint32_t port) {
     return std::to_wstring(port);
@@ -1318,6 +1322,9 @@ void SettingsPanel::SetBounds(
         return;
     }
 
+    RECT current{};GetWindowRect(hwnd_,&current);
+    MapWindowPoints(HWND_DESKTOP,GetParent(hwnd_),reinterpret_cast<POINT*>(&current),2);
+    if(current.left==x&&current.top==y&&current.right-current.left==std::max(1,width)&&current.bottom-current.top==std::max(1,height))return;
     SetWindowPos(
         hwnd_,
         HWND_TOP,
@@ -1327,13 +1334,16 @@ void SettingsPanel::SetBounds(
         std::max(1, height),
         SWP_NOACTIVATE);
 
-    LayoutControls();
+    // WM_SIZE lays out controls only when the client geometry changes.
 }
 
 void SettingsPanel::Show(bool visible) {
     if (hwnd_ == nullptr) {
         return;
     }
+
+    const bool shown=(GetWindowLongPtrW(hwnd_,GWL_STYLE)&WS_VISIBLE)!=0;
+    if(shown==visible)return;
 
     if (!visible) {
         HideDropLists();
@@ -2725,64 +2735,26 @@ void SettingsPanel::ToggleDropList(HWND list) {
             RDW_UPDATENOW);
 }
 
-void SettingsPanel::UpdateDropDownText(
-    const UiState& state) {
-    const wchar_t* connection = L"Direct IP / DDNS";
-    switch (state.preferences.connection_mode) {
-    case ConnectionMode::Lan:
-        connection = L"LAN";
-        break;
-    case ConnectionMode::DirectIpDdNs:
-        connection = L"Direct IP / DDNS";
-        break;
-    case ConnectionMode::Tailscale:
-        connection = L"Tailscale";
-        break;
+void SettingsPanel::UpdateDropDownText(const UiState& state) {
+    if(!dropdown_initialized_||applied_connection_mode_!=state.preferences.connection_mode) {
+        const wchar_t* connection=L"Direct IP / DDNS";
+        if(state.preferences.connection_mode==ConnectionMode::Lan)connection=L"LAN";
+        else if(state.preferences.connection_mode==ConnectionMode::Tailscale)connection=L"Tailscale";
+        SetTextIfDifferent(connection_mode_button_,std::wstring{connection}+L"  \u25BE");
+        SendMessageW(connection_mode_list_,LB_SETCURSEL,static_cast<WPARAM>(state.preferences.connection_mode),0);
+        applied_connection_mode_=state.preferences.connection_mode;
     }
-
-    std::wstring connection_text{connection};
-    connection_text += L"  \u25BE";
-    SetWindowTextW(
-        connection_mode_button_,
-        connection_text.c_str());
-
-    SendMessageW(
-        connection_mode_list_,
-        LB_SETCURSEL,
-        static_cast<WPARAM>(
-            state.preferences.connection_mode),
-        0);
-
-    const wchar_t* audio = L"No Audio";
-    switch (state.preferences.audio_source) {
-    case AudioSourceKind::None:
-        audio = L"No Audio";
-        break;
-    case AudioSourceKind::System:
-        audio = L"Desktop / System Audio";
-        break;
-    case AudioSourceKind::Device:
-        audio = L"Device Source";
-        break;
-    case AudioSourceKind::Application:
-        audio = L"Application Audio";
-        break;
+    if(!dropdown_initialized_||applied_audio_source_!=state.preferences.audio_source) {
+        const wchar_t* audio=L"No Audio";
+        if(state.preferences.audio_source==AudioSourceKind::System)audio=L"Desktop / System Audio";
+        else if(state.preferences.audio_source==AudioSourceKind::Device)audio=L"Device Source";
+        else if(state.preferences.audio_source==AudioSourceKind::Application)audio=L"Application Audio";
+        SetTextIfDifferent(audio_source_button_,std::wstring{audio}+L"  \u25BE");
+        SendMessageW(audio_source_list_,LB_SETCURSEL,static_cast<WPARAM>(state.preferences.audio_source),0);
+        applied_audio_source_=state.preferences.audio_source;
     }
-
-    std::wstring audio_text{audio};
-    audio_text += L"  \u25BE";
-    SetWindowTextW(
-        audio_source_button_,
-        audio_text.c_str());
-
-    SendMessageW(
-        audio_source_list_,
-        LB_SETCURSEL,
-        static_cast<WPARAM>(
-            state.preferences.audio_source),
-        0);
+    dropdown_initialized_=true;
 }
-
 void SettingsPanel::UpdateDiagnosticsVisibility(
     bool visible) {
     diagnostics_visible_ = visible;
@@ -2818,12 +2790,13 @@ void SettingsPanel::ApplyState(
         video_dirty_ = false; video_apply_pending_ = false;
     }
     if (!video_initialized_ || !video_dirty_) {
+        const bool changed=!video_initialized_||video_draft_!=state.preferences.video;
         video_draft_ = state.preferences.video;
         video_initialized_ = true;
-        UpdateVideoChoices();
+        if(changed)UpdateVideoChoices();
         SetTextIfDifferent(bitrate_edit_,std::to_wstring(video_draft_.bitrate_mbps));
         SetTextIfDifferent(keyframe_edit_,std::to_wstring(video_draft_.keyframe_interval));
-        SendMessageW(low_latency_checkbox_,BM_SETCHECK,video_draft_.low_latency ? BST_CHECKED : BST_UNCHECKED,0);
+        SetCheckIfDifferent(low_latency_checkbox_,video_draft_.low_latency);
     }
 
 std::wstring host;
@@ -2887,7 +2860,7 @@ std::wstring host;
 
     switch (state.preferences.audio_source) {
     case AudioSourceKind::None:
-        SetWindowTextW(
+        SetTextIfDifferent(
             audio_status_,
             state.application_audio_supported
                 ? L"Audio disabled. Application Audio capability is available on this Windows build."
@@ -2895,7 +2868,7 @@ std::wstring host;
         break;
 
     case AudioSourceKind::System:
-        SetWindowTextW(
+        SetTextIfDifferent(
             audio_status_,
             state.application_audio_supported
                 ? L"Desktop / System Audio selected - capture starts in FPS-006A."
@@ -2903,7 +2876,7 @@ std::wstring host;
         break;
 
     case AudioSourceKind::Device:
-        SetWindowTextW(
+        SetTextIfDifferent(
             audio_status_,
             state.application_audio_supported
                 ? L"Device Source selected - live device enumeration/capture starts in FPS-006A."
@@ -2911,7 +2884,7 @@ std::wstring host;
         break;
 
     case AudioSourceKind::Application:
-        SetWindowTextW(
+        SetTextIfDifferent(
             audio_status_,
             state.application_audio_supported
                 ? L"Application Audio selected - capture starts in FPS-006A."
@@ -2919,7 +2892,7 @@ std::wstring host;
         break;
     }
 
-    SetWindowTextW(
+    SetTextIfDifferent(
         mute_button_,
         state.preferences.receiver_muted
             ? L"Unmute Remote Audio"
@@ -2938,35 +2911,17 @@ std::wstring host;
             state.preferences.receiver_volume) +
         L"%";
 
-    SetWindowTextW(
+    SetTextIfDifferent(
         volume_label_,
-        volume_text.c_str());
+        volume_text);
 
-    SendMessageW(
-        show_cursor_checkbox_,
-        BM_SETCHECK,
-        state.preferences.show_cursor
-            ? BST_CHECKED
-            : BST_UNCHECKED,
-        0);
+    SetCheckIfDifferent(show_cursor_checkbox_,state.preferences.show_cursor);
 
-    SendMessageW(
-        topmost_checkbox_,
-        BM_SETCHECK,
-        state.preferences.always_on_top
-            ? BST_CHECKED
-            : BST_UNCHECKED,
-        0);
+    SetCheckIfDifferent(topmost_checkbox_,state.preferences.always_on_top);
 
-    SendMessageW(
-        borderless_checkbox_,
-        BM_SETCHECK,
-        state.preferences.borderless
-            ? BST_CHECKED
-            : BST_UNCHECKED,
-        0);
+    SetCheckIfDifferent(borderless_checkbox_,state.preferences.borderless);
 
-    SetWindowTextW(
+    SetTextIfDifferent(
         fullscreen_button_,
         state.fullscreen
             ? L"Exit Fullscreen (Esc)"
@@ -2985,12 +2940,12 @@ std::wstring host;
         UpdateDiagnosticsVisibility(
             diagnostics_visible_);
     } else {
-        SetWindowTextW(
+        SetTextIfDifferent(
             diagnostics_toggle_,
             diagnostics_visible_
                 ? L"Hide Diagnostics"
                 : L"Show Diagnostics");
-        LayoutControls();
+        // Status updates do not change control geometry.
     }
 }
 

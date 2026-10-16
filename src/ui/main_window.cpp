@@ -665,7 +665,8 @@ void MainWindow::LayoutChildren() {
                 SWP_SHOWWINDOW);
     }
 
-    if (resize_callback_) {
+    if (resize_callback_ && (viewer.width!=notified_view_width_ || viewer.height!=notified_view_height_)) {
+        notified_view_width_=viewer.width;notified_view_height_=viewer.height;
         resize_callback_(
             static_cast<UINT>(
                 viewer.width),
@@ -731,7 +732,7 @@ void MainWindow::ApplyUiState(
     settings_visible_ =
         state.preferences.settings_visible;
 
-    if (settings_toggle_button_ != nullptr) {
+    if (settings_toggle_button_ != nullptr && visibility_changed) {
         SetWindowTextW(
             settings_toggle_button_,
             settings_visible_

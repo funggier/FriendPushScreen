@@ -46,19 +46,29 @@ void RunPeerVideoControllerTests() {
         until=GetTickCount64()+3000;
         while(GetTickCount64()<until&&b.Snapshot().error.empty()){
             a.Poll(sink,clear);b.Poll(sink,clear);++source.sequence;source.timestamp_100ns=static_cast<std::int64_t>(source.sequence)*166667;
-            a.PushCapture(source);Sleep(2);
+            a.PushCapture(source);b.PushCapture(source);Sleep(2);
         }
         FPS_EXPECT_TRUE(b.Snapshot().error.find("missing decoder")!=std::string::npos);
         FPS_EXPECT_TRUE(a.Snapshot().connected&&b.Snapshot().connected&&a.WantsShare());
         until=GetTickCount64()+200;
         while(GetTickCount64()<until){a.Poll(sink,clear);b.Poll(sink,clear);Sleep(2);}
         FPS_EXPECT_TRUE(a.Snapshot().error.find("missing decoder")!=std::string::npos);
+        FPS_EXPECT_TRUE(b.StartShare(error));
+        until=GetTickCount64()+2000;
+        while(GetTickCount64()<until&&a.Snapshot().incoming.delivered<2) {
+            a.Poll(sink,clear);b.Poll(sink,clear);++source.sequence;
+            source.timestamp_100ns=static_cast<std::int64_t>(source.sequence)*166667;
+            a.PushCapture(source);b.PushCapture(source);Sleep(2);
+        }
+        FPS_EXPECT_TRUE(a.Snapshot().incoming.delivered>=2);
+        FPS_EXPECT_TRUE(b.Snapshot().error.find("missing decoder")!=std::string::npos);
+        FPS_EXPECT_TRUE(a.Snapshot().error.find("missing decoder")!=std::string::npos);
         fps::media::VideoCodecConfig valid;
         b.ConfigureCodecs(valid,fps::media::VideoBackendPolicy::ForceSoftware,fps::media::VideoBackendPolicy::ForceSoftware);
         until=GetTickCount64()+2000;
         while(GetTickCount64()<until&&b.Snapshot().incoming.delivered<2){
             a.Poll(sink,clear);b.Poll(sink,clear);++source.sequence;source.timestamp_100ns=static_cast<std::int64_t>(source.sequence)*166667;
-            a.PushCapture(source);Sleep(2);
+            a.PushCapture(source);b.PushCapture(source);Sleep(2);
         }
         FPS_EXPECT_TRUE(observed->initializations>=2);
         FPS_EXPECT_TRUE(b.Snapshot().incoming.delivered>=2);

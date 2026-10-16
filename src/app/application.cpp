@@ -529,7 +529,7 @@ void Application::StartCapturePreview() {
         last_capture_state_ =
             capture_session_->State();
         capture_session_.reset();
-        if (renderer_initialized_) {
+        if (renderer_initialized_ && !displaying_peer_) {
             renderer_.RenderPlaceholder();
         }
         UpdateCaptureUi();
@@ -555,7 +555,7 @@ void Application::StopCapturePreview() {
     if(peer_&&peer_->WantsShare()){UpdateCaptureUi();return;}
     StopCaptureSession();
 
-    if (renderer_initialized_) {
+    if (renderer_initialized_ && !displaying_peer_) {
         renderer_.RenderPlaceholder();
     }
 
@@ -987,7 +987,7 @@ int Application::Run(
 
             if (last_preview_frame_.IsValid()) {
                 renderer_.RenderFrame(
-                    last_preview_frame_);
+                    last_preview_frame_, !displaying_peer_);
             } else {
                 renderer_.RenderPlaceholder();
             }

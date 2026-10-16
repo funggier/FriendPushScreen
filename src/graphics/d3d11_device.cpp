@@ -178,6 +178,11 @@ bool D3D11Device::Resize(UINT width, UINT height) {
         return true;
     }
 
+    DXGI_SWAP_CHAIN_DESC1 current{};
+    if(SUCCEEDED(swap_chain_->GetDesc1(&current))&&current.Width==width&&current.Height==height) {
+        const auto hr=render_target_?S_OK:CreateRenderTarget();last_error_=hr;return SUCCEEDED(hr);
+    }
+
     context_->OMSetRenderTargets(0, nullptr, nullptr);
     render_target_.Reset();
 

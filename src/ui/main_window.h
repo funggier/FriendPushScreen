@@ -134,6 +134,7 @@ private:
     SettingsPanel settings_panel_;
 
     ResizeCallback resize_callback_;
+    int notified_view_width_{},notified_view_height_{};
     UiCommandCallback ui_command_callback_;
     CommandCallback diagnostics_ready_callback_;
     std::deque<UiCommand> deferred_ui_commands_;

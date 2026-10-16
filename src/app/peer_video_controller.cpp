@@ -55,7 +55,7 @@ struct PeerVideoController::Impl {
     media::VideoBackendPolicy encodePolicy{media::VideoBackendPolicy::PreferHardware},decodePolicy{media::VideoBackendPolicy::PreferHardware};
     bool wantsShare{},senderRunning{},receiverRunning{},startPending{},connecting{},clearPending{},restartSender{},restartReceiver{};
     std::uint16_t requestedPort{};
-    std::uint16_t remotePort{};std::string remoteHost,error;
+    std::uint16_t remotePort{};std::string remoteHost,error,incomingError,outgoingError;
     std::uint64_t epoch{1},workerEpoch{},lastWake{};
     mutable std::mutex mutex;
     std::condition_variable condition;
@@ -167,14 +167,14 @@ struct PeerVideoController::Impl {
         return sendWindow.Submit(wire.sequence,GetTickCount64(),std::move(credit));
     }
     media::VideoPeerSender::Sink SenderSink(){return [this](VideoWireFrame&& wire){return QueueVideo(std::move(wire));};}
-    void SenderFailed(){error=sender.Error();sender.Stop();senderRunning=false;wantsShare=false;if(session)session->StopShare();}
+    void SenderFailed(){outgoingError=sender.Error();sender.Stop();senderRunning=false;wantsShare=false;if(session)session->StopShare();}
     void ReceiverFailed(){
-        error=receiver.Error();receiver.Stop();receiverRunning=false;clearPending=true;
+        incomingError=receiver.Error();receiver.Stop();receiverRunning=false;clearPending=true;
         if(session&&session->State().connected) {
             const auto& state=session->State();ControlMessage message;message.type=ControlType::Error;
             message.session=state.token;message.generation=state.incoming_generation;
             message.text="Remote decoder: ";
-            for(const unsigned char c:error) {
+            for(const unsigned char c:incomingError) {
                 if(message.text.size()==1024)break;
                 message.text.push_back(c>=32&&c<127?static_cast<char>(c):'?');
             }
@@ -193,12 +193,12 @@ struct PeerVideoController::Impl {
             case SessionActionKind::StartSender:
                 sendWindow.Reset(action.message.session,action.message.generation);skippedCapture=0;
                 senderRunning=sender.Initialize(device.Get(),action.message.format,codec,encodePolicy,action.message.session,action.message.generation);
-                if(!senderRunning)SenderFailed();else error.clear();break;
+                if(!senderRunning)SenderFailed();else outgoingError.clear();break;
             case SessionActionKind::StopSender:sender.Stop();senderRunning=false;sendWindow.Reset(0,0);break;
             case SessionActionKind::StartReceiver:
                 if(action.message.value!=1)clearPending=true;
                 receiverRunning=receiver.Configure(device.Get(),action.message.format,codec,decodePolicy,action.message.session,action.message.generation);
-                if(!receiverRunning)ReceiverFailed();else {error.clear();session->ReceiverReady(action.message.generation);}break;
+                if(!receiverRunning)ReceiverFailed();else {incomingError.clear();session->ReceiverReady(action.message.generation);}break;
             case SessionActionKind::StopReceiver:receiver.Stop();receiverRunning=false;if(action.message.value!=1)clearPending=true;break;
             case SessionActionKind::ForceKeyframe:if(senderRunning&&!sender.RequestKeyframe())SenderFailed();break;
             case SessionActionKind::RecoverReceiver:
@@ -208,7 +208,11 @@ struct PeerVideoController::Impl {
                 Command command;command.kind=CommandKind::Connect;command.epoch=epoch;command.host=remoteHost;command.port=remotePort;
                 connecting=Queue(std::move(command));break;
             }
-            case SessionActionKind::Error:error=action.detail;break;
+            case SessionActionKind::Error:
+                if(action.message.type==ControlType::Error) {
+                    if(action.message.generation==state.outgoing_generation)outgoingError=action.detail;
+                }else error=action.detail;
+                break;
             }
             (void)state;
         }
@@ -360,7 +364,7 @@ bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
             p.receiverRunning=p.receiver.Configure(p.device.Get(),state.incoming_format,p.codec,p.decodePolicy,state.token,state.incoming_generation);
             if(!p.receiverRunning)p.ReceiverFailed();
             else {
-                p.error.clear();
+                p.incomingError.clear();
                 if(wasRunning)p.session->OnMediaLost(state.connection);
                 else p.session->ReceiverReady(state.incoming_generation);
             }
@@ -384,7 +388,7 @@ bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
     return p.receiver.Metrics().delivered!=before;
 }
 void PeerVideoController::Disconnect() {
-    auto& p=*impl_;p.wantsShare=p.startPending=p.connecting=false;
+    auto& p=*impl_;p.wantsShare=p.startPending=p.connecting=false;p.incomingError.clear();p.outgoingError.clear();
     if(p.session){p.session->Disconnect();p.session->TakeActions();}
     p.sender.Stop();p.receiver.Stop();p.sendWindow.Reset(0,0);p.receipts=std::make_shared<ReceiptQueue>();p.senderRunning=p.receiverRunning=false;p.clearPending=true;
     ++p.epoch;Impl::Command command;command.kind=Impl::CommandKind::Stop;command.epoch=p.epoch;p.Queue(std::move(command),true);
@@ -402,13 +406,15 @@ PeerVideoSnapshot PeerVideoController::Snapshot()const {
         result.sharing=state.sharing&&p.senderRunning;result.receiving=(state.receiving&&p.receiverRunning)||state.recovering;
     }
     result.awaiting_keyframe=result.receiving&&(p.session->State().recovering||p.receiver.AwaitingKeyframe());result.error=p.error;
+    for(const auto* codecError:{&p.incomingError,&p.outgoingError})
+        if(!codecError->empty()){if(!result.error.empty())result.error+=" | ";result.error+=*codecError;}
     if(!p.peer)result.status="Not paired - export identity and pair with your friend";
     else if(result.connected)result.status="Authenticated peer connected | "+std::string(result.receiving?(result.awaiting_keyframe?"recovering / waiting for video IDR":"receiving H.264"):"no incoming video");
     else if(result.connecting)result.status="Connecting to "+p.remoteHost+":"+std::to_string(p.remotePort);
     else if(result.listen_port)result.status="Listening on UDP "+std::to_string(result.listen_port)+" | waiting for paired friend";
     else if(p.startPending)result.status="Starting secure peer listener";
     else result.status="Paired | disconnected";
-    if(!p.error.empty())result.status+=" | "+p.error;
+    if(!result.error.empty())result.status+=" | "+result.error;
     result.encoder=p.sender.Info().candidate.name;result.decoder=p.receiver.Info().candidate.name;
     result.encoder_gpu_frames=p.sender.Info().gpu_frames;result.encoder_cpu_frames=p.sender.Info().cpu_frames;
     result.decoder_gpu_frames=p.receiver.Info().gpu_frames;result.decoder_cpu_frames=p.receiver.Info().cpu_frames;
