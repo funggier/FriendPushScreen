@@ -1,0 +1,20 @@
+{
+    "source":  "window",
+    "seconds":  180,
+    "git_head":  "54c16b10fb16ad3ee2f2b5d6cf0fbdded447a914",
+    "args":  [
+                 "--source",
+                 "window",
+                 "--seconds",
+                 "180",
+                 "--require-1080p60"
+             ],
+    "started_utc":  "2026-10-15T23:58:06.2071975Z",
+    "exe":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\build\\Release\\FriendPushScreenCaptureLoopProbe.exe",
+    "git_status":  [
+
+                   ],
+    "binary_sha256":  "F65E5D6A69DD8B6C1EF7BB845ECD0FF2C7CEE371D33888942ED3F1F117613018",
+    "configuration":  "Release",
+    "process_id":  17316
+}

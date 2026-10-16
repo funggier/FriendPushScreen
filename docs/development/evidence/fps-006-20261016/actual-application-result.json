@@ -1,0 +1,15 @@
+{
+  "seconds": 202.157,
+  "capture": 12044,
+  "encoded": 12043,
+  "decoded": 12043,
+  "rendered": 12043,
+  "fps": 59.5725,
+  "queue_max": 1,
+  "drops": 0,
+  "encode_p95_ms": 19.615,
+  "decode_p95_ms": 1.7474,
+  "e2e_p95_ms": 35.1954,
+  "gpu_input": 12044,
+  "gpu_output": 12043
+}

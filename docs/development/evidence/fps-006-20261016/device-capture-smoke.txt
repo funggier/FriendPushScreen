@@ -1,0 +1,14 @@
+ENCODER Intel┬« Quick Sync Video H.264 Encoder MFT surfaces=1 async=1
+DECODER Microsoft H264 Video Decoder MFT surfaces=1
+PROGRESS seconds=0.93657 capture=35 encoded=34 decoded=34 rendered=34 queue=0 private=316354560
+PROGRESS seconds=1.93807 capture=88 encoded=87 decoded=87 rendered=87 queue=0 private=319479808
+PROGRESS seconds=2.93956 capture=141 encoded=141 decoded=141 rendered=141 queue=0 private=325074944
+PROGRESS seconds=3.94057 capture=195 encoded=195 decoded=195 rendered=195 queue=0 private=320102400
+PROGRESS seconds=4.94157 capture=248 encoded=248 decoded=248 rendered=248 queue=0 private=325062656
+PROGRESS seconds=5.9431 capture=302 encoded=302 decoded=302 rendered=302 queue=0 private=320118784
+PROGRESS seconds=6.94407 capture=356 encoded=356 decoded=356 rendered=356 queue=0 private=299171840
+PROGRESS seconds=7.94457 capture=410 encoded=410 decoded=410 rendered=410 queue=0 private=299167744
+PROGRESS seconds=8.94606 capture=463 encoded=463 decoded=463 rendered=463 queue=0 private=299163648
+PROGRESS seconds=9.94606 capture=517 encoded=517 decoded=517 rendered=517 queue=0 private=285683712
+RESULT {"width":1920,"height":1080,"seconds":10.0351,"capture":520,"submitted":520,"encoded":520,"decoded":520,"rendered":520,"fps":51.8179,"source_sequence_gaps":14,"drops":0,"recovery_resets":0,"queue_max":1,"queue_final":0,"encode_avg_ms":5.4886,"encode_p95_ms":6.076,"encode_max_ms":41.581,"decode_avg_ms":1.9015,"decode_p95_ms":1.8633,"decode_max_ms":30.6811,"e2e_avg_ms":8.0897,"e2e_p95_ms":16.6551,"e2e_max_ms":57.6808,"cpu_percent_all_cores":9.37554,"private_min":285683712,"private_max":325074944,"working_set_max":286515200,"encoder_gpu":520,"decoder_gpu":520,"cpu_capture_frames":520,"padded_frames":0,"encoded_bytes":19166417,"bitrate_mbps":15.2794}
+CAPTURE_LOOP_PASS

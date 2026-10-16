@@ -1,0 +1,13 @@
+BT709 red luma=63 expected=63
+FriendPushScreenConversionTests.exe : T:\Space\Projects\ProjectsProgram\FriendPushScreen\.worktrees\fps-006-encode-deco
+de-local-loopback\tests\video_conversion_runtime_tests.cpp:40: expected true: 
+!converter.ConvertBgraFrameToNv12(frame,nv12.Get())
+At line:1 char:142
++ ... DE -eq 0) { & .\build\Debug\FriendPushScreenConversionTests.exe *> .s ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (T:\Space\Projec...ame,nv12.Get()):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+T:\Space\Projects\ProjectsProgram\FriendPushScreen\.worktrees\fps-006-encode-decode-local-loopback\tests\video_conversi
+on_runtime_tests.cpp:46: expected true: converter.ConvertNv12TextureToBgra(padded.Get(),1,width,height,bgra.Get())
+CONVERSION_FAILURES=2

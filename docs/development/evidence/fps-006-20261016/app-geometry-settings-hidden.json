@@ -1,0 +1,41 @@
+[
+    {
+        "hwnd":  1514456,
+        "parent":  5441362,
+        "pid":  5388,
+        "id":  0,
+        "cls":  "Static",
+        "text":  "  Peer: Offline  |  Connection: Disconnected  |  Sharing: Not sharing  |  Incoming Audio: Inactive",
+        "visible":  true,
+        "left":  1120,
+        "top":  635,
+        "width":  1264,
+        "height":  30
+    },
+    {
+        "hwnd":  4791378,
+        "parent":  5441362,
+        "pid":  5388,
+        "id":  0,
+        "cls":  "FriendPushScreenSettingsPanel",
+        "text":  "",
+        "visible":  false,
+        "left":  1852,
+        "top":  677,
+        "width":  520,
+        "height":  667
+    },
+    {
+        "hwnd":  5577740,
+        "parent":  5441362,
+        "pid":  5388,
+        "id":  0,
+        "cls":  "FriendPushScreenRenderSurface",
+        "text":  "",
+        "visible":  true,
+        "left":  1120,
+        "top":  665,
+        "width":  1264,
+        "height":  691
+    }
+]

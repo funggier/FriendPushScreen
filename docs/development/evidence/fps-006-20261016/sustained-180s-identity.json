@@ -1,0 +1,10 @@
+{
+    "binary_sha256":  "7D4A43DFA9E0670ED71C892CA03A6D61C6498887D2E1CAAD740543DD5A2C8BD1",
+    "git_status":  [
+
+                   ],
+    "command":  "FriendPushScreenCaptureLoopProbe --source window --seconds 180 --require-1080p60",
+    "resource_method":  "internal CPU/private/working set; GPU counters in separate isolated jobs",
+    "started_utc":  "2026-10-16T00:06:28.3421764Z",
+    "git_head":  "1a1bbd194d08459e2479942a4b5df43e83628217"
+}

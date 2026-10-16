@@ -1,0 +1,29 @@
+ENCODER Intel® Quick Sync Video H.264 Encoder MFT surfaces=1 async=1
+DECODER Microsoft H264 Video Decoder MFT surfaces=1
+PROGRESS seconds=0.989249 capture=41 encoded=40 decoded=40 rendered=40 queue=0 private=267378688
+PROGRESS seconds=2.00645 capture=102 encoded=101 decoded=101 rendered=101 queue=0 private=267378688
+PROGRESS seconds=3.00697 capture=162 encoded=161 decoded=161 rendered=161 queue=0 private=267423744
+PROGRESS seconds=4.00835 capture=222 encoded=221 decoded=221 rendered=221 queue=0 private=267423744
+PROGRESS seconds=5.00901 capture=282 encoded=281 decoded=281 rendered=281 queue=0 private=267423744
+PROGRESS seconds=6.02543 capture=343 encoded=342 decoded=342 rendered=342 queue=0 private=267423744
+PROGRESS seconds=7.02761 capture=362 encoded=361 decoded=361 rendered=361 queue=0 private=251166720
+PROGRESS seconds=8.028 capture=411 encoded=410 decoded=410 rendered=410 queue=0 private=251166720
+PROGRESS seconds=9.028 capture=471 encoded=470 decoded=470 rendered=470 queue=0 private=251166720
+PROGRESS seconds=10.0297 capture=530 encoded=529 decoded=529 rendered=529 queue=0 private=251166720
+PROGRESS seconds=11.0307 capture=590 encoded=589 decoded=589 rendered=589 queue=0 private=251166720
+PROGRESS seconds=12.047 capture=650 encoded=649 decoded=649 rendered=649 queue=0 private=251166720
+PROGRESS seconds=13.0486 capture=710 encoded=709 decoded=709 rendered=709 queue=0 private=251166720
+PROGRESS seconds=14.05 capture=770 encoded=769 decoded=769 rendered=769 queue=0 private=251166720
+PROGRESS seconds=15.0507 capture=830 encoded=829 decoded=829 rendered=829 queue=0 private=251166720
+PROGRESS seconds=16.0509 capture=890 encoded=889 decoded=889 rendered=889 queue=0 private=260231168
+PROGRESS seconds=17.0517 capture=950 encoded=949 decoded=949 rendered=949 queue=0 private=260231168
+PROGRESS seconds=18.0526 capture=1010 encoded=1009 decoded=1009 rendered=1009 queue=0 private=260231168
+PROGRESS seconds=19.053 capture=1070 encoded=1069 decoded=1069 rendered=1069 queue=0 private=260231168
+PROGRESS seconds=20.0548 capture=1130 encoded=1129 decoded=1129 rendered=1129 queue=0 private=260231168
+PROGRESS seconds=21.0553 capture=1190 encoded=1189 decoded=1189 rendered=1189 queue=0 private=260231168
+PROGRESS seconds=22.056 capture=1250 encoded=1249 decoded=1249 rendered=1249 queue=0 private=251301888
+PROGRESS seconds=23.0734 capture=1311 encoded=1310 decoded=1310 rendered=1310 queue=0 private=251346944
+PROGRESS seconds=24.074 capture=1338 encoded=1337 decoded=1337 rendered=1337 queue=0 private=251346944
+RESULT {"width":1920,"height":1080,"seconds":25.0257,"capture":1394,"submitted":1394,"encoded":1394,"decoded":1394,"rendered":1394,"fps":55.7028,"source_sequence_gaps":0,"drops":0,"recovery_resets":0,"queue_max":1,"queue_final":0,"encode_avg_ms":18.351,"encode_p95_ms":19.3301,"encode_max_ms":649.695,"decode_avg_ms":1.9349,"decode_p95_ms":1.7649,"decode_max_ms":30.6596,"e2e_avg_ms":34.0062,"e2e_p95_ms":35.1119,"e2e_max_ms":651.831,"cpu_percent_all_cores":2.89435,"private_min":251166720,"private_max":267423744,"working_set_max":234938368,"encoder_gpu":1394,"decoder_gpu":1394,"cpu_capture_frames":0,"padded_frames":0,"encoded_bytes":55582611,"bitrate_mbps":17.7682}
+CAPTURE_LOOP_FAIL
+

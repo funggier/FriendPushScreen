@@ -1,0 +1,38 @@
+[
+    {
+        "codec":  "h264",
+        "encoder":  "h264_qsv",
+        "decoder":  "h264_qsv",
+        "frames":  120,
+        "width":  1920,
+        "height":  1080,
+        "encode_exit":  0,
+        "decode_exit":  0,
+        "encode_log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\hardware-recheck-7526f282bf6f4ba1a9cbd5fdf60f9519\\h264-encode.log",
+        "decode_log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\hardware-recheck-7526f282bf6f4ba1a9cbd5fdf60f9519\\h264-decode.log"
+    },
+    {
+        "codec":  "hevc",
+        "encoder":  "hevc_qsv",
+        "decoder":  "hevc_qsv",
+        "frames":  120,
+        "width":  1920,
+        "height":  1080,
+        "encode_exit":  0,
+        "decode_exit":  0,
+        "encode_log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\hardware-recheck-7526f282bf6f4ba1a9cbd5fdf60f9519\\hevc-encode.log",
+        "decode_log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\hardware-recheck-7526f282bf6f4ba1a9cbd5fdf60f9519\\hevc-decode.log"
+    },
+    {
+        "codec":  "av1",
+        "encoder":  "av1_qsv",
+        "decoder":  "av1_qsv",
+        "frames":  120,
+        "width":  1920,
+        "height":  1080,
+        "encode_exit":  0,
+        "decode_exit":  0,
+        "encode_log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\hardware-recheck-7526f282bf6f4ba1a9cbd5fdf60f9519\\av1-encode.log",
+        "decode_log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\hardware-recheck-7526f282bf6f4ba1a9cbd5fdf60f9519\\av1-decode.log"
+    }
+]

@@ -1,0 +1,96 @@
+{
+    "gpu_samples":  1946,
+    "private_max":  268009472,
+    "process_samples":  140,
+    "elapsed_seconds":  181.9593429,
+    "gpu_engines":  [
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_0_engtype_3D",
+                            "samples":  139,
+                            "average":  14.863309352517986,
+                            "max":  17
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_10_engtype_",
+                            "samples":  139,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_11_engtype_",
+                            "samples":  139,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_12_engtype_",
+                            "samples":  139,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_13_engtype_",
+                            "samples":  139,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_1_engtype_VideoDecode",
+                            "samples":  139,
+                            "average":  9.3453237410071939,
+                            "max":  10
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_2_engtype_Copy",
+                            "samples":  139,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_3_engtype_VideoProcessing",
+                            "samples":  139,
+                            "average":  9.8776978417266186,
+                            "max":  11
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_4_engtype_VideoDecode",
+                            "samples":  139,
+                            "average":  4.7913669064748206,
+                            "max":  5
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_5_engtype_Compute",
+                            "samples":  139,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_6_engtype_GSC",
+                            "samples":  139,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_7_engtype_",
+                            "samples":  139,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_8_engtype_",
+                            "samples":  139,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_21800_luid_0x00000000_0x00010F4B_phys_0_eng_9_engtype_",
+                            "samples":  139,
+                            "average":  0,
+                            "max":  0
+                        }
+                    ],
+    "timed_out":  false,
+    "exit_code":  null,
+    "private_min":  26759168,
+    "counter_error":  null
+}

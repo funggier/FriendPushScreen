@@ -2,7 +2,7 @@
 
 ## FPS-006 — Encode / Decode / Local Loopback
 
-**Status:** ACTIVE
+**Status:** GREEN (qualified on canonical feature branch)
 
 **Branch:** `fps-006-encode-decode-local-loopback`
 
@@ -78,3 +78,9 @@ FPS-006 becomes GREEN only after:
 ### Next after FPS-006
 
 `FPS-006A — Audio Capture / Encode / Local Loopback`
+
+### FPS-006 qualification closure — 2026-10-16
+
+Runtime source: 1a1bbd194d08459e2479942a4b5df43e83628217. Real WGC 1080p60 hardware local loop: 180.020 s, 10762 frames through all drained stages, 59.7824 fps, queue max 1, zero queue drops. Real application after Stop/Start: 202.157 s at 59.5725 fps. Forced software fallback, source-loss/selection and viewer regressions passed. DG-004 resolved. Full Debug/Release local builds+CTest and exact-source Windows CI passed; final evidence HEAD is checked before announcing closure.
+
+[Qualification report](../reports/FPS-20261016-006-wip-audit-and-execution.md). Canonical branch/worktree and both old WIP worktrees remain preserved. Integration remains separate from this feature-branch qualification; FPS-006A remains planned.

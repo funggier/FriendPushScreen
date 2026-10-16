@@ -1,0 +1,80 @@
+H.264 encode: 2 candidate(s)
+  [0] Intel┬« Quick Sync Video H.264 Encoder MFT | hardware | d3d11=yes | async=yes | activate=PASS (0x0)
+  [1] H264 Encoder MFT | software | d3d11=no | async=no | activate=PASS (0x0)
+H.264 decode: 1 candidate(s)
+  [0] Microsoft H264 Video Decoder MFT | software | d3d11=yes | async=no | activate=PASS (0x0)
+HEVC encode: 1 candidate(s)
+  [0] Intel┬« Hardware H265 Encoder MFT | hardware | d3d11=yes | async=yes | activate=PASS (0x0)
+HEVC decode: 0 candidate(s)
+AV1 encode: 0 candidate(s)
+AV1 decode: 0 candidate(s)
+D3D11 hardware adapter: Intel(R) Graphics vendor=0x8086 device=0x7d67
+D3D11 decoder profiles=68 (configuration/creation evidence; not a decoded-bitstream test)
+  MPEG2 VLD {EE27417F-5E28-4E65-BEEA-1D26B508ADC9} NV12 configs=3 create1080p=PASS
+  Other profile {BF22AD00-03EA-4690-8077-473346209B7E} NV12 configs=3 create1080p=PASS
+  H264 VLD {1B81BE68-A0C7-11D3-B984-00C04F2E73C5} NV12 configs=9 create1080p=PASS
+  Other profile {D79BE8DA-0CF1-4C81-B82A-69A4E236F43D} NV12 configs=3 create1080p=PASS
+  Other profile {F9AACCBB-C2B6-4CFC-8779-5707B1760552} NV12 configs=3 create1080p=PASS
+  Other profile {705B9D82-76CF-49D6-B7E6-AC8872DB013C} NV12 configs=3 create1080p=PASS
+  Other profile {C528916C-C0AF-4645-8CB2-372B6D4ADC2A} NV12 configs=4 create1080p=PASS
+  Other profile {07CFAFFB-5A2E-4B99-B62A-E4CA53B6D5AA} NV12 configs=3 create1080p=PASS
+  Other profile {91CD2D6E-897B-4FA1-B0D7-51DC88010E0A} NV12 configs=1 create1080p=PASS
+  Other profile {8C56EB1E-2B47-466F-8D33-7DBCD63F3DF2} NV12 configs=6 create1080p=PASS
+  HEVC Main {5B11D51B-2F4C-4452-BCC3-09F2A1160CC0} NV12 configs=6 create1080p=PASS
+  Other profile {75FC75F7-C589-4A07-A25B-72E03B0383B3} NV12 configs=6 create1080p=PASS P010 configs=6 create1080p=PASS
+  HEVC Main10 {107AF0E0-EF1A-4D19-ABA8-67A163073D13} NV12 configs=6 create1080p=PASS P010 configs=6 create1080p=PASS
+  Other profile {9CC55490-E37C-4932-8684-4920F9F6409C} NV12 configs=1 create1080p=PASS P010 configs=1 create1080p=PASS
+  Other profile {0BAC4FE5-1532-4429-A854-F84DE04953DB} NV12 configs=1 create1080p=PASS P010 configs=1 create1080p=PASS
+  Other profile {4008018F-F537-4B36-98CF-61AF8A2C1A33} NV12 configs=1 create1080p=PASS
+  Other profile {0DABEFFA-4458-4602-BC03-0795659D617C} NV12 configs=1 create1080p=PASS P010 configs=1 create1080p=PASS
+  Other profile {1A72925F-0C2C-4F15-96FB-B17D1473603F} NV12 configs=1 create1080p=PASS
+  Other profile {55BCAC81-F311-4093-A7D0-1CBC0B849BEE} NV12 configs=1 create1080p=PASS P010 configs=1 create1080p=PASS
+  Other profile {9798634D-FE9D-48E5-B4DA-DBEC45B3DF01} NV12 configs=1 create1080p=PASS P010 configs=1 create1080p=PASS
+  Other profile {E484DCB8-CAC9-4859-99F5-5C0D45069089} NV12 configs=5 create1080p=PASS P010 configs=5 create1080p=PASS
+  Other profile {41A5AF96-E415-4B0C-9D03-907858E23E78} NV12 configs=5 create1080p=PASS
+  Other profile {6A6A81BA-912A-485D-B57F-CCD2D37B8D94} NV12 configs=5 create1080p=PASS P010 configs=5 create1080p=PASS
+  Other profile {E4E3CF5B-97D2-4658-AACB-366E3EE2CEEE} NV12 configs=5 create1080p=PASS
+  Other profile {FD9D9559-0FD3-4917-A9A7-07E714EE9EF9} NV12 configs=5 create1080p=PASS P010 configs=5 create1080p=PASS
+  Other profile {8FF8A3AA-C456-4132-B6EF-69D9DD72571D} NV12 configs=5 create1080p=PASS
+  Other profile {C23DD857-874B-423C-B6E0-82CEAA9B118A} NV12 configs=5 create1080p=PASS P010 configs=5 create1080p=PASS
+  Other profile {5B08E35D-0C66-4C51-A6F1-89D00CB2C197} NV12 configs=5 create1080p=PASS P010 configs=5 create1080p=PASS
+  Other profile {0E4BC693-5D2C-4936-B125-AEFE32B16D8A} NV12 configs=5 create1080p=PASS
+  Other profile {2F08B5B1-DBC2-4D48-883A-4E7B8174CFF6} NV12 configs=5 create1080p=PASS P010 configs=5 create1080p=PASS
+  Other profile {5467807A-295D-445D-BD2E-CBA8C2457C3D} NV12 configs=5 create1080p=PASS
+  Other profile {AE0D4E15-2360-40A8-BF82-028E6A0DD827} NV12 configs=5 create1080p=PASS P010 configs=5 create1080p=PASS
+  VP9 Profile0 {463707F8-A1D0-4585-876D-83AA6D60B89E} NV12 configs=5 create1080p=PASS
+  VP9 Profile2 10bit {A4C749EF-6ECF-48AA-8448-50A7A1165FF7} NV12 configs=5 create1080p=PASS P010 configs=5 create1080p=PASS
+  Other profile {76988A52-DF13-419A-8E64-FFCF4A336CF5} NV12 configs=4 create1080p=PASS
+  Other profile {68A21C7B-D58F-4E74-9993-E4B8172B19A0} NV12 configs=4 create1080p=PASS
+  Other profile {80A3A7BD-89D8-4497-A2B8-2126AF7E6EB8} NV12 configs=4 create1080p=PASS P010 configs=4 create1080p=PASS
+  Other profile {1D5C4D76-B55A-4430-904C-3383A7AE3B16} NV12 configs=4 create1080p=PASS
+  Other profile {A7F759DD-5F54-4D7F-8291-42E883C546FE} NV12 configs=4 create1080p=PASS P010 configs=4 create1080p=PASS
+  Other profile {F34FA92F-DC79-474C-B0DB-B7BD4522DF77} NV12 configs=4 create1080p=PASS
+  AV1 Profile0 {B8BE4CCB-CF53-46BA-8D59-D6B8A6DA5D2A} NV12 configs=5 create1080p=PASS P010 configs=5 create1080p=PASS
+  Other profile {CA44AFC5-E1D0-42E6-9154-B127186D4D40} NV12 configs=5 create1080p=PASS
+  Other profile {F9A16190-3FB4-4DC5-9846-C8751F83D6D7} NV12 configs=5 create1080p=PASS P010 configs=5 create1080p=PASS
+  Other profile {49761BEC-4B63-4349-A5FF-87FFDF088466} NV12 configs=68 create1080p=PASS
+  Other profile {97688186-56A8-4094-B543-FC9DAAA49F4B} NV12 configs=1 create1080p=FAIL
+  Other profile {1424D4DC-7CF5-4BB1-9CD7-B63717A72A6B} NV12 configs=1 create1080p=FAIL
+  Other profile {464BDB3C-91C4-4E9B-896F-225496AC4ED6} NV12 configs=1 create1080p=FAIL
+  Other profile {9B31316B-F204-455D-8A8C-9345DCA77C01} NV12 configs=1 create1080p=FAIL
+  Other profile {AFE4285C-AB63-4B2D-8278-E6BAACEA2CE9} NV12 configs=1 create1080p=FAIL
+  Other profile {277DE9C5-ED83-48DD-AB8F-AC2D24B22943} NV12 configs=1 create1080p=FAIL
+  Other profile {04C5BA10-4E9A-4B8E-8DBF-4F4B48AFA27C} NV12 configs=1 create1080p=FAIL
+  Other profile {0ACEF8BC-285F-415D-AB22-7BF2527A3D2E} NV12 configs=1 create1080p=FAIL
+  Other profile {24D19FCA-C5A2-4B8E-9F93-F8F6EF15C890} NV12 configs=1 create1080p=FAIL
+  Other profile {353ACA91-D945-4C13-AE7E-469060FAC8D8} NV12 configs=1 create1080p=FAIL
+  Other profile {B8B28E0C-ECAB-4217-8C82-EAAA9755AAF0} NV12 configs=1 create1080p=PASS
+  Other profile {8732ECFD-9747-4897-B42A-E534F9FF2B7A} NV12 configs=1 create1080p=PASS
+  Other profile {580DA148-E4BF-49B1-943B-4214AB05A6FF} NV12 configs=1 create1080p=PASS
+  Other profile {CEE393AB-1030-4F7B-8DBC-55629C72F17E} NV12 configs=1 create1080p=PASS
+  Other profile {87B2AE39-C9A5-4C53-86B8-A52D7EDBA488} NV12 configs=1 create1080p=PASS
+  Other profile {10E19AC8-BF39-4443-BEC3-1B0CBFE4C7AA} NV12 configs=1 create1080p=PASS
+  Other profile {2DEC00C7-21EE-4BF8-8F0E-773F11F126A2} NV12 configs=1 create1080p=PASS
+  Other profile {C35153A0-23C0-4A81-B3BB-6A1326F2B76B} NV12 configs=1 create1080p=PASS
+  Other profile {A33FD0EC-A9D3-4C21-9276-C241CC90F6C7} NV12 configs=1 create1080p=PASS
+  Other profile {310E59D2-7EA4-47BB-B319-500E78855336} NV12 configs=1 create1080p=PASS
+  Other profile {8090A09C-6FC5-48EF-9F40-65BF37F7ACC4} NV12 configs=1 create1080p=FAIL
+  Other profile {0EEA5B11-88C0-4A9F-81AC-B10FD66B22EA} NV12 configs=1 create1080p=FAIL
+  Other profile {50925B7B-E931-4978-A12A-586630F095F9} NV12 configs=1 create1080p=PASS
+  Other profile {3325F221-DB34-47B6-8308-46095447114E} NV12 configs=1 create1080p=FAIL

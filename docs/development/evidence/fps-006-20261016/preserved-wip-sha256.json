@@ -1,0 +1,77 @@
+[
+  {
+    "branch": "fps-006-codec-local-loopback",
+    "file": "src/media/d3d11_video_converter.cpp",
+    "sha256": "9621E5D593F25AD97D49530B9DE4C6F57B5E6FBF6C036FEFE74900EF4A62FC1B"
+  },
+  {
+    "branch": "fps-006-codec-local-loopback",
+    "file": "src/media/d3d11_video_converter.h",
+    "sha256": "751B3E0CCB53C29158CCBFF880E69198059B100370F16A8585B04ACF2BFEA4A0"
+  },
+  {
+    "branch": "fps-006-codec-local-loopback",
+    "file": "src/media/video_frame_converter.cpp",
+    "sha256": "BF6B70716F6151CC3C426576FC4A9358304DF268F782836BF28F59F39DFDF5F7"
+  },
+  {
+    "branch": "fps-006-codec-local-loopback",
+    "file": "src/media/video_frame_converter.h",
+    "sha256": "48C45479C2302EB8ED69D6937317B5DF86A737936EC5D37281C593764F900401"
+  },
+  {
+    "branch": "fps-006-codec-local-loopback",
+    "file": "tests/video_frame_converter_tests.cpp",
+    "sha256": "4946BD80317875FAD9C668405023F5F479AE812FAECEFF3FD7223FA133678C43"
+  },
+  {
+    "branch": "fps-006-codec-local-loopback",
+    "file": "CMakeLists.txt",
+    "sha256": "3976ED0982BA01435763069EB599C65300397D9ED6EB509133079BDAE3F67277"
+  },
+  {
+    "branch": "fps-006-codec-local-loopback",
+    "file": "src/media/mf_h264_codec.cpp",
+    "sha256": "FF59F4817B1AC8A9C44DF9B43A15F2A59043DD2CB7F5F5B3E2E20C8FBA3C4DA0"
+  },
+  {
+    "branch": "fps-006-codec-local-loopback",
+    "file": "src/media/mf_h264_codec.h",
+    "sha256": "E35CCE42EF0CFA30DA28E3BEDA3721E8509FF3C78034A0836C68FDA6A14DE5E9"
+  },
+  {
+    "branch": "fps-006-codec-local-loopback",
+    "file": "tests/test_main.cpp",
+    "sha256": "264B2348FC47EA17FE0EDF5FCA0C0058C14C67049BFC5B99DEEB96598DC15C1A"
+  },
+  {
+    "branch": "fps-006-codec-local-loopback",
+    "file": "tools/codec_probe/main.cpp",
+    "sha256": "16D202B96CFAE04FBE5E32E4DDBEBB33F7344B4AD2C6F325030F1352E9CB16CE"
+  },
+  {
+    "branch": "fps-006-video-codec-local-loopback",
+    "file": "src/media/mf_video_encoder.cpp",
+    "sha256": "E1F76A65573C45015188AAF1C2C57216C0C1DC08158D7CFC9922F038653D9060"
+  },
+  {
+    "branch": "fps-006-video-codec-local-loopback",
+    "file": "src/media/mf_video_encoder.h",
+    "sha256": "BCB1F0604AB55A4CCE9550EDD21817C4EE348EE9803BD67A015E55B19038762A"
+  },
+  {
+    "branch": "fps-006-video-codec-local-loopback",
+    "file": "src/media/mf_video_transform_activation.cpp",
+    "sha256": "ECB09DFB255AEB1DEEB7166AC7C0F40F53F318D0E2243AF5F8B7F015D7DF78A5"
+  },
+  {
+    "branch": "fps-006-video-codec-local-loopback",
+    "file": "src/media/mf_video_transform_activation.h",
+    "sha256": "22D9CC4EEE1C5CCC2C8F3FD61B9E72F4D0384BAC81037AAC3A736F3B6C94510D"
+  },
+  {
+    "branch": "fps-006-video-codec-local-loopback",
+    "file": "CMakeLists.txt",
+    "sha256": "9DB025CC816656FB1EEE70956EE56678D92C63AC0FBA1A62CA73D55EEC3052D2"
+  }
+]

@@ -1,0 +1,23 @@
+ffmpeg.exe : Input #0, lavfi, from 'testsrc2=size=1920x1080:rate=60':
+At T:\Space\Projects\ProjectsProgram\FriendPushScreen\.worktrees\fps-006-encode-decode-local-loopback\.superpowers\hard
+ware-recheck.ps1:13 char:5
++     & $ffmpeg -hide_banner -nostdin -f lavfi -i 'testsrc2=size=1920x1 ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Input #0, lavfi...x1080:rate=60'::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Duration: N/A, start: 0.000000, bitrate: N/A
+  Stream #0:0: Video: wrapped_avframe, yuv420p, 1920x1080 [SAR 1:1 DAR 16:9], 60 fps, 60 tbr, 60 tbn
+Stream mapping:
+  Stream #0:0 -> #0:0 (wrapped_avframe (native) -> av1 (av1_qsv))
+Output #0, matroska, to 'T:\Space\Projects\ProjectsProgram\FriendPushScreen\.worktrees\fps-006-encode-decode-local-loop
+back\.superpowers\hardware-recheck-7526f282bf6f4ba1a9cbd5fdf60f9519\av1.mkv':
+  Metadata:
+    encoder         : Lavf62.12.102
+  Stream #0:0: Video: av1 (AV01 / 0x31305641), nv12(tv, progressive), 1920x1080 [SAR 1:1 DAR 16:9], q=2-31, 20000 
+kb/s, 60 fps, 1k tbn
+    Metadata:
+      encoder         : Lavc62.28.102 av1_qsv
+[out#0/matroska @ 0000022c3d251c40] video:4158KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB 
+muxing overhead: 0.039266%
+frame=  120 fps=0.0 q=-0.0 Lsize=    4160KiB time=00:00:01.98 bitrate=17182.6kbits/s speed=2.61x elapsed=0:00:00.76    

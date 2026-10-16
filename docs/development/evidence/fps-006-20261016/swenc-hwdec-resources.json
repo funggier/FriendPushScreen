@@ -1,0 +1,96 @@
+{
+    "gpu_samples":  140,
+    "private_max":  323096576,
+    "process_samples":  10,
+    "elapsed_seconds":  12.953773,
+    "gpu_engines":  [
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_0_engtype_3D",
+                            "samples":  10,
+                            "average":  10.7,
+                            "max":  12
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_10_engtype_",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_11_engtype_",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_12_engtype_",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_13_engtype_",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_1_engtype_VideoDecode",
+                            "samples":  10,
+                            "average":  2.9,
+                            "max":  3
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_2_engtype_Copy",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_3_engtype_VideoProcessing",
+                            "samples":  10,
+                            "average":  10.9,
+                            "max":  12
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_4_engtype_VideoDecode",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_5_engtype_Compute",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_6_engtype_GSC",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_7_engtype_",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_8_engtype_",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        },
+                        {
+                            "name":  "pid_14100_luid_0x00000000_0x00010F4B_phys_0_eng_9_engtype_",
+                            "samples":  10,
+                            "average":  0,
+                            "max":  0
+                        }
+                    ],
+    "timed_out":  false,
+    "exit_code":  0,
+    "private_min":  19369984,
+    "counter_error":  null
+}

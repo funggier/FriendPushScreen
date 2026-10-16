@@ -1,0 +1,13 @@
+{
+    "gpu_samples":  0,
+    "private_max":  267423744,
+    "process_samples":  25,
+    "elapsed_seconds":  25.5991957,
+    "gpu_engines":  [
+
+                    ],
+    "timed_out":  false,
+    "exit_code":  1,
+    "private_min":  27996160,
+    "counter_error":  null
+}

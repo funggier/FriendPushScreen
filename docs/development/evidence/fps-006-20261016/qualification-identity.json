@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-16",
+  "machine": "CDQ-P",
+  "branch": "fps-006-encode-decode-local-loopback",
+  "source_commit": "1a1bbd194d08459e2479942a4b5df43e83628217",
+  "base": "c9c0af087fe039ae1a8c8f695411560b147f3ef4",
+  "source_ci": {
+    "id": 38827576279,
+    "url": "https://github.com/funggier/FriendPushScreen/actions/runs/38827576279",
+    "head_sha": "1a1bbd194d08459e2479942a4b5df43e83628217",
+    "jobs": [
+      {
+        "id": 116738508384,
+        "name": "Windows x64 Release",
+        "conclusion": "success"
+      },
+      {
+        "id": 116738508621,
+        "name": "Windows x64 Debug",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "closure_ci": "The final evidence commit must pass exact-head Windows CI before GREEN is announced. Inspect branch/PR checks for its immutable head SHA.",
+  "scope": "Native H264 local loop; no transport/control/audio changes",
+  "hardware_compatibility": "Intel physical reference qualified; AMD/NVIDIA untested"
+}

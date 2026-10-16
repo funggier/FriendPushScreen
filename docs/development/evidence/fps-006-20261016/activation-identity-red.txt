@@ -1,0 +1,19 @@
+Test project T:/Space/Projects/ProjectsProgram/FriendPushScreen/.worktrees/fps-006-encode-decode-local-loopback/build
+    Start 1: FriendPushScreenTests
+1/1 Test #1: FriendPushScreenTests ............***Failed    0.08 sec
+T:\Space\Projects\ProjectsProgram\FriendPushScreen\.worktrees\fps-006-encode-decode-local-loopback\tests\mft_video_media_type_tests.cpp:105: expected true: !fps::media::MatchesMftVideoCodecDescriptor(activation.Get(),descriptor)
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) =   0.08 sec
+
+The following tests FAILED:
+	  1 - FriendPushScreenTests (Failed)
+ctest : Errors while running CTest
+At line:1 char:130
++ ... DE -eq 0) { ctest --test-dir build -C Debug --output-on-failure *> .s ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Errors while running CTest:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

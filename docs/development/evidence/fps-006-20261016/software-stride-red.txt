@@ -1,0 +1,19 @@
+Test project T:/Space/Projects/ProjectsProgram/FriendPushScreen/.worktrees/fps-006-encode-decode-local-loopback/build
+    Start 1: FriendPushScreenTests
+1/1 Test #1: FriendPushScreenTests ............***Failed    0.88 sec
+T:\Space\Projects\ProjectsProgram\FriendPushScreen\.worktrees\fps-006-encode-decode-local-loopback\tests\mft_video_media_type_tests.cpp:72: expected equality: layout.stride == 1376U
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) =   0.88 sec
+
+The following tests FAILED:
+	  1 - FriendPushScreenTests (Failed)
+ctest : Errors while running CTest
+At line:1 char:154
++ ... EXITCODE }; ctest --test-dir build -C Debug --output-on-failure *> .s ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Errors while running CTest:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

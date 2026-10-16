@@ -1,0 +1,33 @@
+ffmpeg.exe : [vist#0:0/hevc @ 0000021884a081c0] WARNING: defaulting hwaccel_output_format to qsv for compatibility 
+with old commandlines. This behaviour is DEPRECATED and will be removed in the future. Please explicitly set 
+"-hwaccel_output_format qsv".
+At T:\Space\Projects\ProjectsProgram\FriendPushScreen\.worktrees\fps-006-encode-decode-local-loopback\.superpowers\hard
+ware-recheck.ps1:17 char:9
++         & $ffmpeg -hide_banner -nostdin -hwaccel qsv -c:v ($codec+'_q ...
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([vist#0:0/hevc ...ut_format qsv".:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Input #0, matroska,webm, from 'T:\Space\Projects\ProjectsProgram\FriendPushScreen\.worktrees\fps-006-encode-decode-loca
+l-loopback\.superpowers\hardware-recheck-7526f282bf6f4ba1a9cbd5fdf60f9519\hevc.mkv':
+  Metadata:
+    ENCODER         : Lavf62.12.102
+  Duration: 00:00:02.00, start: 0.000000, bitrate: 24039 kb/s
+  Stream #0:0: Video: hevc (Main), yuv420p(tv, progressive), 1920x1080 [SAR 1:1 DAR 16:9], 60 fps, 60 tbr, 1k tbn
+    Metadata:
+      ENCODER         : Lavc62.28.102 hevc_qsv
+      DURATION        : 00:00:02.000000000
+[D3D11VA @ 0000021884a239c0] Using device 8086:7d67 (Intel(R) Graphics).
+Stream mapping:
+  Stream #0:0 -> #0:0 (hevc (hevc_qsv) -> wrapped_avframe (native))
+Output #0, null, to 'NUL':
+  Metadata:
+    encoder         : Lavf62.12.102
+  Stream #0:0: Video: wrapped_avframe, qsv(tv, progressive), 1920x1080 [SAR 1:1 DAR 16:9], q=2-31, 200 kb/s, 60 fps, 
+60 tbn
+    Metadata:
+      encoder         : Lavc62.28.102 wrapped_avframe
+      DURATION        : 00:00:02.000000000
+[out#0/null @ 00000218849f3c00] video:50KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing 
+overhead: unknown
+frame=  120 fps=0.0 q=-0.0 Lsize=N/A time=00:00:02.00 bitrate=N/A speed=13.7x elapsed=0:00:00.14    

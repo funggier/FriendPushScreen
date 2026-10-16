@@ -1,0 +1,5 @@
+encoder=Intel® Quick Sync Video H.264 Encoder MFT async=1 surface_io=1 low_latency=1
+decoder=Microsoft H264 Video Decoder MFT catalog_class=software surface_io=0 low_latency=0
+RESULT input=720 encoded=720 decoded=720 keyframes=13 quality_fail=0 queue_max=1 drops=0 seconds=12.0261 fps=59.87 bytes=28447698 encoder_gpu=720 decoder_gpu=0 encoder_cpu=0 decoder_cpu=720
+SYNTHETIC_LOOP_PASS
+

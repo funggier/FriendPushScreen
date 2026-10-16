@@ -1,0 +1,15 @@
+ENCODER H264 Encoder MFT surfaces=0 async=0
+DECODER Microsoft H264 Video Decoder MFT surfaces=0
+PROGRESS seconds=0.998761 capture=46 encoded=46 decoded=46 rendered=46 queue=0 private=350892032
+PROGRESS seconds=2.00002 capture=106 encoded=106 decoded=106 rendered=106 queue=0 private=350892032
+PROGRESS seconds=3.01571 capture=167 encoded=167 decoded=167 rendered=167 queue=0 private=350916608
+PROGRESS seconds=4.01614 capture=227 encoded=227 decoded=227 rendered=227 queue=0 private=350904320
+PROGRESS seconds=5.01686 capture=287 encoded=287 decoded=287 rendered=287 queue=0 private=350920704
+PROGRESS seconds=6.01841 capture=347 encoded=347 decoded=347 rendered=347 queue=0 private=350863360
+PROGRESS seconds=7.01989 capture=407 encoded=407 decoded=407 rendered=407 queue=0 private=350875648
+PROGRESS seconds=8.03535 capture=468 encoded=468 decoded=468 rendered=468 queue=0 private=350875648
+PROGRESS seconds=9.03679 capture=528 encoded=528 decoded=528 rendered=528 queue=0 private=350875648
+PROGRESS seconds=10.0377 capture=588 encoded=588 decoded=588 rendered=588 queue=0 private=350875648
+PROGRESS seconds=11.0389 capture=648 encoded=648 decoded=648 rendered=648 queue=0 private=350875648
+RESULT {"width":1920,"height":1080,"seconds":12.0087,"capture":706,"submitted":706,"encoded":706,"decoded":706,"rendered":706,"fps":58.7908,"source_sequence_gaps":0,"drops":0,"recovery_resets":0,"queue_max":1,"queue_final":0,"encode_avg_ms":6.2732,"encode_p95_ms":7.0572,"encode_max_ms":30.8159,"decode_avg_ms":4.3654,"decode_p95_ms":4.6364,"decode_max_ms":17.9974,"e2e_avg_ms":16.4114,"e2e_p95_ms":17.4346,"e2e_max_ms":53.2559,"cpu_percent_all_cores":7.63027,"private_min":350863360,"private_max":350920704,"working_set_max":276357120,"encoder_gpu":0,"decoder_gpu":0,"cpu_capture_frames":0,"padded_frames":0,"encoded_bytes":719948,"bitrate_mbps":0.479618}
+CAPTURE_LOOP_PASS

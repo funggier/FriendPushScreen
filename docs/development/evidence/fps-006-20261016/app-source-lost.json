@@ -1,0 +1,41 @@
+[
+    {
+        "hwnd":  7014234,
+        "parent":  4791378,
+        "pid":  5388,
+        "id":  2117,
+        "cls":  "Button",
+        "text":  "Window — FPS-006 1080p moving source [Unavailable]  ?",
+        "visible":  true,
+        "left":  1869,
+        "top":  776,
+        "width":  464,
+        "height":  28
+    },
+    {
+        "hwnd":  3349344,
+        "parent":  4791378,
+        "pid":  5388,
+        "id":  2119,
+        "cls":  "Button",
+        "text":  "Preview",
+        "visible":  true,
+        "left":  2153,
+        "top":  840,
+        "width":  96,
+        "height":  32
+    },
+    {
+        "hwnd":  4070220,
+        "parent":  4791378,
+        "pid":  5388,
+        "id":  0,
+        "cls":  "Static",
+        "text":  "Window source lost",
+        "visible":  true,
+        "left":  1869,
+        "top":  840,
+        "width":  276,
+        "height":  32
+    }
+]

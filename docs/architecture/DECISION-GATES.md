@@ -69,7 +69,7 @@ Decision inputs include actual runtime modes exposed by Onten OTN-332 and at lea
 
 The API boundary must remain vendor-neutral. Backend technology is selected from runtime capability and measured behavior, not CPU vendor assumptions.
 
-**FPS-002 evidence (2026-10-14):** Intel QSV H.264/HEVC/AV1 encode and decode are available and were exercised; simultaneous H.264 1080p60 encode/decode completed in a short probe. Intel-side feasibility is established, but AMD/NVIDIA remain untested, so the cross-vendor gate stays OPEN.
+**Status: RESOLVED for the V1 codec abstraction by FPS-006 (2026-10-16).** Select native Media Foundation transforms from actual runtime subtype, classification, D3D11 capability and successful media-type/sample execution. Keep vendor-neutral IVideoEncoder / IVideoDecoder interfaces; retain exact opaque hardware-instance identity. The reference path uses Intel Quick Sync H.264 hardware encoding plus Microsoft H.264 decoding with D3D11 acceleration. A real WGC 1920x1080 local capture/encode/bounded-queue/decode/render run completed 180.020 s at 59.7824 fps, 10762 frames at every stage, zero queue drops and queue maximum 1. Explicit software H.264 encode/decode and padded-width regression runs passed. No Intel/AMD/NVIDIA branch selects the application backend. HEVC/AV1 remain capability-dependent; their missing native MF decoder pairs do not block H.264 V1. AMD/NVIDIA physical compatibility remains untested and is future evidence, not a vendor-specific interface assumption. See [FPS-006 qualification report](../development/reports/FPS-20261016-006-wip-audit-and-execution.md) for source identities, retained failures, resources and limitations.
 
 ## DG-005 â€” UI/application framework
 
