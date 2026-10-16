@@ -27,6 +27,7 @@ void RunPeerSessionTests() {
     FPS_EXPECT_TRUE(!Has(recovery_actions,SessionActionKind::ForceKeyframe));
     FPS_EXPECT_TRUE(Has(recovery_actions,SessionActionKind::StopSender));
     FPS_EXPECT_TRUE(waiting.State().outgoing_generation>unchanged_generation);
+    FPS_EXPECT_TRUE(std::any_of(recovery_actions.begin(),recovery_actions.end(),[](const auto& action){return action.kind==SessionActionKind::SendControl&&action.message.type==ControlType::ShareStart&&action.message.value==1;}));
     FPS_EXPECT_TRUE(!waiting.State().sharing);
     PeerSession s("AA","BB",7);
     FPS_EXPECT_TRUE(s.RequestShare(f));FPS_EXPECT_TRUE(!s.State().sharing);
@@ -69,4 +70,16 @@ void RunPeerSessionTests() {
     FPS_EXPECT_EQ(simultaneous.State().connection,20ULL);
     PeerSession other("BB","AA",10);Handshake(other,10,true,300);Handshake(other,20,false,400);
     FPS_EXPECT_EQ(other.State().token,400ULL);
+    PeerSession recovering("BB","AA",11);Handshake(recovering,1,false,900);
+    start.session=900;start.generation=7;start.value=0;format=start;format.type=ControlType::VideoFormat;format.format=f;
+    FPS_EXPECT_TRUE(recovering.OnControl(1,start,50));FPS_EXPECT_TRUE(recovering.OnControl(1,format,51));recovering.TakeActions();
+    start.generation=8;start.value=1;
+    FPS_EXPECT_TRUE(recovering.OnControl(1,start,52));
+    const auto paused=recovering.TakeActions();
+    FPS_EXPECT_TRUE(std::any_of(paused.begin(),paused.end(),[](const auto& action){return action.kind==SessionActionKind::StopReceiver&&action.message.value==1;}));
+    format=start;format.type=ControlType::VideoFormat;format.format=f;
+    FPS_EXPECT_TRUE(recovering.OnControl(1,format,53));
+    start.generation=9;FPS_EXPECT_TRUE(recovering.OnControl(1,start,54));
+    format.generation=9;format.format.coded_width=format.format.visible_width=642;
+    FPS_EXPECT_TRUE(!recovering.OnControl(1,format,55)); // A recovery marker cannot conceal a source/format change.
 }

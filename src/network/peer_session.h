@@ -10,7 +10,7 @@ struct SessionAction {
     std::string detail;
 };
 struct PeerSessionState {
-    bool connected{},sharing{},receiving{};
+    bool connected{},sharing{},receiving{},recovering{};
     std::uint64_t connection{},token{},outgoing_generation{},incoming_generation{};
     VideoFormat outgoing_format,incoming_format;
 };
@@ -23,6 +23,8 @@ public:
     bool AcceptVideo(std::uint64_t id,const VideoWireFrame&,std::uint64_t now);
     void ReceiverReady(std::uint64_t generation);
     void OnMediaLost(std::uint64_t id);
+    void RestartOutgoing();
+    void ReceiverRecovered(std::uint64_t generation);
     bool RequestShare(VideoFormat);
     void StopShare();
     void SetConnectionIntent(bool intent,std::uint64_t now);
@@ -36,11 +38,11 @@ private:
     void Send(std::uint64_t,ControlType,std::uint64_t generation=0,std::uint64_t value=0);
     void Activate(std::uint64_t);
     void ClearActive();
-    void BeginShare();
+    void BeginShare(bool recovery=false);
     bool FailLink(std::uint64_t,const char*);
     std::string own_,peer_;
     std::uint64_t boot_{},generation_{},last_sequence_{},pending_generation_{},stopped_generation_{};
-    bool share_intent_{},connect_intent_{},awaiting_ready_{};
+    bool share_intent_{},connect_intent_{},awaiting_ready_{},pending_recovery_{};
     std::uint32_t retry_{};
     std::uint64_t next_retry_{};
     VideoFormat desired_;

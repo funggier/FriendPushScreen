@@ -72,10 +72,11 @@ struct PeerVideoController::Impl {
     std::uint64_t skippedCapture{};
     EncodedObserver observer;
     unsigned traces{},lossTraces{};
+    std::uint64_t lastPoll{},flowRecoveries{};
     void Trace(const std::string& text) {
         wchar_t flag[2]{};
         if(GetEnvironmentVariableW(L"FPS_CODEC_METRICS",flag,2)!=1||flag[0]!=L'1')return;
-        const bool loss=text.starts_with("transport lost:")||text=="decoder requests keyframe";
+        const bool loss=text.starts_with("transport lost:")||text.starts_with("flow ")||text=="decoder requests keyframe";
         if(loss?lossTraces++>=200:traces++>=200)return;
         std::ofstream log(directory/"video-trace.log",std::ios::app);log<<GetTickCount64()<<" "<<text<<"\n";
     }
@@ -180,10 +181,10 @@ struct PeerVideoController::Impl {
                 if(!senderRunning)SenderFailed();break;
             case SessionActionKind::StopSender:sender.Stop();senderRunning=false;sendWindow.Reset(0,0);break;
             case SessionActionKind::StartReceiver:
-                clearPending=true;
+                if(action.message.value!=1)clearPending=true;
                 receiverRunning=receiver.Configure(device.Get(),action.message.format,codec,decodePolicy,action.message.session,action.message.generation);
                 if(!receiverRunning)ReceiverFailed();else session->ReceiverReady(action.message.generation);break;
-            case SessionActionKind::StopReceiver:receiver.Stop();receiverRunning=false;clearPending=true;break;
+            case SessionActionKind::StopReceiver:receiver.Stop();receiverRunning=false;if(action.message.value!=1)clearPending=true;break;
             case SessionActionKind::ForceKeyframe:if(senderRunning&&!sender.RequestKeyframe())SenderFailed();break;
             case SessionActionKind::RecoverReceiver:
                 if(receiverRunning&&!receiver.Recover())ReceiverFailed();break;
@@ -276,6 +277,13 @@ bool PeerVideoController::PushCapture(const capture::CapturedFrame& frame) {
 bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
     auto& p=*impl_;if(!p.session)return false;
     const auto before=p.receiver.Metrics().delivered;
+    const auto polled=GetTickCount64();
+    if(p.lastPoll&&polled-p.lastPoll>100)p.Trace("flow UI gap ms="+std::to_string(polled-p.lastPoll));
+    p.lastPoll=polled;
+    const auto delivered=[&](const capture::CapturedFrame& frame) {
+        if(!sink(frame))return false;
+        p.session->ReceiverRecovered(p.session->State().incoming_generation);return true;
+    };
     if(p.clearPending){p.clearPending=false;clear();}
     std::deque<Impl::Notice> pending;{std::lock_guard lock(p.mutex);pending.swap(p.notices);}
     for(auto& notice:pending) {
@@ -316,7 +324,7 @@ bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
                 wire->receive_credit=std::move(credit);
                 if(p.session->AcceptVideo(event.connection_id,*wire,now)&&p.receiverRunning) {
                     if(p.clearPending){p.clearPending=false;clear();}
-                    if(!p.receiver.Push(std::move(*wire),sink))p.ReceiverFailed();
+                    if(!p.receiver.Push(std::move(*wire),delivered))p.ReceiverFailed();
                     p.Trace("decode total="+std::to_string(p.receiver.Metrics().delivered)+" dropped="+std::to_string(p.receiver.Metrics().dropped)+" wait="+std::to_string(p.receiver.AwaitingKeyframe()));
                     if(p.receiver.TakeKeyframeRequest()){p.Trace("decoder requests keyframe");p.session->OnMediaLost(event.connection_id);}
                 }break;
@@ -341,9 +349,13 @@ bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
     for(const auto& receipt:consumed)
         if(receipt.connection==p.session->State().connection&&receipt.message.session==p.session->State().token)
             p.QueueControl(receipt.message,receipt.connection);
-    if(p.senderRunning&&p.sendWindow.Expire(GetTickCount64())&&!p.sender.RequestKeyframe())p.SenderFailed();
+    if(p.senderRunning&&p.sendWindow.Expire(GetTickCount64())) {
+        ++p.flowRecoveries;p.Trace("flow consumer timeout pending="+std::to_string(p.sendWindow.Pending())+
+            " oldest_ms="+std::to_string(p.sendWindow.OldestAge(GetTickCount64())));
+        p.session->RestartOutgoing();p.Actions();
+    }
     if(p.senderRunning&&p.sendWindow.CanSubmit()&&!p.sender.Poll(p.SenderSink())){p.SenderFailed();p.Actions();}
-    if(p.receiverRunning&&!p.receiver.Poll(sink))p.ReceiverFailed();
+    if(p.receiverRunning&&!p.receiver.Poll(delivered))p.ReceiverFailed();
     if(p.session->State().connected)p.connecting=false;
     return p.receiver.Metrics().delivered!=before;
 }
@@ -363,11 +375,11 @@ PeerVideoSnapshot PeerVideoController::Snapshot()const {
     if(p.session) {
         const auto& state=p.session->State();result.connected=state.connected;
         result.connection=state.connection;result.session=state.token;result.outgoing_generation=state.outgoing_generation;result.incoming_generation=state.incoming_generation;
-        result.sharing=state.sharing&&p.senderRunning;result.receiving=state.receiving&&p.receiverRunning;
+        result.sharing=state.sharing&&p.senderRunning;result.receiving=(state.receiving&&p.receiverRunning)||state.recovering;
     }
-    result.awaiting_keyframe=result.receiving&&p.receiver.AwaitingKeyframe();result.error=p.error;
+    result.awaiting_keyframe=result.receiving&&(p.session->State().recovering||p.receiver.AwaitingKeyframe());result.error=p.error;
     if(!p.peer)result.status="Not paired - export identity and pair with your friend";
-    else if(result.connected)result.status="Authenticated peer connected | "+std::string(result.receiving?(result.awaiting_keyframe?"waiting for video IDR":"receiving H.264"):"no incoming video");
+    else if(result.connected)result.status="Authenticated peer connected | "+std::string(result.receiving?(result.awaiting_keyframe?"recovering / waiting for video IDR":"receiving H.264"):"no incoming video");
     else if(result.connecting)result.status="Connecting to "+p.remoteHost+":"+std::to_string(p.remotePort);
     else if(result.listen_port)result.status="Listening on UDP "+std::to_string(result.listen_port)+" | waiting for paired friend";
     else if(p.startPending)result.status="Starting secure peer listener";
@@ -379,12 +391,13 @@ PeerVideoSnapshot PeerVideoController::Snapshot()const {
     result.outgoing=p.sender.Metrics();result.incoming=p.receiver.Metrics();
     result.encode_latency=p.sender.Latency();result.decode_latency=p.receiver.DecodeLatency();result.end_to_end=p.receiver.EndToEndLatency();
     result.outbound_pending=p.sendBudget->count.load();result.outbound_bytes=p.sendBudget->bytes.load();
+    result.flow_recoveries=p.flowRecoveries;result.skipped_capture=p.skippedCapture;result.oldest_outbound_ms=p.sendWindow.OldestAge(GetTickCount64());
     result.max_outbound_pending=p.sendBudget->max_count.load();result.max_outbound_bytes=p.sendBudget->max_bytes.load();return result;
 }
 HANDLE PeerVideoController::WakeEvent()const{return impl_->wake;}
 void PeerVideoController::SetEncodedObserver(EncodedObserver observer){impl_->observer=std::move(observer);}
 bool PeerVideoController::WantsShare()const{return impl_->wantsShare;}
-bool PeerVideoController::IsReceiving()const{return impl_->receiverRunning&&impl_->session&&impl_->session->State().receiving;}
+bool PeerVideoController::IsReceiving()const{return impl_->session&&((impl_->receiverRunning&&impl_->session->State().receiving)||impl_->session->State().recovering);}
 bool PeerVideoController::IsActive()const {
     const auto& p=*impl_;std::lock_guard lock(p.mutex);return p.startPending||p.actualPort!=0;
 }

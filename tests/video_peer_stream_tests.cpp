@@ -56,6 +56,12 @@ void RunVideoPeerStreamTests() {
         FPS_EXPECT_TRUE(receiver.Push(gap,sink));FPS_EXPECT_EQ(rendered,2U);FPS_EXPECT_TRUE(!receiver.AwaitingKeyframe());
         FPS_EXPECT_TRUE(d->flushes>0);
     }
+    const auto delivered_before_restart=receiver.Metrics().delivered;
+    const auto encoded_before_restart=sender.Metrics().encoded;
+    FPS_EXPECT_TRUE(receiver.Configure(nullptr,format,config,media::VideoBackendPolicy::RequireHardware,123,5));
+    FPS_EXPECT_TRUE(sender.Initialize(nullptr,format,config,media::VideoBackendPolicy::ForceSoftware,123,5));
+    FPS_EXPECT_EQ(receiver.Metrics().delivered,delivered_before_restart);
+    FPS_EXPECT_EQ(sender.Metrics().encoded,encoded_before_restart);
     FPS_EXPECT_TRUE(sender.RequestKeyframe());FPS_EXPECT_TRUE(e->requests>0);
     sender.Stop();receiver.Stop();FPS_EXPECT_TRUE(!sender.Push(source,[](auto&&){return true;}));
 }

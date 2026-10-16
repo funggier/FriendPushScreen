@@ -33,7 +33,7 @@ void PeerSession::ClearActive() {
     const auto id=state_.connection;
     if(state_.sharing)Emit(SessionActionKind::StopSender,id);
     if(state_.receiving)Emit(SessionActionKind::StopReceiver,id);
-    awaiting_ready_=false;state_={};last_sequence_=pending_generation_=stopped_generation_=0;
+    awaiting_ready_=pending_recovery_=false;state_={};last_sequence_=pending_generation_=stopped_generation_=0;
 }
 void PeerSession::Activate(std::uint64_t id) {
     auto& next=links_.at(id);
@@ -48,13 +48,13 @@ void PeerSession::Activate(std::uint64_t id) {
     state_.connected=true;state_.connection=id;state_.token=next.nonce;retry_=0;
     if(share_intent_)BeginShare();
 }
-void PeerSession::BeginShare() {
+void PeerSession::BeginShare(bool recovery) {
     if(!state_.connected||!share_intent_)return;
     if(state_.sharing)Emit(SessionActionKind::StopSender,state_.connection);
     if(++generation_==0)++generation_;
     state_.sharing=false;awaiting_ready_=true;state_.outgoing_generation=generation_;state_.outgoing_format=desired_;
-    Send(state_.connection,ControlType::ShareStart,generation_);
-    Send(state_.connection,ControlType::VideoFormat,generation_);
+    Send(state_.connection,ControlType::ShareStart,generation_,recovery?1:0);
+    Send(state_.connection,ControlType::VideoFormat,generation_,recovery?1:0);
 
 }
 bool PeerSession::OnControl(std::uint64_t id,const ControlMessage& message,std::uint64_t now) {
@@ -82,8 +82,11 @@ bool PeerSession::OnControl(std::uint64_t id,const ControlMessage& message,std::
         break;
     case ControlType::ShareStart:
         if(!message.generation)return FailLink(id,"Missing stream generation");
+        if(message.value>1)return FailLink(id,"Unsupported recovery marker");
         if(message.generation<=std::max({stopped_generation_,state_.incoming_generation,pending_generation_}))return true;
-        if(state_.receiving)Emit(SessionActionKind::StopReceiver,id);
+        if(message.value&&!state_.receiving&&!state_.recovering)return FailLink(id,"Recovery before an incoming stream");
+        if(state_.receiving)Emit(SessionActionKind::StopReceiver,id,message);
+        pending_recovery_=message.value==1;state_.recovering=pending_recovery_;
         stopped_generation_=std::max(stopped_generation_,state_.incoming_generation);
         state_.receiving=false;state_.incoming_generation=0;last_sequence_=0;pending_generation_=message.generation;break;
     case ControlType::VideoFormat:
@@ -93,16 +96,18 @@ bool PeerSession::OnControl(std::uint64_t id,const ControlMessage& message,std::
         }
         if(message.generation!=pending_generation_||message.generation<=stopped_generation_)return true;
         if(!ValidateVideoFormat(message.format))return FailLink(id,"Unsupported peer video format");
+        if(message.value!=(pending_recovery_?1ULL:0ULL)||
+            (pending_recovery_&&message.format!=state_.incoming_format))return FailLink(id,"Recovery format changed");
         state_.incoming_format=message.format;state_.incoming_generation=message.generation;
         state_.receiving=true;pending_generation_=0;last_sequence_=0;
         Emit(SessionActionKind::StartReceiver,id,message);break;
     case ControlType::ShareStop:
         if(!message.generation||message.generation<std::max(state_.incoming_generation,pending_generation_))return true;
-        stopped_generation_=std::max(stopped_generation_,message.generation);pending_generation_=0;
+        stopped_generation_=std::max(stopped_generation_,message.generation);pending_generation_=0;pending_recovery_=false;state_.recovering=false;
         if(state_.receiving)Emit(SessionActionKind::StopReceiver,id);
         state_.receiving=false;state_.incoming_generation=0;last_sequence_=0;break;
     case ControlType::KeyframeRequest:
-        if(state_.sharing&&message.generation==state_.outgoing_generation)BeginShare();
+        if(state_.sharing&&message.generation==state_.outgoing_generation)BeginShare(true);
         break;
     case ControlType::Ping:Send(id,ControlType::Pong,0,message.value);break;
     case ControlType::Pong:break;
@@ -124,7 +129,13 @@ void PeerSession::ReceiverReady(std::uint64_t generation) {
 }
 void PeerSession::OnMediaLost(std::uint64_t id) {
     if(!state_.connected||id!=state_.connection)return;
-    if(state_.receiving){Emit(SessionActionKind::RecoverReceiver,id);Send(id,ControlType::KeyframeRequest,state_.incoming_generation);}
+    if(state_.receiving){state_.recovering=true;Emit(SessionActionKind::RecoverReceiver,id);Send(id,ControlType::KeyframeRequest,state_.incoming_generation);}
+}
+void PeerSession::RestartOutgoing() {
+    if(state_.sharing)BeginShare(true);
+}
+void PeerSession::ReceiverRecovered(std::uint64_t generation) {
+    if(state_.receiving&&generation==state_.incoming_generation)state_.recovering=false;
 }
 bool PeerSession::RequestShare(VideoFormat format) {
     if(!ValidateVideoFormat(format))return false;

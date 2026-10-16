@@ -923,7 +923,7 @@ void Application::UpdatePeerUi(bool force) {
                 <<" sent_bytes="<<p.transport.sent_bytes<<" received_bytes="<<p.transport.received_bytes
                 <<" tx_peak_count="<<p.max_outbound_pending<<" tx_peak_bytes="<<p.max_outbound_bytes
                 <<" rx_peak_count="<<p.transport.max_receive_media_count<<" rx_peak_bytes="<<p.transport.max_receive_media_bytes
-                <<" drops="<<p.transport.dropped_video<<" encoder_gpu="<<p.encoder_gpu_frames<<" encoder_cpu="<<p.encoder_cpu_frames
+                <<" drops="<<p.transport.dropped_video<<" flow_recoveries="<<p.flow_recoveries<<" skipped_capture="<<p.skipped_capture<<" oldest_outbound_ms="<<p.oldest_outbound_ms<<" encoder_gpu="<<p.encoder_gpu_frames<<" encoder_cpu="<<p.encoder_cpu_frames
                 <<" decoder_gpu="<<p.decoder_gpu_frames<<" decoder_cpu="<<p.decoder_cpu_frames
                 <<" encode_p50_ms="<<p.encode_latency.p50_ms<<" encode_p95_ms="<<p.encode_latency.p95_ms<<" encode_p99_ms="<<p.encode_latency.p99_ms
                 <<" decode_p50_ms="<<p.decode_latency.p50_ms<<" decode_p95_ms="<<p.decode_latency.p95_ms<<" decode_p99_ms="<<p.decode_latency.p99_ms

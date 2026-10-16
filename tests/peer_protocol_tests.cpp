@@ -40,7 +40,9 @@ void RunPeerProtocolTests() {
     FPS_EXPECT_TRUE(held_first.expired()&&!held_second.expired());
     FPS_EXPECT_TRUE(!window.Acknowledge(consumed));FPS_EXPECT_TRUE(window.CanSubmit());
     FPS_EXPECT_TRUE(!window.Expire(359));FPS_EXPECT_TRUE(window.Expire(360));
-    FPS_EXPECT_TRUE(held_second.expired());FPS_EXPECT_EQ(window.Pending(),std::size_t{0});
+    FPS_EXPECT_TRUE(!held_second.expired());FPS_EXPECT_EQ(window.Pending(),std::size_t{1});
+    FPS_EXPECT_TRUE(!window.CanSubmit());FPS_EXPECT_TRUE(!window.Expire(361));
+    window.Reset(123,7);FPS_EXPECT_TRUE(held_second.expired());
     FPS_EXPECT_TRUE(window.Submit(3,400,{}));window.Reset(123,8);FPS_EXPECT_EQ(window.Pending(),std::size_t{0});
     VideoWireFrame v;v.session=789;v.generation=3;v.sequence=42;v.source_sequence=21;
     v.timestamp_100ns=700;v.duration_100ns=166666;v.capture_time_100ns=800;v.format=f;v.keyframe=true;

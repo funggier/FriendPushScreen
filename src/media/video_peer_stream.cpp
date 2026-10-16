@@ -38,7 +38,7 @@ VideoPeerSender::VideoPeerSender(std::unique_ptr<IVideoEncoder> encoder):encoder
 VideoPeerSender::~VideoPeerSender(){Stop();}
 bool VideoPeerSender::Initialize(ID3D11Device* device,const network::VideoFormat& format,VideoCodecConfig config,VideoBackendPolicy policy,
     std::uint64_t session,std::uint64_t generation) {
-    Stop();error_.clear();metrics_={};latency_.clear();format_=format;session_=session;generation_=generation;
+    Stop();error_.clear();format_=format;session_=session;generation_=generation;
     if(!network::ValidateVideoFormat(format)||!session||!generation){error_="Unsupported outgoing video format/session";return false;}
     config=ConfigureCodec(std::move(config),format);clock_=VideoFrameClock(format.fps_numerator,format.fps_denominator);
     normalizer_->Configure(device,format.coded_width,format.coded_height);
@@ -97,7 +97,7 @@ VideoPeerReceiver::VideoPeerReceiver(std::unique_ptr<IVideoDecoder> decoder):dec
 VideoPeerReceiver::~VideoPeerReceiver(){Stop();}
 bool VideoPeerReceiver::Configure(ID3D11Device* device,const network::VideoFormat& format,VideoCodecConfig config,VideoBackendPolicy policy,
     std::uint64_t session,std::uint64_t generation) {
-    Stop();error_.clear();metrics_={};decode_latency_.clear();end_to_end_.clear();format_=format;session_=session;generation_=generation;
+    Stop();error_.clear();format_=format;session_=session;generation_=generation;
     if(!network::ValidateVideoFormat(format)||!session||!generation){error_="Unsupported incoming video format/session";return false;}
     normalizer_->Configure(device,format.coded_width,format.coded_height);config=ConfigureCodec(std::move(config),format);
     if(!decoder_->Initialize(device,config,policy)){error_="Decoder: "+decoder_->Error();return false;}

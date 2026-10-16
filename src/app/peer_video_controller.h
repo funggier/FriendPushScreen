@@ -12,6 +12,7 @@ struct PeerVideoSnapshot {
     media::LatencyPercentiles encode_latency,decode_latency,end_to_end;
     std::uint64_t encoder_gpu_frames{},encoder_cpu_frames{},decoder_gpu_frames{},decoder_cpu_frames{};
     std::uint64_t outbound_pending{},outbound_bytes{},max_outbound_pending{},max_outbound_bytes{};
+    std::uint64_t flow_recoveries{},skipped_capture{},oldest_outbound_ms{};
 };
 class PeerVideoController {
 public:
