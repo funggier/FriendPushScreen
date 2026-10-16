@@ -31,6 +31,7 @@ constexpr int kConnectButtonId = 2105;
 constexpr int kExportIdentityId=2127,kPairFriendId=2128,kDisconnectPeerId=2129;
 constexpr int kPairSectionHeight=220;
 constexpr int kAudioSourceId = 2106;
+constexpr int kAudioOutputId=2130,kAudioSectionHeight=106;
 constexpr int kMuteButtonId = 2107;
 constexpr int kVolumeSliderId = 2108;
 constexpr int kTopmostId = 2109;
@@ -89,6 +90,7 @@ constexpr WPARAM kDropKindAudio = 2;
 constexpr WPARAM kDropKindSource = 3;
 constexpr WPARAM kDropKindEncoder = 4;
 constexpr WPARAM kDropKindDecoder = 5;
+constexpr WPARAM kDropKindAudioOutput=6;
 
 struct DropPopupInit {
     HWND notify{nullptr};
@@ -1723,35 +1725,10 @@ void SettingsPanel::InitializeControls(
             kDropKindAudio,
             &audio_source_list_);
 
-    SendMessageW(
-        audio_source_list_,
-        LB_ADDSTRING,
-        0,
-        reinterpret_cast<LPARAM>(
-            L"No Audio"));
-    SendMessageW(
-        audio_source_list_,
-        LB_ADDSTRING,
-        0,
-        reinterpret_cast<LPARAM>(
-            L"Desktop / System Audio"));
-    SendMessageW(
-        audio_source_list_,
-        LB_ADDSTRING,
-        0,
-        reinterpret_cast<LPARAM>(
-            L"Device Source"));
-    SendMessageW(
-        audio_source_list_,
-        LB_ADDSTRING,
-        0,
-        reinterpret_cast<LPARAM>(
-            L"Application Audio"));
-
-    ShowWindow(
-        audio_source_popup_,
-        SW_HIDE);
-
+    audio_output_label_=CreateLabel(instance,L"Remote Audio Output");
+    audio_output_button_=CreateButton(instance,kAudioOutputId,L"Default Output Device  \u25BE");
+    audio_output_popup_=CreateDropPopup(instance,root_owner,hwnd_,kDropKindAudioOutput,&audio_output_list_);
+    ShowWindow(audio_source_popup_,SW_HIDE);ShowWindow(audio_output_popup_,SW_HIDE);
     audio_status_ =
         CreateLabel(
             instance,
@@ -1890,6 +1867,7 @@ void SettingsPanel::ApplyDefaultFont() {
         audio_source_button_,
         audio_source_list_,
         audio_status_,
+        audio_output_label_,audio_output_button_,
         mute_button_,
         volume_slider_,
         volume_label_,
@@ -1974,7 +1952,7 @@ void SettingsPanel::LayoutControls() {
         };
 
     const auto move = [&](HWND control,int x,int y,int w,int h) {
-        place(control,x,y + (y >= 316 ? kVideoSectionHeight : 0) + (y >= 560 ? kPairSectionHeight : 0),w,h);
+        place(control,x,y + (y >= 316 ? kVideoSectionHeight : 0) + (y >= 560 ? kPairSectionHeight : 0) + (y>=712?kAudioSectionHeight:0) + (control==audio_status_?66:0),w,h);
     };
     place(video_heading_,kPadding,316,field_width,20);
     place(encoder_label_,kPadding,342,field_width,18);
@@ -2187,12 +2165,10 @@ void SettingsPanel::LayoutControls() {
         field_width,
         kFieldHeight);
     move(
-        audio_status_,
-        kPadding,
-        646,
-        field_width,
-        56);
+        audio_status_,kPadding,646,field_width,96);
 
+    place(audio_output_label_,kPadding,646+kVideoSectionHeight+kPairSectionHeight,field_width,18);
+    place(audio_output_button_,kPadding,666+kVideoSectionHeight+kPairSectionHeight,field_width,kFieldHeight);
     const int mute_width = 140;
     move(
         mute_button_,
@@ -2285,9 +2261,9 @@ void SettingsPanel::LayoutControls() {
             button_width,
             kButtonHeight);
 
-        content_height_ = 1342 + kVideoSectionHeight + kPairSectionHeight;
+        content_height_ = 1342 + kVideoSectionHeight + kPairSectionHeight + kAudioSectionHeight;
     } else {
-        content_height_ = 1012 + kVideoSectionHeight + kPairSectionHeight;
+        content_height_ = 1012 + kVideoSectionHeight + kPairSectionHeight + kAudioSectionHeight;
     }
 
     SetWindowPos(
@@ -2589,6 +2565,7 @@ std::uint32_t SettingsPanel::ReadPort(HWND edit) const {
 }
 
 void SettingsPanel::HideDropLists() {
+    if(audio_output_popup_)ShowWindow(audio_output_popup_,SW_HIDE);
     if (encoder_popup_) ShowWindow(encoder_popup_,SW_HIDE);
     if (decoder_popup_) ShowWindow(decoder_popup_,SW_HIDE);
     if (source_popup_ != nullptr) {
@@ -2627,6 +2604,8 @@ void SettingsPanel::ToggleDropList(HWND list) {
     } else if (list == audio_source_list_) {
         button = audio_source_button_;
         popup = audio_source_popup_;
+    } else if(list==audio_output_list_) {
+        button=audio_output_button_;popup=audio_output_popup_;
     } else if (list == encoder_list_) {
         button = encoder_button_; popup = encoder_popup_;
     } else if (list == decoder_list_) {
@@ -2744,16 +2723,35 @@ void SettingsPanel::UpdateDropDownText(const UiState& state) {
         SendMessageW(connection_mode_list_,LB_SETCURSEL,static_cast<WPARAM>(state.preferences.connection_mode),0);
         applied_connection_mode_=state.preferences.connection_mode;
     }
-    if(!dropdown_initialized_||applied_audio_source_!=state.preferences.audio_source) {
-        const wchar_t* audio=L"No Audio";
-        if(state.preferences.audio_source==AudioSourceKind::System)audio=L"Desktop / System Audio";
-        else if(state.preferences.audio_source==AudioSourceKind::Device)audio=L"Device Source";
-        else if(state.preferences.audio_source==AudioSourceKind::Application)audio=L"Application Audio";
-        SetTextIfDifferent(audio_source_button_,std::wstring{audio}+L"  \u25BE");
-        SendMessageW(audio_source_list_,LB_SETCURSEL,static_cast<WPARAM>(state.preferences.audio_source),0);
-        applied_audio_source_=state.preferences.audio_source;
-    }
+    UpdateAudioChoices(state);
     dropdown_initialized_=true;
+}
+void SettingsPanel::UpdateAudioChoices(const UiState& state) {
+    auto sources=state.audio_sources;
+    if(sources.empty())sources={{"none","No Audio",{},audio::AudioSourceKind::None,true},{"system","Desktop / System Audio",{},audio::AudioSourceKind::SystemLoopback,true}};
+    if(sources!=audio_source_choices_) {
+        audio_source_choices_=std::move(sources);SendMessageW(audio_source_list_,LB_RESETCONTENT,0,0);
+        for(const auto& source:audio_source_choices_) {
+            auto text=Utf8ToWide(source.name+(source.supported?"":" (unavailable)"));
+            SendMessageW(audio_source_list_,LB_ADDSTRING,0,reinterpret_cast<LPARAM>(text.c_str()));
+        }
+    }
+    auto outputs=state.audio_outputs;outputs.insert(outputs.begin(),{"","Default Output Device",true});
+    if(outputs!=audio_output_choices_) {
+        audio_output_choices_=std::move(outputs);SendMessageW(audio_output_list_,LB_RESETCONTENT,0,0);
+        for(const auto& output:audio_output_choices_) {
+            auto text=Utf8ToWide(output.name);SendMessageW(audio_output_list_,LB_ADDSTRING,0,reinterpret_cast<LPARAM>(text.c_str()));
+        }
+    }
+    const auto sourceId=state.preferences.audio_source_id.empty()?(state.preferences.audio_source==AudioSourceKind::System?"system":"none"):state.preferences.audio_source_id;
+    std::wstring sourceText=L"Saved source unavailable",outputText=L"Saved output unavailable";
+    int sourceIndex=-1,outputIndex=-1;
+    for(std::size_t i=0;i<audio_source_choices_.size();++i)if(audio_source_choices_[i].id==sourceId){sourceText=Utf8ToWide(audio_source_choices_[i].name);sourceIndex=static_cast<int>(i);}
+    for(std::size_t i=0;i<audio_output_choices_.size();++i)if(audio_output_choices_[i].id==state.preferences.receiver_output_id){outputText=Utf8ToWide(audio_output_choices_[i].name);outputIndex=static_cast<int>(i);}
+    SetTextIfDifferent(audio_source_button_,sourceText+L"  \u25BE");
+    SetTextIfDifferent(audio_output_button_,outputText+L"  \u25BE");
+    if(SendMessageW(audio_source_list_,LB_GETCURSEL,0,0)!=sourceIndex)SendMessageW(audio_source_list_,LB_SETCURSEL,static_cast<WPARAM>(sourceIndex),0);
+    if(SendMessageW(audio_output_list_,LB_GETCURSEL,0,0)!=outputIndex)SendMessageW(audio_output_list_,LB_SETCURSEL,static_cast<WPARAM>(outputIndex),0);
 }
 void SettingsPanel::UpdateDiagnosticsVisibility(
     bool visible) {
@@ -2858,39 +2856,7 @@ std::wstring host;
     EnableWindow(host_edit_,state.connection_state==ConnectionUiState::Connected?FALSE:TRUE);
     EnableWindow(remote_port_edit_,state.connection_state==ConnectionUiState::Connected?FALSE:TRUE);
 
-    switch (state.preferences.audio_source) {
-    case AudioSourceKind::None:
-        SetTextIfDifferent(
-            audio_status_,
-            state.application_audio_supported
-                ? L"Audio disabled. Application Audio capability is available on this Windows build."
-                : L"Audio disabled. Application Audio is unsupported on this Windows build (requires build 20348+).");
-        break;
-
-    case AudioSourceKind::System:
-        SetTextIfDifferent(
-            audio_status_,
-            state.application_audio_supported
-                ? L"Desktop / System Audio selected - capture starts in FPS-006A."
-                : L"Desktop / System Audio selected - capture starts in FPS-006A. Application Audio is unsupported on this Windows build (requires build 20348+).");
-        break;
-
-    case AudioSourceKind::Device:
-        SetTextIfDifferent(
-            audio_status_,
-            state.application_audio_supported
-                ? L"Device Source selected - live device enumeration/capture starts in FPS-006A."
-                : L"Device Source selected - live device enumeration/capture starts in FPS-006A. Application Audio is unsupported on this Windows build (requires build 20348+).");
-        break;
-
-    case AudioSourceKind::Application:
-        SetTextIfDifferent(
-            audio_status_,
-            state.application_audio_supported
-                ? L"Application Audio selected - capture starts in FPS-006A."
-                : L"Application Audio is unsupported on this Windows build (requires build 20348+).");
-        break;
-    }
+    SetTextIfDifferent(audio_status_,Utf8ToWide(state.audio_status.empty()?"No Audio. Choose a source to share. Application Audio requires build 20348+; process backend is not qualified.":state.audio_status));
 
     SetTextIfDifferent(
         mute_button_,
@@ -3352,18 +3318,15 @@ LRESULT SettingsPanel::HandleMessage(
             return 0;
         }
 
-        if (wparam ==
-            kDropKindAudio) {
-            if (selection > 3) {
-                return 0;
-            }
-
-            Emit(UiCommand{
-                UiCommandType::SelectAudioSource,
-                selection,
-                {}
-            });
-            return 0;
+        if(wparam==kDropKindAudio) {
+            if(selection<0||selection>=static_cast<int>(audio_source_choices_.size()))return 0;
+            const auto& source=audio_source_choices_[static_cast<std::size_t>(selection)];if(!source.supported)return 0;
+            const int kind=source.kind==audio::AudioSourceKind::None?0:source.kind==audio::AudioSourceKind::SystemLoopback?1:2;
+            Emit(UiCommand{UiCommandType::SelectAudioSource,kind,source.id});return 0;
+        }
+        if(wparam==kDropKindAudioOutput) {
+            if(selection<0||selection>=static_cast<int>(audio_output_choices_.size()))return 0;
+            Emit(UiCommand{UiCommandType::SelectAudioOutput,selection,audio_output_choices_[static_cast<std::size_t>(selection)].id});return 0;
         }
 
         return 0;
@@ -3397,6 +3360,7 @@ LRESULT SettingsPanel::HandleMessage(
                 return 0;
             }
 
+            if(id==kAudioOutputId){ToggleDropList(audio_output_list_);return 0;}
             if (id == kAudioSourceId) {
                 ToggleDropList(
                     audio_source_list_);

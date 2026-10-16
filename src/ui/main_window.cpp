@@ -122,6 +122,8 @@ bool ShouldDeferUiCommand(
     case UiCommandType::ToggleShareRequest:
     case UiCommandType::ToggleConnectionRequest:
     case UiCommandType::ApplyVideoSettings:
+    case UiCommandType::SelectAudioSource:
+    case UiCommandType::SelectAudioOutput:
     case UiCommandType::SelectCaptureSource:
     case UiCommandType::ToggleCapturePreview:
     case UiCommandType::RefreshCaptureSources:
@@ -714,10 +716,12 @@ std::wstring MainWindow::BuildStatusSummary(
     text += state.receiving_video?L"  |  Video: Incoming peer":L"  |  Video: No incoming stream";
     text += L"  |  Audio: ";
 
-    if (state.preferences.receiver_muted) {
+    if(state.audio_feedback_blocked) {
+        text+=L"Feedback blocked";
+    } else if (state.preferences.receiver_muted) {
         text += L"Muted";
     } else {
-        text += L"Inactive";
+        text += (state.audio_sending||state.audio_receiving)?L"Active":L"Inactive";
     }
 
     return text;

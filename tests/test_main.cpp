@@ -1,6 +1,8 @@
 #include "test_support.h"
 
 void RunWasapiAudioTests();
+void RunPeerAudioTests();
+void RunAudioUiTests();
 void RunAudioTests();
 void RunFeedbackProtectionTests();
 void RunPeerSessionTests();
@@ -27,6 +29,8 @@ int main() {
     FPS_EXPECT_TRUE(true);
     FPS_EXPECT_EQ(2 + 2, 4);
     RunWasapiAudioTests();
+    RunPeerAudioTests();
+    RunAudioUiTests();
     RunAudioTests();
     RunPeerIdentityTests();
     RunPeerProtocolTests();

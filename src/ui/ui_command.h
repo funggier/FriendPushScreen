@@ -23,6 +23,7 @@ enum class UiCommandType {
     SetSharePort,
     SetRemotePort,
     SelectAudioSource,
+    SelectAudioOutput,
     ToggleReceiverMute,
     SetReceiverVolume,
     ToggleAlwaysOnTop,

@@ -10,7 +10,8 @@ namespace fps::network {
 inline constexpr std::size_t kMaxControlBytes=64*1024;
 inline constexpr std::size_t kMaxMediaBytes=8*1024*1024;
 inline constexpr std::size_t kMaxMediaInFlight=2;
-enum class TransportEventKind { Connected,Disconnected,Control,Video,MediaLost,MediaSendLost,Error };
+inline constexpr std::size_t kMaxAudioBytes=1024,kMaxAudioInFlight=6;
+enum class TransportEventKind { Connected,Disconnected,Control,Video,Audio,MediaLost,MediaSendLost,Error };
 struct TransportEvent {
     TransportEventKind kind{TransportEventKind::Error};
     std::uint64_t connection_id{0};
@@ -19,6 +20,8 @@ struct TransportEvent {
     std::shared_ptr<void> receive_credit; // Keeps partial + queued + consumer-held media in one budget.
 };
 struct TransportMetrics {
+    std::uint64_t sent_audio{},received_audio{},dropped_audio{};
+    std::uint32_t send_audio_count{},receive_audio_count{},max_send_audio_count{},max_receive_audio_count{};
     std::uint64_t sent_control{0},received_control{0},sent_video{0},received_video{0};
     std::uint64_t sent_bytes{0},received_bytes{0},rejected_certificates{0},dropped_video{0};
     std::uint64_t send_media_bytes{0},receive_media_bytes{0},max_send_media_bytes{0},max_receive_media_bytes{0};
@@ -41,6 +44,7 @@ public:
     bool Connect(const std::string& host,std::uint16_t port,std::string& error);
     TransportSendResult SendControl(std::span<const std::uint8_t>,std::uint64_t connection_id=0);
     TransportSendResult SendVideo(std::vector<std::uint8_t>,std::uint64_t connection_id=0,std::shared_ptr<void> send_credit={});
+    TransportSendResult SendAudio(std::vector<std::uint8_t>,std::uint64_t connection_id=0);
     std::vector<TransportEvent> PollEvents();
     TransportMetrics Metrics()const;
     std::uint16_t ListenPort()const;

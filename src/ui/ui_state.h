@@ -1,6 +1,7 @@
 #pragma once
 
 #include "media/video_codec_model.h"
+#include "audio/wasapi_audio.h"
 
 #include <cstdint>
 #include <string>
@@ -62,6 +63,7 @@ struct UiPreferences {
     bool show_cursor{true};
 
     AudioSourceKind audio_source{AudioSourceKind::None};
+    std::string audio_source_id,receiver_output_id;
     bool receiver_muted{false};
     int receiver_volume{100};
 };
@@ -80,6 +82,10 @@ struct UiState {
     std::string peer_status,share_status,own_fingerprint,peer_fingerprint;
     std::uint32_t windows_build{0};
     bool application_audio_supported{false};
+    std::vector<audio::AudioSourceDescriptor> audio_sources;
+    std::vector<audio::AudioEndpoint> audio_outputs;
+    std::string audio_status;
+    bool audio_sending{},audio_receiving{},audio_feedback_blocked{};
 };
 
 struct PeerUiSnapshot {

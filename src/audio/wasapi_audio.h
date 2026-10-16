@@ -7,8 +7,9 @@ struct AudioSourceDescriptor {
     std::string id,name,reason;
     AudioSourceKind kind{AudioSourceKind::None};
     bool supported{true};
+    bool operator==(const AudioSourceDescriptor&)const=default;
 };
-struct AudioEndpoint {std::string id,name;bool is_default{};};
+struct AudioEndpoint {std::string id,name;bool is_default{};bool operator==(const AudioEndpoint&)const=default;};
 struct AudioCatalog {std::vector<AudioSourceDescriptor> sources;std::vector<AudioEndpoint> outputs;std::string process_reason,error;};
 struct AudioPcmFormat {std::uint32_t sample_rate{kAudioRate},channels{kAudioChannels},native_rate{},native_channels{};};
 struct AudioPcmChunk {std::vector<float> samples;std::int64_t pts_100ns{};bool discontinuity{};};

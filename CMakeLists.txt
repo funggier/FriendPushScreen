@@ -314,3 +314,22 @@ target_sources(FriendPushScreenTests PRIVATE tests/wasapi_audio_tests.cpp)
 add_executable(FriendPushScreenAudioProbe tools/audio_probe/main.cpp)
 target_link_libraries(FriendPushScreenAudioProbe PRIVATE fps_audio)
 fps_apply_warnings(FriendPushScreenAudioProbe)
+
+target_sources(FriendPushScreenTests PRIVATE tests/peer_audio_tests.cpp)
+
+target_sources(FriendPushScreenTests PRIVATE tests/audio_ui_tests.cpp)
+
+foreach(fps_audio_app FriendPushScreen FriendPushScreenCaptureLoopProbe FriendPushScreenFeedbackProbe)
+  target_link_libraries(${fps_audio_app} PRIVATE fps_audio)
+endforeach()
+
+set_tests_properties(FriendPushScreenTests PROPERTIES TIMEOUT 60)
+
+# The portable app statically contains Opus; retain its upstream notice beside it.
+add_custom_command(TARGET FriendPushScreen POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/third-party/opus-notice.txt"
+    "$<TARGET_FILE_DIR:FriendPushScreen>/opus-notice.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+    "$<TARGET_FILE_DIR:FriendPushScreen>/LICENSE")

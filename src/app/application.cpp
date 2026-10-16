@@ -159,6 +159,7 @@ bool IsPreferenceCommand(
     case ui::UiCommandType::SetSharePort:
     case ui::UiCommandType::SetRemotePort:
     case ui::UiCommandType::SelectAudioSource:
+    case ui::UiCommandType::SelectAudioOutput:
     case ui::UiCommandType::ToggleReceiverMute:
     case ui::UiCommandType::SetReceiverVolume:
     case ui::UiCommandType::ToggleAlwaysOnTop:
@@ -205,6 +206,20 @@ void Application::OnDiagnosticsReady() {
     text += WideStatusToUtf8(
         renderer_status_);
     if(peer_)text += "\nPeer: "+peer_->Snapshot().status;
+    if(peer_) {
+        const auto p=peer_->Snapshot();std::ostringstream detail;
+        detail<<"\nAudio\n"<<p.audio.status<<"\nSource: "<<p.audio.source<<"\nOutput endpoint: "<<p.audio.output
+            <<"\nOpus 1.6.1 / 48kHz stereo / 20ms / constrained VBR128kbit/s"
+            <<"\nInput native: "<<p.audio.input_format.native_rate<<"Hz / "<<p.audio.input_format.native_channels<<"ch"
+            <<"\nAudio generation send/receive: "<<p.audio.outgoing_generation<<"/"<<p.audio.incoming_generation
+            <<"\nEncoded/sent/received/decoded: "<<p.audio.encoded<<"/"<<p.audio.sent<<"/"<<p.audio.received<<"/"<<p.audio.decoded
+            <<"\nJitter: "<<p.audio.jitter_depth<<"/6 (peak "<<p.audio.max_jitter_depth<<") | PLC "<<p.audio.plc<<" | Drops "<<p.audio.dropped
+            <<"\nPlayed frames: "<<p.audio.played_frames<<" | Underflows "<<p.audio.underflows<<" | Overruns "<<p.audio.overruns
+            <<"\nCapture->encode mean/max: "<<p.audio.capture_latency_mean_ms<<"/"<<p.audio.capture_latency_max_ms<<"ms"
+            <<"\nLatest playout age (same-host clock): "<<p.audio.playout_age_ms<<"ms"
+            <<"\n"<<p.audio.catalog.process_reason<<"\nTransport: localhost evaluation, ALPN friendpush/2";
+        text+=detail.str();
+    }
     text += "\n\n";
     text += diagnostics::
         FormatDiagnosticsText(
@@ -304,7 +319,14 @@ void Application::PersistUiPreferences() {
     }
 }
 
+void Application::ConfigurePeerAudio() {
+    if(!peer_)return;audio::AudioPreferences preferences;
+    preferences.source_id=ui_state_.preferences.audio_source_id.empty()?(ui_state_.preferences.audio_source==ui::AudioSourceKind::System?"system":"none"):ui_state_.preferences.audio_source_id;
+    preferences.output_id=ui_state_.preferences.receiver_output_id;preferences.muted=ui_state_.preferences.receiver_muted;
+    preferences.volume=ui_state_.preferences.receiver_volume;preferences.windows_build=ui_state_.windows_build;peer_->ConfigureAudio(std::move(preferences));
+}
 void Application::ApplyUiState() {
+    ConfigurePeerAudio();
     main_window_.ApplyUiState(
         ui_state_);
     UpdateCaptureUi();
@@ -733,32 +755,20 @@ void Application::HandleUiCommand(
         }
         break;
 
-    case ui::UiCommandType::SelectAudioSource:
-        if (command.value >= 0 &&
-            command.value <= 3) {
-            const auto source =
-                static_cast<
-                    ui::AudioSourceKind>(
-                    command.value);
-
-            if (ui::SelectAudioSource(
-                    ui_state_,
-                    source)) {
-                state_changed = true;
-            } else {
-                diagnostics::Logger::Instance().
-                    Log(
-                        diagnostics::LogLevel::Info,
-                        "ui",
-                        "Application Audio selection "
-                        "rejected: unsupported on "
-                        "this Windows build");
-                ApplyUiState();
-                return;
-            }
+    case ui::UiCommandType::SelectAudioSource: {
+        const auto found=std::find_if(ui_state_.audio_sources.begin(),ui_state_.audio_sources.end(),[&](const auto& item){return item.id==command.text&&item.supported;});
+        if(found!=ui_state_.audio_sources.end()) {
+            ui_state_.preferences.audio_source_id=found->id;
+            ui_state_.preferences.audio_source=found->kind==audio::AudioSourceKind::None?ui::AudioSourceKind::None:found->kind==audio::AudioSourceKind::SystemLoopback?ui::AudioSourceKind::System:ui::AudioSourceKind::Device;
+            state_changed=true;
         }
         break;
-
+    }
+    case ui::UiCommandType::SelectAudioOutput:
+        if(command.text.empty()||std::any_of(ui_state_.audio_outputs.begin(),ui_state_.audio_outputs.end(),[&](const auto& item){return item.id==command.text;})) {
+            ui_state_.preferences.receiver_output_id=command.text;state_changed=true;
+        }
+        break;
     case ui::UiCommandType::ToggleReceiverMute:
         ui::ToggleReceiverMute(
             ui_state_);
@@ -904,6 +914,13 @@ void Application::UpdatePeerUi(bool force) {
         p.status,p.sharing?"Sharing H.264 | sent "+std::to_string(p.outgoing.delivered)+" frames":
         (p.wants_share?"Waiting for paired friend / source frame":"Not sharing"),p.own_fingerprint,p.peer_fingerprint};
     if(!peer_error_.empty())state.status+=" | "+peer_error_;
+    if(!p.audio.catalog.sources.empty()) {
+        ui_state_.audio_sources=p.audio.catalog.sources;ui_state_.audio_outputs=p.audio.catalog.outputs;
+    }
+    ui_state_.audio_status=p.audio.status;
+    if(!p.audio.catalog.process_reason.empty())ui_state_.audio_status+="\n"+p.audio.catalog.process_reason;
+    ui_state_.audio_sending=p.audio.send_state==audio::AudioState::Active;
+    ui_state_.audio_receiving=p.audio.receiving;ui_state_.audio_feedback_blocked=p.audio.feedback_blocked;
     ui::ApplyPeerUiSnapshot(ui_state_,state);
     main_window_.ApplyUiState(ui_state_);
     if(p.active||p.connected) {
@@ -930,6 +947,18 @@ void Application::UpdatePeerUi(bool force) {
                 <<" e2e_p50_ms="<<p.end_to_end.p50_ms<<" e2e_p95_ms="<<p.end_to_end.p95_ms<<" e2e_p99_ms="<<p.end_to_end.p99_ms
                 <<" encoder="<<p.encoder<<" decoder="<<p.decoder;
             diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Info,"peer-metrics",log.str());
+            std::ostringstream audioLog;
+            audioLog<<"send_state="<<static_cast<unsigned>(p.audio.send_state)<<" receiving="<<p.audio.receiving<<" guard="<<p.audio.feedback_blocked
+                <<" muted="<<p.audio.muted<<" volume="<<ui_state_.preferences.receiver_volume
+                <<" out_generation="<<p.audio.outgoing_generation<<" in_generation="<<p.audio.incoming_generation
+                <<" captured_frames="<<p.audio.captured_frames<<" encoded="<<p.audio.encoded<<" sent="<<p.audio.sent<<" received="<<p.audio.received
+                <<" decoded="<<p.audio.decoded<<" played_frames="<<p.audio.played_frames<<" plc="<<p.audio.plc<<" drops="<<p.audio.dropped
+                <<" jitter="<<p.audio.jitter_depth<<" peak_jitter="<<p.audio.max_jitter_depth<<" underflows="<<p.audio.underflows<<" overruns="<<p.audio.overruns
+                <<" render_peak_frames="<<p.audio.max_render_queue_frames<<" restarts="<<p.audio.source_restarts
+                <<" capture_mean_ms="<<p.audio.capture_latency_mean_ms<<" capture_max_ms="<<p.audio.capture_latency_max_ms<<" playout_age_ms="<<p.audio.playout_age_ms
+                <<" tx_count="<<p.transport.send_audio_count<<" rx_count="<<p.transport.receive_audio_count<<" tx_peak="<<p.transport.max_send_audio_count<<" rx_peak="<<p.transport.max_receive_audio_count
+                <<" source="<<p.audio.source<<" output="<<p.audio.output<<" error="<<p.audio.error;
+            diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Info,"audio-metrics",audioLog.str());
         }
     } else UpdateCaptureUi();
 }
@@ -972,6 +1001,7 @@ int Application::Run(
         ui::MakeStateFromPreferences(
             preferences,
             windows_build);
+    {auto audioCatalog=audio::EnumerateAudioDevices(windows_build);ui_state_.audio_sources=std::move(audioCatalog.sources);ui_state_.audio_outputs=std::move(audioCatalog.outputs);ui_state_.audio_status=audioCatalog.process_reason;}
 
     main_window_.SetResizeCallback(
         [this](

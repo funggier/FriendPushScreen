@@ -18,7 +18,7 @@ namespace fps::network {
 namespace {
 constexpr std::uint64_t kProtocolError=0x465001,kExpiredMedia=0x465002;
 constexpr std::size_t kMaxConnections=4,kMaxControlPending=32,kMaxEvents=128;
-constexpr std::uint8_t kAlpnBytes[]={'f','r','i','e','n','d','p','u','s','h','/','1'};
+constexpr std::uint8_t kAlpnBytes[]={'f','r','i','e','n','d','p','u','s','h','/','2'};
 QUIC_BUFFER Alpn(){return {sizeof(kAlpnBytes),const_cast<std::uint8_t*>(kAlpnBytes)};}
 std::string StatusText(const char* action,QUIC_STATUS status) {
     std::ostringstream s;s<<action<<" (0x"<<std::hex<<static_cast<unsigned long>(status)<<')';return s.str();
@@ -53,11 +53,11 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
     struct Connection;
     struct ReceiveCredit {
         std::weak_ptr<Impl> owner;
-        std::size_t size{};
+        std::size_t size{};bool audio{};
         ~ReceiveCredit() {
             if(auto self=owner.lock()) {
                 std::lock_guard lock(self->mutex);
-                if(!self->stopping){--self->metrics.receive_media_count;self->metrics.receive_media_bytes-=size;}
+                if(!self->stopping){if(audio)--self->metrics.receive_audio_count;else {--self->metrics.receive_media_count;self->metrics.receive_media_bytes-=size;}}
             }
         }
     };
@@ -81,7 +81,8 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
         std::uint64_t id{};
         bool client{},certificateValid{},tlsConnected{},announced{},closed{},closing{};
         Stream* control{};
-        std::size_t pendingControl{};
+        std::size_t pendingControl{};std::uint16_t datagramMax{};
+        std::vector<SendBuffer*> audioSends;
         std::deque<std::unique_ptr<Stream>> streams;
     };
     struct CallbackScope {
@@ -114,8 +115,8 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
             return;
         }
         std::shared_ptr<void> credit;
-        if(kind==TransportEventKind::Video) {
-            auto lease=std::make_shared<ReceiveCredit>();lease->owner=weak_from_this();lease->size=bytes.size();credit=std::move(lease);
+        if(kind==TransportEventKind::Video||kind==TransportEventKind::Audio) {
+            auto lease=std::make_shared<ReceiveCredit>();lease->owner=weak_from_this();lease->size=bytes.size();lease->audio=kind==TransportEventKind::Audio;credit=std::move(lease);
         }
         events.push_back({kind,c?c->id:0,std::move(bytes),std::move(detail),std::move(credit)});
     }
@@ -179,6 +180,7 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
                 const auto status=self.api->StreamOpen(handle,QUIC_STREAM_OPEN_FLAG_NONE,StreamCallback,stream.get(),&stream->handle);
                 if(QUIC_FAILED(status)){self.Error(&c,"Control stream open failed",status);self.CloseProtocol(c,"Control stream unavailable");break;}
                 c.control=stream.get();c.streams.push_back(std::move(stream));
+                const std::uint16_t priority=65535;self.api->SetParam(c.control->handle,QUIC_PARAM_STREAM_PRIORITY,sizeof(priority),&priority);
                 const auto start=self.api->StreamStart(c.control->handle,QUIC_STREAM_START_FLAG_IMMEDIATE);
                 if(QUIC_FAILED(start)){self.CloseProtocol(c,"Control stream start failed");break;}
                 if(!self.Send(*c.control,{0,0,0,0},true,false)){self.CloseProtocol(c,"Control stream announcement failed");break;}
@@ -201,14 +203,37 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
                     raw->receiveAccounted=true;++self.metrics.receive_media_count;
                     self.metrics.max_receive_media_count=std::max(self.metrics.max_receive_media_count,self.metrics.receive_media_count);
                 }
-            } else {c.control=raw;self.Announce(c);}
+            } else {c.control=raw;const std::uint16_t priority=65535;self.api->SetParam(raw->handle,QUIC_PARAM_STREAM_PRIORITY,sizeof(priority),&priority);self.Announce(c);}
             break;
         }
         case QUIC_CONNECTION_EVENT_SHUTDOWN_INITIATED_BY_TRANSPORT:
             if(!c.closing)self.Error(&c,"QUIC connection closed",event->SHUTDOWN_INITIATED_BY_TRANSPORT.Status);
             c.closing=true;break;
         case QUIC_CONNECTION_EVENT_SHUTDOWN_INITIATED_BY_PEER:c.closing=true;break;
+        case QUIC_CONNECTION_EVENT_DATAGRAM_STATE_CHANGED:
+            c.datagramMax=event->DATAGRAM_STATE_CHANGED.SendEnabled?event->DATAGRAM_STATE_CHANGED.MaxSendLength:0;break;
+        case QUIC_CONNECTION_EVENT_DATAGRAM_RECEIVED: {
+            const auto* buffer=event->DATAGRAM_RECEIVED.Buffer;
+            if(!c.announced||!c.certificateValid||c.closing||!buffer||!buffer->Length||buffer->Length>kMaxAudioBytes)break;
+            if(self.metrics.receive_audio_count>=kMaxAudioInFlight||self.events.size()>=kMaxEvents){++self.metrics.dropped_audio;break;}
+            ++self.metrics.receive_audio_count;
+            self.metrics.max_receive_audio_count=std::max(self.metrics.max_receive_audio_count,self.metrics.receive_audio_count);
+            ++self.metrics.received_audio;self.metrics.received_bytes+=buffer->Length;
+            self.Event(TransportEventKind::Audio,&c,{buffer->Buffer,buffer->Buffer+buffer->Length});break;
+        }
+        case QUIC_CONNECTION_EVENT_DATAGRAM_SEND_STATE_CHANGED: {
+            const auto state=event->DATAGRAM_SEND_STATE_CHANGED.State;
+            if(QUIC_DATAGRAM_SEND_STATE_IS_FINAL(state)) {
+                auto* send=static_cast<SendBuffer*>(event->DATAGRAM_SEND_STATE_CHANGED.ClientContext);
+                const auto found=std::find(c.audioSends.begin(),c.audioSends.end(),send);
+                if(found!=c.audioSends.end()) {
+                    c.audioSends.erase(found);delete send;--self.metrics.send_audio_count;
+                    if(state==QUIC_DATAGRAM_SEND_CANCELED||state==QUIC_DATAGRAM_SEND_LOST_DISCARDED)++self.metrics.dropped_audio;
+                }
+            }break;
+        }
         case QUIC_CONNECTION_EVENT_SHUTDOWN_COMPLETE:
+            for(auto* send:c.audioSends){delete send;--self.metrics.send_audio_count;}c.audioSends.clear();
             c.closing=true;c.closed=true;c.tlsConnected=false;
             self.Event(TransportEventKind::Disconnected,&c);
             self.api->ConnectionClose(handle);c.handle=nullptr;break;
@@ -318,6 +343,7 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
         settings.HandshakeIdleTimeoutMs=4000;settings.IsSet.HandshakeIdleTimeoutMs=TRUE;
         settings.PeerBidiStreamCount=client?0:1;settings.IsSet.PeerBidiStreamCount=TRUE;
         settings.PeerUnidiStreamCount=4;settings.IsSet.PeerUnidiStreamCount=TRUE;
+        settings.DatagramReceiveEnabled=TRUE;settings.IsSet.DatagramReceiveEnabled=TRUE;
         settings.SendBufferingEnabled=FALSE;settings.IsSet.SendBufferingEnabled=TRUE;
         settings.KeepAliveIntervalMs=2000;settings.IsSet.KeepAliveIntervalMs=TRUE;
         settings.ServerResumptionLevel=QUIC_SERVER_NO_RESUME;settings.IsSet.ServerResumptionLevel=TRUE;
@@ -424,11 +450,27 @@ TransportSendResult SecurePeerTransport::SendVideo(std::vector<std::uint8_t> byt
     ++self.metrics.send_media_count;self.metrics.send_media_bytes+=bytes.size();
     self.metrics.max_send_media_count=std::max(self.metrics.max_send_media_count,self.metrics.send_media_count);
     self.metrics.max_send_media_bytes=std::max(self.metrics.max_send_media_bytes,self.metrics.send_media_bytes);
+    const std::uint16_t priority=0;self.api->SetParam(raw->handle,QUIC_PARAM_STREAM_PRIORITY,sizeof(priority),&priority);
     status=self.api->StreamStart(raw->handle,QUIC_STREAM_START_FLAG_IMMEDIATE);
     if(QUIC_FAILED(status)||!self.Send(*raw,std::move(bytes),false,true)) {
         self.api->StreamShutdown(raw->handle,QUIC_STREAM_SHUTDOWN_FLAG_ABORT,kExpiredMedia);return TransportSendResult::Backpressure;
     }
     ++self.metrics.sent_video;self.metrics.sent_bytes+=raw->sendBytes;return TransportSendResult::Sent;
+}
+TransportSendResult SecurePeerTransport::SendAudio(std::vector<std::uint8_t> bytes,std::uint64_t id) {
+    if(bytes.empty()||bytes.size()>kMaxAudioBytes)return TransportSendResult::Invalid;
+    auto& self=*impl_;std::lock_guard lock(self.mutex);auto* c=self.Find(id);
+    if(!c||!c->datagramMax)return TransportSendResult::NotConnected;
+    if(bytes.size()>c->datagramMax)return TransportSendResult::Invalid;
+    if(self.metrics.send_audio_count>=kMaxAudioInFlight){++self.metrics.dropped_audio;return TransportSendResult::Backpressure;}
+    auto* send=new Impl::SendBuffer();send->bytes=std::move(bytes);
+    send->buffer={static_cast<std::uint32_t>(send->bytes.size()),send->bytes.data()};
+    c->audioSends.push_back(send);++self.metrics.send_audio_count;
+    self.metrics.max_send_audio_count=std::max(self.metrics.max_send_audio_count,self.metrics.send_audio_count);
+    const auto size=send->bytes.size();
+    const auto status=self.api->DatagramSend(c->handle,&send->buffer,1,QUIC_SEND_FLAG_NONE,send);
+    if(QUIC_FAILED(status)){std::erase(c->audioSends,send);delete send;--self.metrics.send_audio_count;++self.metrics.dropped_audio;return TransportSendResult::Backpressure;}
+    ++self.metrics.sent_audio;self.metrics.sent_bytes+=size;return TransportSendResult::Sent;
 }
 std::vector<TransportEvent> SecurePeerTransport::PollEvents() {
     auto& self=*impl_;std::lock_guard lock(self.mutex);
@@ -458,7 +500,7 @@ void SecurePeerTransport::Stop() {
     if(self.clientConfiguration){self.api->ConfigurationClose(self.clientConfiguration);self.clientConfiguration=nullptr;}
     if(self.registration){self.api->RegistrationClose(self.registration);self.registration=nullptr;}
     self.connections.clear();self.events.clear();self.metrics.send_media_count=0;self.metrics.receive_media_count=0;
-    self.metrics.send_media_bytes=0;self.metrics.receive_media_bytes=0;
+    self.metrics.send_media_bytes=0;self.metrics.receive_media_bytes=0;self.metrics.send_audio_count=0;self.metrics.receive_audio_count=0;
     if(self.api&&self.closeApi){self.closeApi(self.api);self.api=nullptr;}
     if(self.library){FreeLibrary(self.library);self.library=nullptr;}
     if(self.portReservation){CloseHandle(self.portReservation);self.portReservation=nullptr;}

@@ -1,6 +1,7 @@
 #pragma once
 #include "media/video_peer_stream.h"
 #include "network/peer_session.h"
+#include "audio/peer_audio.h"
 namespace fps::app {
 struct PeerVideoSnapshot {
     bool active{},connecting{},connected{},wants_share{},sharing{},receiving{},awaiting_keyframe{};
@@ -8,6 +9,7 @@ struct PeerVideoSnapshot {
     std::uint64_t connection{},session{},outgoing_generation{},incoming_generation{};
     std::string status,error,own_fingerprint,peer_fingerprint,encoder,decoder,runtime;
     network::TransportMetrics transport;
+    audio::PeerAudioSnapshot audio;
     media::PeerStreamMetrics outgoing,incoming;
     media::LatencyPercentiles encode_latency,decode_latency,end_to_end;
     std::uint64_t encoder_gpu_frames{},encoder_cpu_frames{},decoder_gpu_frames{},decoder_cpu_frames{};
@@ -28,6 +30,7 @@ public:
     // Caller presents and explicitly authorizes the exact full fingerprint first.
     bool AuthorizePeer(const network::PublicPeerIdentity&,std::string&);
     void ConfigureCodecs(media::VideoCodecConfig,media::VideoBackendPolicy encoder,media::VideoBackendPolicy decoder);
+    void ConfigureAudio(audio::AudioPreferences);
     bool Listen(std::uint16_t port,std::string&);
     bool Connect(std::string host,std::uint16_t remote_port,std::uint16_t own_port,std::string&);
     bool StartShare(std::string&);

@@ -114,6 +114,7 @@ private:
     void HideDropLists();
     void ToggleDropList(HWND list);
     void UpdateDropDownText(const UiState& state);
+    void UpdateAudioChoices(const UiState&);
 
     HWND hwnd_{nullptr};
 
@@ -167,6 +168,9 @@ private:
     HWND audio_source_popup_{nullptr};
     HWND audio_source_list_{nullptr};
     HWND audio_status_{nullptr};
+    HWND audio_output_label_{nullptr},audio_output_button_{nullptr},audio_output_popup_{nullptr},audio_output_list_{nullptr};
+    std::vector<audio::AudioSourceDescriptor> audio_source_choices_;
+    std::vector<audio::AudioEndpoint> audio_output_choices_;
     HWND mute_button_{nullptr};
     HWND volume_slider_{nullptr};
     HWND volume_label_{nullptr};

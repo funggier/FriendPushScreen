@@ -120,7 +120,19 @@ bool NegativeTests(const std::filesystem::path& root) {
         ok=Check(m.receive_media_count<=2&&m.max_receive_media_count<=2&&m.max_receive_media_bytes<=2*kMaxMediaBytes&&
             s.max_send_media_count<=2&&s.max_send_media_bytes<=2*kMaxMediaBytes,"all partial/in-flight queues bounded")&&ok;
         ok=Check(m.dropped_video>0&&m.receive_media_count==2,"stalled receiver drops excess media")&&ok;
-        auto held=receiver.PollEvents();
+        std::cout<<"AudioDatagramBudgetIndependent\n";
+        for(unsigned i=0;i<20;++i){sender.SendAudio(std::vector<std::uint8_t>(512,static_cast<std::uint8_t>(i)));sender.PollEvents();Sleep(3);}
+        Sleep(30);
+        const auto am=receiver.Metrics(),asmtr=sender.Metrics();
+        ok=Check(am.receive_audio_count==6&&am.max_receive_audio_count==6&&am.receive_media_count==2&&
+            asmtr.max_send_audio_count<=6,"independent six-datagram audio budget with full video credit")&&ok;
+        auto audioHeld=receiver.PollEvents();
+        std::vector<TransportEvent> keepVideo;
+        for(auto it=audioHeld.begin();it!=audioHeld.end();)if(it->kind==TransportEventKind::Video){keepVideo.push_back(std::move(*it));it=audioHeld.erase(it);}else ++it;
+        ok=Check(receiver.Metrics().receive_audio_count==6,"consumer-held audio remains accounted")&&ok;
+        audioHeld.clear();
+        ok=Check(receiver.Metrics().receive_audio_count==0,"audio credits returned after consumer release")&&ok;
+        auto held=std::move(keepVideo);
         ok=Check(receiver.Metrics().receive_media_count==2,"consumer-held media remains in receive budget")&&ok;
         held.clear();sender.PollEvents();
         bool recovered=false;

@@ -33,6 +33,7 @@ private:
     void RefreshDiagnostics();
     void UpdatePeerUi(bool force=false);
     void ConfigurePeerCodecs();
+    void ConfigurePeerAudio();
     void ToggleShare();
     void ConnectPeer();
     void DisconnectPeer();

@@ -1,6 +1,7 @@
 #include "app/peer_video_controller.h"
 #include "network/peer_video_flow.h"
 #include <bcrypt.h>
+#include <objbase.h>
 #include <mmsystem.h>
 #include <atomic>
 #include <condition_variable>
@@ -36,11 +37,12 @@ struct InboundCredit {
 };
 }
 struct PeerVideoController::Impl {
-    enum class CommandKind {Start,Connect,Control,Video,Close,Stop};
+    enum class CommandKind {Start,Connect,Control,Video,AudioState,AudioControl,Close,Stop};
     struct Command {
         CommandKind kind{CommandKind::Stop};std::uint64_t epoch{},connection{};
         std::uint16_t port{};std::string host;
         PublicPeerIdentity peer;std::vector<std::uint8_t> bytes;std::shared_ptr<void> credit;
+        audio::AudioPreferences audio_preferences;std::uint64_t audio_session{};bool audio_share{};
     };
     enum class NoticeKind {Started,Event,Failure,Overflow,SendLost};
     struct Notice {NoticeKind kind{NoticeKind::Event};std::uint64_t epoch{};TransportEvent event;};
@@ -65,6 +67,9 @@ struct PeerVideoController::Impl {
     HANDLE wake{CreateEventW(nullptr,FALSE,FALSE,nullptr)};
     std::uint16_t actualPort{};
     TransportMetrics transportMetrics;
+    audio::AudioPreferences audioPreferences,syncedAudioPreferences;
+    audio::PeerAudioSnapshot audioSnapshot;
+    std::uint64_t syncedAudioConnection{},syncedAudioSession{};bool syncedAudioShare{},audioSynced{};
     std::string runtime;
     std::shared_ptr<SendBudget> sendBudget{std::make_shared<SendBudget>()};
     PeerVideoSendWindow sendWindow;
@@ -105,21 +110,23 @@ struct PeerVideoController::Impl {
         Notice notice;notice.kind=NoticeKind::Failure;notice.epoch=workerEpoch;notice.event.detail=message;NoticeOut(std::move(notice));
     }
     void Worker(std::stop_token stop) {
-        SecurePeerTransport transport;bool precision=false;
+        const auto com=CoInitializeEx(nullptr,COINIT_MULTITHREADED);
+        {
+        SecurePeerTransport transport;audio::PeerAudio audioEngine;bool precision=false;std::uint64_t lastAudioSnapshot=0,syncedWorkerAudioConnection=0;
         while(!stop.stop_requested()) {
-            std::deque<Command> pending;
+            std::deque<Command> pending;std::deque<Command> videos;
             {std::lock_guard lock(mutex);pending.swap(commands);}
             for(auto& command:pending) {
                 if(command.epoch<workerEpoch)continue;
                 if(command.kind==CommandKind::Start) {
-                    workerEpoch=command.epoch;std::string reason;
+                    workerEpoch=command.epoch;audioEngine.Bind(0,0);std::string reason;
                     if(transport.Start(*identity,command.peer,{directory/"transport",command.port,true,250},reason)) {
                         if(!precision)precision=timeBeginPeriod(1)==TIMERR_NOERROR;
                         {std::lock_guard lock(mutex);actualPort=transport.ListenPort();runtime=transport.RuntimeInfo();}
                         Notice notice;notice.kind=NoticeKind::Started;notice.epoch=workerEpoch;NoticeOut(std::move(notice));
                     }else {{std::lock_guard lock(mutex);actualPort=0;}Failure(reason);}
                 } else if(command.kind==CommandKind::Stop) {
-                    workerEpoch=command.epoch;transport.Stop();if(precision){timeEndPeriod(1);precision=false;}
+                    workerEpoch=command.epoch;audioEngine.Bind(0,0);transport.Stop();if(precision){timeEndPeriod(1);precision=false;}
                     std::lock_guard lock(mutex);actualPort=0;transportMetrics={};
                 } else if(command.epoch==workerEpoch) {
                     switch(command.kind) {
@@ -129,23 +136,51 @@ struct PeerVideoController::Impl {
                     case CommandKind::Control:
                         if(transport.SendControl(command.bytes,command.connection)!=TransportSendResult::Sent)Failure("Peer control send failed");
                         break;
-                    case CommandKind::Video:
-                        if(transport.SendVideo(std::move(command.bytes),command.connection,std::move(command.credit))!=TransportSendResult::Sent) {
-                            Notice lost;lost.kind=NoticeKind::SendLost;lost.epoch=workerEpoch;lost.event.kind=TransportEventKind::MediaSendLost;lost.event.connection_id=command.connection;NoticeOut(std::move(lost));
-                        }break;
+                    case CommandKind::Video:videos.push_back(std::move(command));break;
+                    case CommandKind::AudioState:
+                        audioEngine.Configure(command.audio_preferences,command.audio_share);
+                        audioEngine.Bind(command.connection,command.audio_session);syncedWorkerAudioConnection=command.connection;break;
+                    case CommandKind::AudioControl:audioEngine.OnControl(command.connection,command.bytes);break;
                     case CommandKind::Close:transport.Disconnect(command.connection);break;
                     default:break;
                     }
                 }
             }
             auto events=transport.PollEvents();
-            for(auto& event:events) {Notice notice;notice.epoch=workerEpoch;notice.event=std::move(event);NoticeOut(std::move(notice));}
+            for(auto& event:events) {
+                if(event.kind==TransportEventKind::Audio){audioEngine.OnAudio(event.connection_id,event.bytes);continue;}
+                Notice notice;notice.epoch=workerEpoch;notice.event=std::move(event);NoticeOut(std::move(notice));
+            }
+            audioEngine.Tick([&](std::vector<std::uint8_t> bytes){return transport.SendControl(bytes,syncedWorkerAudioConnection)==TransportSendResult::Sent;},
+                [&](std::vector<std::uint8_t> bytes){return transport.SendAudio(std::move(bytes),syncedWorkerAudioConnection)==TransportSendResult::Sent;});
+            for(auto& command:videos)if(command.epoch==workerEpoch) {
+                if(transport.SendVideo(std::move(command.bytes),command.connection,std::move(command.credit))!=TransportSendResult::Sent) {
+                    Notice lost;lost.kind=NoticeKind::SendLost;lost.epoch=workerEpoch;lost.event.kind=TransportEventKind::MediaSendLost;lost.event.connection_id=command.connection;NoticeOut(std::move(lost));
+                }
+            }
+            if(GetTickCount64()-lastAudioSnapshot>=20) {
+                lastAudioSnapshot=GetTickCount64();auto snapshot=audioEngine.Snapshot();
+                std::lock_guard lock(mutex);audioSnapshot=std::move(snapshot);
+            }
             const auto metrics=transport.Metrics();
             {std::unique_lock lock(mutex);transportMetrics=metrics;
                 if(actualPort&&GetTickCount64()-lastWake>=10){lastWake=GetTickCount64();if(wake)SetEvent(wake);}
                 condition.wait_for(lock,std::chrono::milliseconds(actualPort?1:100),[&]{return stop.stop_requested()||!commands.empty();});}
         }
-        transport.Stop();if(precision)timeEndPeriod(1);
+        audioEngine.Bind(0,0);transport.Stop();if(precision)timeEndPeriod(1);
+        }
+        if(SUCCEEDED(com))CoUninitialize();
+    }
+    void SyncAudio(bool force=false) {
+        const auto connection=session&&session->State().connected?session->State().connection:0;
+        const auto token=connection?session->State().token:0;
+        if(!force&&audioSynced&&connection==syncedAudioConnection&&token==syncedAudioSession&&
+           wantsShare==syncedAudioShare&&audioPreferences==syncedAudioPreferences)return;
+        Command command;command.kind=CommandKind::AudioState;command.epoch=epoch;command.connection=connection;
+        command.audio_session=token;command.audio_share=wantsShare;command.audio_preferences=audioPreferences;
+        if(Queue(std::move(command))) {
+            syncedAudioConnection=connection;syncedAudioSession=token;syncedAudioShare=wantsShare;syncedAudioPreferences=audioPreferences;audioSynced=true;
+        }
     }
     bool QueueControl(const ControlMessage& message,std::uint64_t id) {
         auto bytes=EncodeControl(message);if(bytes.empty()){error="Invalid local control message";return false;}
@@ -254,6 +289,7 @@ void PeerVideoController::ConfigureCodecs(media::VideoCodecConfig config,media::
     p.restartReceiver=p.session&&p.session->State().receiving&&(decoder!=p.decodePolicy||config.decoder_id!=p.codec.decoder_id);
     p.codec=std::move(config);p.encodePolicy=encoder;p.decodePolicy=decoder;
 }
+void PeerVideoController::ConfigureAudio(audio::AudioPreferences preferences) {auto& p=*impl_;p.audioPreferences=std::move(preferences);p.SyncAudio(true);}
 bool PeerVideoController::Listen(std::uint16_t port,std::string& error) {
     auto& p=*impl_;if(!p.identity||!p.peer||!p.session){error="Export your identity and pair with your friend before connecting";return false;}
     std::uint16_t actual=0;{std::lock_guard lock(p.mutex);actual=p.actualPort;}
@@ -274,11 +310,11 @@ bool PeerVideoController::Connect(std::string host,std::uint16_t remotePort,std:
 }
 bool PeerVideoController::StartShare(std::string& error) {
     auto& p=*impl_;if(!p.peer||!p.session){error="Pair with your friend before sharing";return false;}
-    p.wantsShare=true;p.error.clear();return true;
+    p.wantsShare=true;p.error.clear();p.SyncAudio();return true;
 }
 void PeerVideoController::StopShare() {
     auto& p=*impl_;p.wantsShare=false;if(p.session){p.session->StopShare();p.Actions();}
-    p.sender.Stop();p.senderRunning=false;p.sendWindow.Reset(0,0);
+    p.sender.Stop();p.senderRunning=false;p.sendWindow.Reset(0,0);p.SyncAudio();
 }
 bool PeerVideoController::PushCapture(const capture::CapturedFrame& frame) {
     auto& p=*impl_;if(!p.wantsShare||!p.session)return true;
@@ -325,6 +361,12 @@ bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
             case TransportEventKind::Disconnected:
                 p.session->OnDisconnected(event.connection_id,now);p.connecting=false;break;
             case TransportEventKind::Control: {
+                if(audio::IsAudioControl(event.bytes)) {
+                    if(p.session->State().connected&&event.connection_id==p.session->State().connection) {
+                        p.SyncAudio();Impl::Command command;command.kind=Impl::CommandKind::AudioControl;
+                        command.epoch=p.epoch;command.connection=event.connection_id;command.bytes=std::move(event.bytes);p.Queue(std::move(command));
+                    }break;
+                }
                 std::string error;const auto message=DecodeControl(event.bytes,error);
                 if(message) {
                     p.session->OnControl(event.connection_id,*message,now);
@@ -349,6 +391,7 @@ bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
                     if(p.receiver.TakeKeyframeRequest()){p.Trace("decoder requests keyframe");p.session->OnMediaLost(event.connection_id);}
                 }break;
             }
+            case TransportEventKind::Audio:break; // consumed on the network/audio worker
             case TransportEventKind::MediaSendLost:
                 if(p.senderRunning&&!p.sender.RequestKeyframe())p.SenderFailed();break;
             case TransportEventKind::MediaLost:p.Trace("transport lost: "+event.detail);p.session->OnMediaLost(event.connection_id);break;
@@ -385,7 +428,7 @@ bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
     if(p.senderRunning&&p.sendWindow.CanSubmit()&&!p.sender.Poll(p.SenderSink())){p.SenderFailed();p.Actions();}
     if(p.receiverRunning&&!p.receiver.Poll(delivered))p.ReceiverFailed();
     if(p.session->State().connected)p.connecting=false;
-    return p.receiver.Metrics().delivered!=before;
+    p.SyncAudio();return p.receiver.Metrics().delivered!=before;
 }
 void PeerVideoController::Disconnect() {
     auto& p=*impl_;p.wantsShare=p.startPending=p.connecting=false;p.incomingError.clear();p.outgoingError.clear();
@@ -397,7 +440,7 @@ void PeerVideoController::Disconnect() {
 }
 PeerVideoSnapshot PeerVideoController::Snapshot()const {
     const auto& p=*impl_;PeerVideoSnapshot result;
-    {std::lock_guard lock(p.mutex);result.listen_port=p.actualPort;result.transport=p.transportMetrics;result.runtime=p.runtime;}
+    {std::lock_guard lock(p.mutex);result.listen_port=p.actualPort;result.transport=p.transportMetrics;result.runtime=p.runtime;result.audio=p.audioSnapshot;}
     result.active=result.listen_port||p.startPending;result.connecting=p.connecting;result.wants_share=p.wantsShare;
     if(p.identity)result.own_fingerprint=p.identity->Public().fingerprint;if(p.peer)result.peer_fingerprint=p.peer->fingerprint;
     if(p.session) {

@@ -44,7 +44,7 @@ NativeTlsFailure RunNativeTlsNegative(fps::network::SecurePeerTransport& server,
     NativeTlsClient client;client.api=api;
     QUIC_REGISTRATION_CONFIG registration_config{"FriendPushScreen credential rejection fixture",QUIC_EXECUTION_PROFILE_LOW_LATENCY};
     auto status=api->RegistrationOpen(&registration_config,&registration);
-    const std::uint8_t bytes[]={'f','r','i','e','n','d','p','u','s','h','/','1'};
+    const std::uint8_t bytes[]={'f','r','i','e','n','d','p','u','s','h','/','2'};
     QUIC_BUFFER alpn{sizeof(bytes),const_cast<std::uint8_t*>(bytes)};
     QUIC_SETTINGS settings{};settings.HandshakeIdleTimeoutMs=2000;settings.IsSet.HandshakeIdleTimeoutMs=TRUE;
     if(QUIC_SUCCEEDED(status))status=api->ConfigurationOpen(registration,&alpn,1,&settings,sizeof(settings),nullptr,&configuration);

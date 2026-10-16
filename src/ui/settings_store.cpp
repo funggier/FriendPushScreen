@@ -233,6 +233,8 @@ std::string SerializePreferences(
         << AudioSourceText(
                preferences.audio_source)
         << "\n";
+    out << "audio_source_id=" << SanitizeSingleLine(preferences.audio_source_id).substr(0,1024) << "\n";
+    out << "receiver_output_id=" << SanitizeSingleLine(preferences.receiver_output_id).substr(0,1024) << "\n";
     out << "receiver_muted="
         << BoolText(preferences.receiver_muted)
         << "\n";
@@ -346,6 +348,10 @@ UiPreferences ParsePreferences(
                             parsed)) {
                         result.audio_source = parsed;
                     }
+                } else if (key == "audio_source_id" && value.size()<=1024) {
+                    result.audio_source_id=std::string(value);
+                } else if (key == "receiver_output_id" && value.size()<=1024) {
+                    result.receiver_output_id=std::string(value);
                 } else if (key == "receiver_muted") {
                     bool parsed = false;
                     if (ParseBool(value, parsed)) {

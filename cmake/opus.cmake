@@ -33,3 +33,8 @@ fps_apply_warnings(fps_audio)
 
 target_sources(fps_audio PRIVATE src/audio/wasapi_audio.cpp)
 target_link_libraries(fps_audio PRIVATE Ole32 Uuid)
+
+target_sources(fps_audio PRIVATE src/audio/audio_session.cpp)
+
+target_sources(fps_audio PRIVATE src/audio/peer_audio.cpp)
+target_link_libraries(fps_audio PRIVATE fps_network)

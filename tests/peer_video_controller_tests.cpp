@@ -74,6 +74,28 @@ void RunPeerVideoControllerTests() {
         FPS_EXPECT_TRUE(b.Snapshot().incoming.delivered>=2);
         FPS_EXPECT_TRUE(a.Snapshot().error.empty()&&b.Snapshot().error.empty());
         FPS_EXPECT_TRUE(a.WantsShare()&&a.Snapshot().connected&&b.Snapshot().connected);
+        std::cout<<"AudioSourceSwitchLeavesVideoRunning\n";
+        until=GetTickCount64()+100;while(GetTickCount64()<until){a.Poll(sink,clear);b.Poll(sink,clear);Sleep(2);}
+        const auto originalVideo=a.Snapshot().outgoing_generation,originalSession=a.Snapshot().session;
+
+        fps::audio::AudioPreferences audioPrefs;audioPrefs.source_id="capture:__fps_missing_endpoint__";
+        a.ConfigureAudio(audioPrefs);
+        until=GetTickCount64()+1000;
+        while(GetTickCount64()<until&&a.Snapshot().audio.send_state!=fps::audio::AudioState::Error) {
+            a.Poll(sink,clear);b.Poll(sink,clear);++source.sequence;
+            Sleep(2);
+        }
+        FPS_EXPECT_EQ(a.Snapshot().audio.send_state,fps::audio::AudioState::Error);
+        FPS_EXPECT_TRUE(!a.Snapshot().audio.error.empty());
+        FPS_EXPECT_EQ(a.Snapshot().session,originalSession);
+        FPS_EXPECT_EQ(a.Snapshot().outgoing_generation,originalVideo);
+        FPS_EXPECT_TRUE(a.WantsShare()&&a.Snapshot().sharing&&b.Snapshot().receiving);
+        audioPrefs.source_id="none";a.ConfigureAudio(audioPrefs);
+        until=GetTickCount64()+100;
+        while(GetTickCount64()<until){a.Poll(sink,clear);b.Poll(sink,clear);Sleep(2);}
+        FPS_EXPECT_EQ(a.Snapshot().audio.send_state,fps::audio::AudioState::Disabled);
+        FPS_EXPECT_EQ(a.Snapshot().session,originalSession);
+        FPS_EXPECT_EQ(a.Snapshot().outgoing_generation,originalVideo);
         a.Disconnect();b.Disconnect();
     }
     std::filesystem::remove_all(root);
