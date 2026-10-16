@@ -1,0 +1,17 @@
+﻿{
+    "source_head":  "23038b26675a991b34da309c2daee8dbbcaf3c05",
+    "utc":  "2026-10-16T01:25:00.2752733Z",
+    "binary_sha256":  "7F0FAC0675184092A0ACEAC69397ED8D8C40AEE25DC6C216757CC4007F40CA81",
+    "test_root":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\dual-instance-localhost-20261016",
+    "machine":  "CDQ-P",
+    "peer_a":  {
+                   "remote_host":  "127.0.0.1",
+                   "share_port":  42801,
+                   "remote_port":  42802
+               },
+    "peer_b":  {
+                   "remote_host":  "127.0.0.1",
+                   "share_port":  42802,
+                   "remote_port":  42801
+               }
+}

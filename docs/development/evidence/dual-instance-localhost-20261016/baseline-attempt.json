@@ -1,0 +1,124 @@
+﻿{
+    "utc":  "2026-10-16T01:34:26.3446819Z",
+    "result":  "BLOCKED_NOT_IMPLEMENTED",
+    "netstat_rows":  [
+
+                     ],
+    "peers":  [
+                  {
+                      "role":  "A",
+                      "pid":  16396,
+                      "hwnd":  5643040,
+                      "endpoint_controls":  [
+                                                {
+                                                    "id":  2115,
+                                                    "text":  "42801"
+                                                },
+                                                {
+                                                    "id":  2103,
+                                                    "text":  "127.0.0.1"
+                                                },
+                                                {
+                                                    "id":  2104,
+                                                    "text":  "42802"
+                                                }
+                                            ],
+                      "status":  [
+                                     {
+                                         "text":  "H.264 decoded local loop | Intel® Quick Sync Video H.264 Encoder MFT | GPU input",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     },
+                                     {
+                                         "text":  "Share requested - media pipeline is not active in FPS-004.",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     },
+                                     {
+                                         "text":  "VIDEO / H.264",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     },
+                                     {
+                                         "text":  "Encoder: [GPU] Intel® Quick Sync Video H.264 Encoder MFT\nDecoder: [GPU] Microsoft H264 Video Decoder MFT\nTarget 20 Mbps | Keyframe 120 frames | Encoder low latency on\nDecoder low latency on",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     },
+                                     {
+                                         "text":  "Connect requested - transport is not implemented in FPS-004.",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     },
+                                     {
+                                         "text":  "  Peer: Offline  |  Connection: Requested  |  Sharing: Requested  |  Incoming Audio: Inactive",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     }
+                                 ]
+                  },
+                  {
+                      "role":  "B",
+                      "pid":  1500,
+                      "hwnd":  6298686,
+                      "endpoint_controls":  [
+                                                {
+                                                    "id":  2115,
+                                                    "text":  "42802"
+                                                },
+                                                {
+                                                    "id":  2103,
+                                                    "text":  "127.0.0.1"
+                                                },
+                                                {
+                                                    "id":  2104,
+                                                    "text":  "42801"
+                                                }
+                                            ],
+                      "status":  [
+                                     {
+                                         "text":  "No source selected",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     },
+                                     {
+                                         "text":  "Share requested - media pipeline is not active in FPS-004.",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     },
+                                     {
+                                         "text":  "VIDEO / H.264",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     },
+                                     {
+                                         "text":  "H.264 local preview. Choose send/receive codecs independently, then Apply Video.",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     },
+                                     {
+                                         "text":  "Connect requested - transport is not implemented in FPS-004.",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     },
+                                     {
+                                         "text":  "  Peer: Offline  |  Connection: Requested  |  Sharing: Requested  |  Incoming Audio: Inactive",
+                                         "cls":  "Static",
+                                         "id":  0,
+                                         "visible":  true
+                                     }
+                                 ]
+                  }
+              ],
+    "preview_encoder_decoder_status":  "Encoder: [GPU] Intel® Quick Sync Video H.264 Encoder MFT\nDecoder: [GPU] Microsoft H264 Video Decoder MFT\nTarget 20 Mbps | Keyframe 120 frames | Encoder low latency on\nDecoder low latency on"
+}

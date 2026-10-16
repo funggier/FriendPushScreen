@@ -95,3 +95,13 @@ Settings → VIDEO / H.264 now selects CPU/GPU encoder and decoder independently
 Full Debug/Release builds + CTest, eight real-bitstream mode/latency runs, actual four-pair UI switching, invalid-input/draft/restart behavior, missing-codec recovery and Settings/F11/Esc/Stop/Start checks passed. [Exact-source Debug/Release CI passed](https://github.com/funggier/FriendPushScreen/actions/runs/38833566080). All 15 old WIP hashes are unchanged. Final documentation/evidence commit CI is checked before announcing completion.
 
 [Report and evidence](../reports/FPS-20261016-006-codec-settings-controls.md). Original FPS-006 sustained results remain tied to their original source; short follow-up smokes do not extend that performance claim. FPS-006A remains planned; main integration remains separate.
+
+### Two-folder localhost request and continued-system design — 2026-10-16
+
+**Network test result: BLOCKED_NOT_IMPLEMENTED.** Source baseline 23038b26675a991b34da309c2daee8dbbcaf3c05; no product-code change in this follow-up.
+
+Actual portable copies A/B loaded separate settings and ports 42801/42802 with cross-connected 127.0.0.1 endpoints. Real Start Share/Connect handlers only produced Requested state and inactive-transport logs; TCP/UDP port and PID checks returned no app-owned socket. A's real GPU H.264 local preview ran independently; B received no peer video. Both owned test apps closed normally. [Baseline report/evidence](../reports/FPS-20261016-dual-instance-localhost-baseline.md).
+
+The user then explicitly requested continuing any missing system. Latest requested priority is a real No Audio network-video increment through two independent instances, followed by the remaining V1 roadmap. Optional audio remains a required later V1 outcome; FPS-006A is not marked complete or silently removed.
+
+[Written secure dual-instance design](../../superpowers/specs/2026-10-16-secure-dual-instance-video-design.md) is PROPOSED for review. MsQuic/OpenSSL is the recommended first evaluation on Windows 10, with WebRTC as an alternative and no permanent DG-001 decision claimed. Required trust, bounded media, feedback protection, connection lifecycle and real-process qualification are specified. Written-spec review, implementation plan/execution selection, production implementation and network qualification remain pending. There is no new ACTIVE implementation task and no network GREEN claim. FPS-006's existing GREEN scope and main integration status are unchanged.

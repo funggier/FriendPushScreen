@@ -1,0 +1,4 @@
+2026-10-16 08:25:14 [Info] [diagnostics] collection started
+2026-10-16 08:25:14 [Info] [diagnostics] collection completed; chars=1913; ui_update=true
+2026-10-16 08:28:43 [Info] [ui] share requested; media pipeline not active
+2026-10-16 08:28:43 [Info] [ui] connect requested; transport not active

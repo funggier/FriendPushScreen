@@ -1,0 +1,19 @@
+{
+  "phase": "After activating A's local H.264 preview; before closing owned peers",
+  "results": [
+    {
+      "port": 42801,
+      "protocol": "both",
+      "local_address": null,
+      "count": 0,
+      "endpoints": []
+    },
+    {
+      "port": 42802,
+      "protocol": "both",
+      "local_address": null,
+      "count": 0,
+      "endpoints": []
+    }
+  ]
+}

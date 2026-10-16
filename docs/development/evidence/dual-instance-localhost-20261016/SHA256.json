@@ -1,0 +1,47 @@
+﻿[
+    {
+        "name":  "baseline-attempt.json",
+        "bytes":  7011,
+        "sha256":  "B7501E817BEA9DC65A0ACC66A64FC856FA0E0B637212D71859F9FBC4AB514AC4"
+    },
+    {
+        "name":  "binary-copies.json",
+        "bytes":  568,
+        "sha256":  "3CBD958E58E1D674B942579C088FAEEFC874B260F33EFB9419B95EA61EB8DD3A"
+    },
+    {
+        "name":  "identity.json",
+        "bytes":  750,
+        "sha256":  "A28C929D9F1C3D98BD58525FD44DD87D4586F54365195157B932990A49905E3D"
+    },
+    {
+        "name":  "peer-a-settings.ini",
+        "bytes":  395,
+        "sha256":  "20ACC148BC9FFC4C77BF6A97141542ED1B3344C52ECB1F21005DC7B722144FCE"
+    },
+    {
+        "name":  "peer-a.log",
+        "bytes":  297,
+        "sha256":  "783ACBAC81FD4C2D9E87F0E95B826D14CF6429064F8DAC6F505266E06B332F1E"
+    },
+    {
+        "name":  "peer-b-settings.ini",
+        "bytes":  395,
+        "sha256":  "21A00FED188BB9EC1F63D3FC150BBB880E63F2B8AAC497F1234B4C9F005E2397"
+    },
+    {
+        "name":  "peer-b.log",
+        "bytes":  297,
+        "sha256":  "2DC8526D29574CD16969463D7B38A23CAAA4E4DC8C92519A440BB94680F60127"
+    },
+    {
+        "name":  "port-ownership.json",
+        "bytes":  363,
+        "sha256":  "3E540ACED81BEBA965E2B2A4479CEC16CA027882DF97B6267842CD5ECE5509C8"
+    },
+    {
+        "name":  "two-instance-baseline.png",
+        "bytes":  58925,
+        "sha256":  "73B7A3013AD07BCB8673C495427EC42DECB8DBCC7D60F45CD06069ECF66CCA74"
+    }
+]

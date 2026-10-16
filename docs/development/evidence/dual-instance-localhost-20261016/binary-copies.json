@@ -1,0 +1,14 @@
+﻿[
+    {
+        "path":  "build\\Release\\FriendPushScreen.exe",
+        "sha256":  "7F0FAC0675184092A0ACEAC69397ED8D8C40AEE25DC6C216757CC4007F40CA81"
+    },
+    {
+        "path":  ".superpowers\\dual-instance-localhost-20261016\\peer-a\\FriendPushScreen.exe",
+        "sha256":  "7F0FAC0675184092A0ACEAC69397ED8D8C40AEE25DC6C216757CC4007F40CA81"
+    },
+    {
+        "path":  ".superpowers\\dual-instance-localhost-20261016\\peer-b\\FriendPushScreen.exe",
+        "sha256":  "7F0FAC0675184092A0ACEAC69397ED8D8C40AEE25DC6C216757CC4007F40CA81"
+    }
+]
