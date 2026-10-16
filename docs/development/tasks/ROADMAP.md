@@ -11,9 +11,9 @@ This roadmap converts the V1 master specification into execution-sized FPS tasks
 | FPS-005 | Unified Capture Sources | Monitor, Window, and generic Capture Card preview through one source abstraction | GREEN |
 | FPS-006 | Encode / Decode / Local Loopback | Hardware video paths plus H.264 fallback and stable 1080p60 local loop | GREEN |
 | FPS-006A | Audio Capture / Encode / Local Loopback | WASAPI System/Device sources, process-loopback capability, local audio codec loop, receiver playback/mute/volume | PLANNED |
-| FPS-007 | Feedback Protection | Capture exclusion where supported plus black-mask fallback | IMPLEMENTED; qualification in FPS-009 |
-| FPS-008 | Control Protocol | Versioned handshake, connection/audio/video capabilities, peer/share/audio state, heartbeat, reconnect semantics | IMPLEMENTED; qualification in FPS-009 |
-| FPS-009 | Media Transport Decision & Network Streaming | Evidence-backed secure low-latency control/video/audio transport; one-port feasibility; timing/multiplexing | ACTIVE — No Audio / localhost evaluation |
+| FPS-007 | Feedback Protection | Capture exclusion where supported plus black-mask fallback | SCOPED PASS in FPS-009; full V1 inputs open |
+| FPS-008 | Control Protocol | Versioned handshake, connection/audio/video capabilities, peer/share/audio state, heartbeat, reconnect semantics | SCOPED PASS in FPS-009; full V1 inputs open |
+| FPS-009 | Media Transport Decision & Network Streaming | Evidence-backed secure low-latency control/video/audio transport; one-port feasibility; timing/multiplexing | ACTIVE — No Audio localhost evaluated; transport decision open |
 | FPS-010 | Connectivity Modes | Dual-instance localhost, LAN, Direct IP/DDNS, Tailscale, secure Direct Internet, reconnect/path diagnostics | PLANNED |
 | FPS-011 | One-Way Production Flow | Daily-usable A → B video plus optional shared audio across all V1 source types | PLANNED |
 | FPS-012 | Two-Way Sharing | Stable A ↔ B video/audio streams with independent audio state, receiver mute/volume, and feedback protection | PLANNED |

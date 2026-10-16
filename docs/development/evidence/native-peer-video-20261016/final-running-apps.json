@@ -1,0 +1,18 @@
+﻿[
+    {
+        "role":  "A",
+        "pid":  24544,
+        "affinity":  17,
+        "app_sha256":  "F117743C53205EE1494CEF4A303417FF01B7671BD0F62564997CEFB3A295D01A",
+        "fixture_sha256":  "275042FEF8FBDA8E8B8BCF88653C1320BB00DBFC7A74CC4407A2D3FD79301181",
+        "metric":  "2026-10-16 21:05:13 [Info] [peer-metrics] connected=1 sharing=1 receiving=1 session=121269073740586258 out_generation=1 in_generation=1 encoded=211 sent=211 decoded=213 rendered=213 sent_bytes=6329405 received_bytes=6412929 tx_peak_count=2 tx_peak_bytes=41804 rx_peak_count=2 rx_peak_bytes=41804 drops=0 flow_recoveries=0 skipped_capture=2 oldest_outbound_ms=15 encoder_gpu=211 encoder_cpu=0 decoder_gpu=213 decoder_cpu=0 encode_p50_ms=5.5679 encode_p95_ms=8.7023 encode_p99_ms=9.5767 decode_p50_ms=1.7546 decode_p95_ms=2.9292 decode_p99_ms=4.6049 e2e_p50_ms=9.9245 e2e_p95_ms=12.436 e2e_p99_ms=16.4183 encoder=IntelÂ® Quick Sync Video H.264 Encoder MFT decoder=Microsoft H264 Video Decoder MFT"
+    },
+    {
+        "role":  "B",
+        "pid":  20764,
+        "affinity":  17,
+        "app_sha256":  "F117743C53205EE1494CEF4A303417FF01B7671BD0F62564997CEFB3A295D01A",
+        "fixture_sha256":  "275042FEF8FBDA8E8B8BCF88653C1320BB00DBFC7A74CC4407A2D3FD79301181",
+        "metric":  "2026-10-16 21:05:13 [Info] [peer-metrics] connected=1 sharing=1 receiving=1 session=121269073740586258 out_generation=1 in_generation=1 encoded=213 sent=213 decoded=211 rendered=211 sent_bytes=6412969 received_bytes=6329485 tx_peak_count=2 tx_peak_bytes=41804 rx_peak_count=2 rx_peak_bytes=41804 drops=0 flow_recoveries=0 skipped_capture=14 oldest_outbound_ms=15 encoder_gpu=213 encoder_cpu=0 decoder_gpu=211 decoder_cpu=0 encode_p50_ms=5.3732 encode_p95_ms=8.392 encode_p99_ms=8.9897 decode_p50_ms=1.7523 decode_p95_ms=2.9707 decode_p99_ms=4.1493 e2e_p50_ms=10.2699 e2e_p95_ms=12.8419 e2e_p99_ms=16.1146 encoder=IntelÂ® Quick Sync Video H.264 Encoder MFT decoder=Microsoft H264 Video Decoder MFT"
+    }
+]

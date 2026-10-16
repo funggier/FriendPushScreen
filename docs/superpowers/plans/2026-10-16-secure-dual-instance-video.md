@@ -60,18 +60,18 @@
 - Produces SecurePeerTransport::Start(identity,peer,port,error), Connect(host,port,error), SendControl(bytes), SendVideo(bytes), PollEvents(), Metrics(), Stop(); event kinds Connected, Disconnected, Control, Video, MediaLost, Error.
 - All send ownership is explicit, every count/byte cap is enforced, callbacks never access UI/media objects.
 
-- [ ] Pin/download/inspect official native OpenSSL 2.6.3 package and matching headers; record archive/runtime SHA256, imports, signature/provider and notices. Configure only project-local dependencies.
+- [x] Pin/download/inspect official native OpenSSL 2.6.3 package and matching headers; record archive/runtime SHA256, imports, signature/provider and notices. Configure only project-local dependencies.
   Expected: native x64 DLL loads on 19045; no Schannel-only path or missing import.
-- [ ] Write identity behavior tests before implementation: stable restart identity, different roots give different keys, public-only bounded bundle roundtrip, damaged DPAPI blob fails without replacement, malformed/oversized bundle rejection, own identity rejection.
-- [ ] Run compiled tests with minimal declared/unimplemented API bodies.
+- [x] Write identity behavior tests before implementation: stable restart identity, different roots give different keys, public-only bounded bundle roundtrip, damaged DPAPI blob fails without replacement, malformed/oversized bundle rejection, own identity rejection.
+- [x] Run compiled tests with minimal declared/unimplemented API bodies.
   Expected: named assertions fail because identity behavior is absent; compilation errors alone do not count as RED.
-- [ ] Implement standard native certificate/key generation and DPAPI persistence, strict public bundle format, no global certificate trust installation. Preserve normal validity, purpose and SAN checks.
-- [ ] Write and run actual secure-peer probe assertions before complete transport: known mutual identities exchange deterministic payloads; unknown/wrong pin/missing client/expired/wrong SAN fail; partial/truncated receive and two outstanding-send limits are exercised.
+- [x] Implement standard native certificate/key generation and DPAPI persistence, strict public bundle format, no global certificate trust installation. Preserve normal validity, purpose and SAN checks.
+- [x] Write and run actual secure-peer probe assertions before complete transport: known mutual identities exchange deterministic payloads; unknown/wrong pin/missing client/expired/wrong SAN fail; partial/truncated receive and two outstanding-send limits are exercised.
   Expected: missing transport fails the exchange assertion; there is no mock TLS success.
-- [ ] Implement OpenSSL validation flags, portable-DER synchronous pin rejection, explicit native-library loading, real UDP listener and connection, ordered length-prefixed control stream and separate bounded reliable AU streams. Stop closes handles only after callback ownership is safe; overflow/abort emits MediaLost.
-- [ ] Run full Debug/Release CTest and native secure-peer self-test, then a server/client probe in two OS processes with distinct folders/ports. Record startup, security negative tests, payload digests and endpoint owners.
+- [x] Implement OpenSSL validation flags, portable-DER synchronous pin rejection, explicit native-library loading, real UDP listener and connection, ordered length-prefixed control stream and separate bounded reliable AU streams. Stop closes handles only after callback ownership is safe; overflow/abort emits MediaLost.
+- [x] Run full Debug/Release CTest and native secure-peer self-test, then a server/client probe in two OS processes with distinct folders/ports. Record startup, security negative tests, payload digests and endpoint owners.
   Expected: all tests pass, only known pinned peers exchange payload, queues stay within caps.
-- [ ] Commit dependency/identity/transport foundation. Record evaluation outcome and any provisional DG-001/DG-006/DG-008 conclusions; no WAN/video-completion claim.
+- [x] Commit dependency/identity/transport foundation. Record evaluation outcome and any provisional DG-001/DG-006/DG-008 conclusions; no WAN/video-completion claim.
 
 ## Task 2: Feedback protection
 
@@ -82,12 +82,12 @@
 - Produces FeedbackProtection::ConfigureOwnedWindow(HWND), Apply(CapturedFrame&,CaptureSourceDescriptor,error).
 - Consumes CapturedFrame BGRA CPU/GPU representation and actual monitor/window geometry.
 
-- [ ] Write RED tests: negative screen origins, clipping/off-screen rectangles, overlapping masks, portrait/odd sources, self-viewer window rejection and CPU black masking preserve unmasked pixels.
+- [x] Write RED tests: negative screen origins, clipping/off-screen rectangles, overlapping masks, portrait/odd sources, self-viewer window rejection and CPU black masking preserve unmasked pixels.
   Expected: absent masking fails the relevant pixel/geometry assertions.
-- [ ] Implement capture affinity on owned top-level windows plus checked fallback mask before encoding; preserve non-masked pixels and cursor policy, no wrong-monitor coordinate reuse.
-- [ ] Qualify real DDA/WGC exclusion and forced fallback against owned moving windows; verify masked GPU readback while preserving synthetic reference colors outside masks.
+- [x] Implement capture affinity on owned top-level windows plus checked fallback mask before encoding; preserve non-masked pixels and cursor policy, no wrong-monitor coordinate reuse.
+- [x] Qualify real DDA/WGC exclusion and forced fallback against owned moving windows; verify masked GPU readback while preserving synthetic reference colors outside masks.
   Expected: viewer rectangles are absent/black, remaining content matches reference, card/window sources are not accidentally masked using unrelated monitor coordinates.
-- [ ] Run full CTest, retain physical evidence and commit. Mark FPS-007 only for the behavior actually qualified.
+- [x] Run full CTest, retain physical evidence and commit. Mark FPS-007 only for the behavior actually qualified.
 
 ## Task 3: Versioned protocol and session lifecycle
 
@@ -99,14 +99,14 @@
 - Produces PeerSession::OnTransportEvent, RequestShare, StopShare, Disconnect, Tick; actions queue validated control/media/state changes.
 - Consumes authenticated transport only; no parser or session may cause pre-auth media delivery.
 
-- [ ] Write RED tests for roundtrips, every short header, excessive sizes, overflow, unsupported versions/type/format, invalid geometry/cursor, duplicate/old generation and reserved fields.
+- [x] Write RED tests for roundtrips, every short header, excessive sizes, overflow, unsupported versions/type/format, invalid geometry/cursor, duplicate/old generation and reserved fields.
   Expected: unimplemented codecs fail roundtrip/rejection assertions.
-- [ ] Implement strict serializer/parser and immutable validated records. Entire encoded wire media remains within the 8 MiB record budget, with control independently capped.
-- [ ] Write RED session tests: no-source receive, independent share intent, Stop Share versus Disconnect, stale stop/format/frame after reconnect, heartbeat loss, bounded reconnect backoff and simultaneous-connect tie-break.
-- [ ] Implement Hello/capabilities and stream state, keyframe requests, heartbeat, deterministic one-session selection and fresh generations. No Audio is advertised honestly; reconnect only while user intent remains.
-- [ ] Run full CTest and transport probe with fragmented control reception and malformed peer records.
+- [x] Implement strict serializer/parser and immutable validated records. Entire encoded wire media remains within the 8 MiB record budget, with control independently capped.
+- [x] Write RED session tests: no-source receive, independent share intent, Stop Share versus Disconnect, stale stop/format/frame after reconnect, heartbeat loss, bounded reconnect backoff and simultaneous-connect tie-break.
+- [x] Implement Hello/capabilities and stream state, keyframe requests, heartbeat, deterministic one-session selection and fresh generations. No Audio is advertised honestly; reconnect only while user intent remains.
+- [x] Run full CTest and transport probe with fragmented control reception and malformed peer records.
   Expected: no unvalidated or stale payload reaches a media action; failed connection attempts are explicit and bounded.
-- [ ] Commit protocol/session implementation and qualified FPS-008 model results.
+- [x] Commit protocol/session implementation and qualified FPS-008 model results.
 
 ## Task 4: Independent network sender and receiver codec pipelines
 
@@ -119,12 +119,12 @@
 - Consumes Task 3 VideoWireFrame; no UI types. Sink ownership and dropped-frame behavior are explicit.
 - Existing VideoLocalLoop remains the qualified local-only path and uses the shared normalizer.
 
-- [ ] Write RED tests with existing encoder/decoder interfaces for visible geometry, sequence/timing preservation, independently chosen policies, old generation rejection, bounded pending metadata and awaiting-IDR recovery.
-- [ ] Extract shared normalization/cropping without changing local-loop semantics; implement sender-only encoding and receiver-only decoding, real-time decoder unchanged.
-- [ ] Run native same encoded bitstream across processes, initially synthetic owned patterns, then real WGC capture. Validate encoded payload digest and decoded content separately.
+- [x] Write RED tests with existing encoder/decoder interfaces for visible geometry, sequence/timing preservation, independently chosen policies, old generation rejection, bounded pending metadata and awaiting-IDR recovery.
+- [x] Extract shared normalization/cropping without changing local-loop semantics; implement sender-only encoding and receiver-only decoding, real-time decoder unchanged.
+- [x] Run native same encoded bitstream across processes, initially synthetic owned patterns, then real WGC capture. Validate encoded payload digest and decoded content separately.
   Expected: a receiving process with no capture source renders the sender's changing content and cannot advance frame count from a local preview.
-- [ ] Run CPU/GPU combinations, padded/portrait geometry and force-IDR recovery after an intentionally aborted AU. Report hardware performance separately from software functional tests.
-- [ ] Run full Debug/Release CTest and prior local-loop regression probes; commit media integration.
+- [x] Run CPU/GPU combinations, padded/portrait geometry and force-IDR recovery after an intentionally aborted AU. Report hardware performance separately from software functional tests.
+- [x] Run full Debug/Release CTest and prior local-loop regression probes; commit media integration.
 
 ## Task 5: Real UI connection/sharing and pairing flow
 
@@ -136,14 +136,14 @@
 - Local Preview intent and capture-for-sharing intent are distinct. One captured outgoing frame is encoded once; incoming rendering has priority and is explicitly labeled.
 - Pairing export/import actions are deferred normal UI commands with native file dialogs and explicit full-fingerprint confirmation.
 
-- [ ] Write RED state/command tests for actual connected/sharing/error statuses, no-source receiver, local preview independence, Stop Share preserving receive, Connect cancellation and codec-setting updates.
-- [ ] Implement controller; add Export Identity/Pair with Friend controls and public fingerprint/peer status. Persist trust separately from ordinary INI settings.
-- [ ] Replace inert Share/Connect request handlers, poll network without requiring a capture source, and wake idle UI on network activity. Keep network callbacks away from WGC/UI/codec calls.
-- [ ] Route outgoing source capture, optional explicit local preview and incoming frames correctly; preserve source selection on settings changes and clear stale remote output on stop/loss.
-- [ ] Add accurate codec, connection, stream/byte/FPS/queue/error diagnostics; remove stale transport-not-implemented text from actual runtime UI. No Auto connection mode.
-- [ ] Exercise real file pairing/confirmation for the two known owned copies and switch all four codec pairs through the UI while connected.
+- [x] Write RED state/command tests for actual connected/sharing/error statuses, no-source receiver, local preview independence, Stop Share preserving receive, Connect cancellation and codec-setting updates.
+- [x] Implement controller; add Export Identity/Pair with Friend controls and public fingerprint/peer status. Persist trust separately from ordinary INI settings.
+- [x] Replace inert Share/Connect request handlers, poll network without requiring a capture source, and wake idle UI on network activity. Keep network callbacks away from WGC/UI/codec calls.
+- [x] Route outgoing source capture, optional explicit local preview and incoming frames correctly; preserve source selection on settings changes and clear stale remote output on stop/loss.
+- [x] Add accurate codec, connection, stream/byte/FPS/queue/error diagnostics; remove stale transport-not-implemented text from actual runtime UI. No Auto connection mode.
+- [x] Exercise real file pairing/confirmation for the two known owned copies and switch all four codec pairs through the UI while connected.
   Expected: both directions work with independent settings; user-facing state corresponds to actual transport/decoder state.
-- [ ] Run full CTest and app regressions; commit usable UI integration and manual two-folder instructions.
+- [x] Run full CTest and app regressions; commit usable UI integration and manual two-folder instructions.
 
 ## Task 6: Cross-process qualification, faults and final review
 
@@ -151,14 +151,22 @@
 
 **Interfaces:** Consumes the complete application and previous probe APIs; produces exact-source reports, binary/runtime identities and reproducible tests, not new product behavior unrelated to qualification.
 
-- [ ] Run two portable copies from isolated folders with distinct keys/settings/ports. Confirm socket owners and encrypted/pinned connection before measuring.
-- [ ] Prove A → B with B having no capture source, B → A, and simultaneous distinct owned patterns; record changing content and actual incoming counters.
-- [ ] Run five-minute hardware 1080p60 tests per direction and simultaneous sharing. Aim ≥59 rendered fps each, report actual fps, p50/p95/p99 stage latency, bitrate, CPU/GPU/memory, queue count/bytes/age and drops honestly.
-- [ ] Test Stop Share/Disconnect, source switch/loss, server/client restart, trust rejection/replacement/expiry, unavailable/duplicate ports, stalled receiver, malformed records and repeated shutdown. Write reproducing RED tests for any defect before fixing.
+- [x] Run two portable copies from isolated folders with distinct keys/settings/ports. Confirm socket owners and encrypted/pinned connection before measuring.
+- [x] Prove A → B with B having no capture source, B → A, and simultaneous distinct owned patterns; record changing content and actual incoming counters.
+- [x] Run five-minute hardware 1080p60 tests per direction and simultaneous sharing. Aim ≥59 rendered fps each, report actual fps, p50/p95/p99 stage latency, bitrate, CPU/GPU/memory, queue count/bytes/age and drops honestly.
+- [x] Test Stop Share/Disconnect, source switch/loss, server/client restart, trust rejection/replacement/expiry, unavailable/duplicate ports, stalled receiver, malformed records and repeated shutdown. Write reproducing RED tests for any defect before fixing.
 - [ ] Compare same encoded workload with the TLS/TCP reference and, if candidate evidence warrants it, the WebRTC alternative. Include interleaved control and scheduled synthetic audio load; retain DG-001 as provisional if full decision inputs remain outstanding.
 - [ ] Qualify self-LAN only after secure localhost tests; label all untested Internet/Tailscale/physical peer paths. No firewall/router change is needed for this local acceptance.
-- [ ] Run final Debug/Release build/CTest, full source regression and exact-commit CI. Prepare one fresh whole-change review with spec, plan, diff, ledger rulings and Review Focus verbatim. Re-grade findings; fix Critical/Important with RED→GREEN and the whole suite.
-- [ ] Preserve reports/evidence, update roadmap states only to demonstrated outcomes, commit/push exact final source and documentation and confirm both CI jobs/clean state. Do not merge main or release without a separate instruction.
+- [x] Run final Debug/Release build/CTest, full source regression and exact-commit CI. Prepare one fresh whole-change review with spec, plan, diff, ledger rulings and Review Focus verbatim. Re-grade findings; fix Critical/Important with RED→GREEN and the whole suite.
+- [x] Preserve reports/evidence, update roadmap states only to demonstrated outcomes, commit/push exact final source and documentation and confirm both CI jobs/clean state. Do not merge main or release without a separate instruction.
+
+## Qualification rulings recorded at delivery
+
+Tasks 1-5 are implemented and verified. Checked qualification steps mean the tests were executed and their results preserved, including failed strict generation-continuity runs; they do not turn every FPS roadmap item GREEN.
+
+The same-workload encrypted TCP/audio-load comparison and self-LAN/remote routes remain unchecked. The approved spec explicitly permits a provisional development-branch integration while the full DG-001 inputs are outstanding. This increment remains loopback-only No Audio. Physical negative-origin/card networking, full V1 audio and Internet results are not inferred from models or localhost.
+
+The single fresh whole-change reviewer and one grouped Important fix pass completed. The later user-supplied fixture and Diagnostics defects received their own physical/compiled RED-to-GREEN checks. The native ledger and dated report retain failed harness attempts, source/binary identities, review re-grading and final CI.
 
 ## Plan self-review and authority
 

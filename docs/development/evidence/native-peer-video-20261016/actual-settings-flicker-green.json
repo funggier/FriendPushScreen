@@ -1,0 +1,15 @@
+﻿{
+    "test":  "Live settings status refresh preserves open codec menu and dark Hide Settings surface",
+    "pass":  true,
+    "samples":  380,
+    "white_background_samples":  0,
+    "menu_stable":  true,
+    "selected_before":  1,
+    "temporary_highlight":  0,
+    "highlight_after_5s":  0,
+    "list_count_before":  3,
+    "list_count_after":  3,
+    "background_colors":  {
+                              "38,46,57":  220
+                          }
+}

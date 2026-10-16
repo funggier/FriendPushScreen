@@ -1,0 +1,14 @@
+﻿[
+    {
+        "phase":  "A-to-B",
+        "exit_code":  1
+    },
+    {
+        "phase":  "B-to-A",
+        "exit_code":  1
+    },
+    {
+        "phase":  "simultaneous",
+        "exit_code":  1
+    }
+]

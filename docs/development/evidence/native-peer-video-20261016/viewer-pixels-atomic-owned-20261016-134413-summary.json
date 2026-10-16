@@ -1,0 +1,20 @@
+﻿{
+    "phase":  "atomic-owned",
+    "seconds":  180,
+    "started_utc":  "2026-10-16T13:44:13.2562706Z",
+    "completed_utc":  "2026-10-16T13:47:13.3742049Z",
+    "sample_interval_target_ms":  8,
+    "test":  "Actual incoming fixture stripe remains blue on A and red on B; sampled pixel owner must match the receiving app",
+    "affinity_mode":  "FPS_FORCE_FEEDBACK_MASK=1 diagnostic fallback",
+    "A_pid":  12020,
+    "B_pid":  2664,
+    "statistics":  {
+                       "samples":  10783,
+                       "unexpected_A":  0,
+                       "unexpected_B":  0,
+                       "max_bad_streak_A":  0,
+                       "max_bad_streak_B":  0,
+                       "occluded_samples":  0
+                   },
+    "pass":  true
+}

@@ -1,0 +1,366 @@
+﻿{
+    "phase":  "red",
+    "test":  "Failed local capture start while remote sender is paused preserves received blue picture",
+    "A_pid":  16216,
+    "B_pid":  7840,
+    "before":  {
+                   "r":  1,
+                   "g":  0,
+                   "b":  255,
+                   "blue":  true
+               },
+    "samples":  [
+                    {
+                        "elapsed_ms":  17,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  48,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  80,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  114,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  147,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  181,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  197,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  231,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  264,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  297,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  331,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  364,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  397,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  431,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  447,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  464,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  498,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  531,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  564,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  598,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  631,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  664,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  698,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  731,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  764,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  781,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  797,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  814,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  831,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  848,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  865,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  898,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  932,
+                        "r":  20,
+                        "g":  31,
+                        "b":  41,
+                        "blue":  false
+                    },
+                    {
+                        "elapsed_ms":  966,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  981,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  998,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1015,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1031,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1048,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1065,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1081,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1115,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1148,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1181,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1215,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1248,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1265,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1281,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1298,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    },
+                    {
+                        "elapsed_ms":  1315,
+                        "r":  1,
+                        "g":  0,
+                        "b":  255,
+                        "blue":  true
+                    }
+                ],
+    "unexpected_pixels":  33,
+    "pass":  false
+}

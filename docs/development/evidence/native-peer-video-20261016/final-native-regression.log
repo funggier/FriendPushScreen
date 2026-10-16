@@ -1,0 +1,20 @@
+Session proc-1792159056603-327
+Exit 0
+Completed 2026-10-16T13:58:09.136Z
+Test project T:/Space/Projects/ProjectsProgram/FriendPushScreen/.worktrees/fps-006-encode-decode-local-loopback/build
+    Start 1: FriendPushScreenTests
+1/2 Test #1: FriendPushScreenTests .............   Passed    1.82 sec
+    Start 2: FriendPushScreenSecurePeerTests
+2/2 Test #2: FriendPushScreenSecurePeerTests ...   Passed    6.75 sec
+100% tests passed out of 2
+Total Test time (real) =   8.57 sec
+Test project T:/Space/Projects/ProjectsProgram/FriendPushScreen/.worktrees/fps-006-encode-decode-local-loopback/build
+    Start 1: FriendPushScreenTests
+1/2 Test #1: FriendPushScreenTests .............   Passed    2.36 sec
+    Start 2: FriendPushScreenSecurePeerTests
+2/2 Test #2: FriendPushScreenSecurePeerTests ...   Passed    6.76 sec
+100% tests passed out of 2
+Total Test time (real) =   9.12 sec
+RESULT {"width":1920,"height":1080,"seconds":10.0312,"capture":561,"submitted":561,"encoded":561,"decoded":561,"rendered":561,"fps":55.9254,"source_sequence_gaps":0,"drops":0,"recovery_resets":0,"queue_max":1,"queue_final":0,"encode_avg_ms":16.1907,"encode_p95_ms":22.1963,"encode_max_ms":49.244,"decode_avg_ms":2.9887,"decode_p95_ms":7.0105,"decode_max_ms":37.1237,"e2e_avg_ms":31.0431,"e2e_p95_ms":39.725,"e2e_max_ms":66.67,"cpu_percent_all_cores":5.59637,"private_min":261320704,"private_max":269180928,"working_set_max":236269568,"encoder_gpu":561,"decoder_gpu":561,"cpu_capture_frames":0,"padded_frames":0,"encoded_bytes":20874728,"bitrate_mbps":16.6478}
+CAPTURE_LOOP_PASS
+POST_DIAGNOSTICS_REGRESSION_PASS

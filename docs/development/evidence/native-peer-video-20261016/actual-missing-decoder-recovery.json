@@ -1,0 +1,79 @@
+﻿{
+    "test":  "Actual saved native missing decoder after restart; GPU Apply resumes without A StopStart",
+    "pass":  true,
+    "failure_visible_both_sides":  true,
+    "before":  {
+                   "A_errors":  [
+                                    "Send: waiting for source / peer\nReceive: waiting for peer video\nSent 43157 | Received 37223 | Queue 0/2 | 20 Mbps, GOP 120\nEncoder latency on | Decoder real-time on\nRemote decoder: Decoder: Selected H264 decoder unavailable (0xC00D5212)",
+                                    "Authenticated peer connected | no incoming video | Remote decoder: Decoder: Selected H264 decoder unavailable (0xC00D5212)"
+                                ],
+                   "B_errors":  [
+                                    "GPU - saved codec unavailable  ?",
+                                    "Send: waiting for source / peer\nReceive: waiting for peer video\nSent 0 | Received 0 | Queue 0/2 | 20 Mbps, GOP 120\nEncoder latency on | Decoder real-time on\nDecoder: Selected H264 decoder unavailable (0xC00D5212)",
+                                    "Authenticated peer connected | no incoming video | Decoder: Selected H264 decoder unavailable (0xC00D5212)"
+                                ],
+                   "B_no_source":  true,
+                   "identity_stable":  true
+               },
+    "selected_decoder":  "[GPU] Microsoft H264 Video Decoder MFT",
+    "after":  {
+                  "A":  {
+                            "connected":  1,
+                            "sharing":  1,
+                            "receiving":  0,
+                            "session":  8589609446620718216,
+                            "out_generation":  10,
+                            "in_generation":  0,
+                            "encoded":  43374,
+                            "sent":  43374,
+                            "decoded":  37223,
+                            "rendered":  37223,
+                            "sent_bytes":  1793318994,
+                            "received_bytes":  1546439756,
+                            "tx_peak_count":  2,
+                            "tx_peak_bytes":  83606,
+                            "rx_peak_count":  2,
+                            "rx_peak_bytes":  83606,
+                            "drops":  0,
+                            "flow_recoveries":  5,
+                            "skipped_capture":  3,
+                            "oldest_outbound_ms":  0,
+                            "encoder_gpu":  218,
+                            "encoder_cpu":  0,
+                            "decoder_gpu":  0,
+                            "decoder_cpu":  0
+                        },
+                  "B":  {
+                            "connected":  1,
+                            "sharing":  0,
+                            "receiving":  1,
+                            "session":  8589609446620718216,
+                            "out_generation":  0,
+                            "in_generation":  10,
+                            "encoded":  0,
+                            "sent":  0,
+                            "decoded":  201,
+                            "rendered":  201,
+                            "sent_bytes":  1127950,
+                            "received_bytes":  7022219,
+                            "tx_peak_count":  0,
+                            "tx_peak_bytes":  0,
+                            "rx_peak_count":  2,
+                            "rx_peak_bytes":  41804,
+                            "drops":  0,
+                            "flow_recoveries":  0,
+                            "skipped_capture":  0,
+                            "oldest_outbound_ms":  0,
+                            "encoder_gpu":  0,
+                            "encoder_cpu":  0,
+                            "decoder_gpu":  201,
+                            "decoder_cpu":  0,
+                            "encode_p50_ms":  0,
+                            "encode_p95_ms":  0,
+                            "encode_p99_ms":  0
+                        }
+              },
+    "remaining_errors":  [
+
+                         ]
+}

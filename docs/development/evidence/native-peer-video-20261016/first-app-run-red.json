@@ -1,0 +1,23 @@
+[
+    {
+        "role":  "A",
+        "pid":  31016,
+        "status":  [
+                       "Sharing H.264 | sent 0 frames",
+                       "Send: Intel® Quick Sync Video H.264 Encoder MFT\nReceive: waiting for peer video\nSent 0 | Received 0 | Queue 0/2 | 20 Mbps, GOP 120\nEncoder latency on | Decoder real-time on",
+                       "Authenticated peer connected | no incoming video",
+                       "  Peer: Online  |  Connection: Connected  |  Sharing: Sharing  |  Video: No incoming stream  |  Audio: Inactive"
+                   ]
+    },
+    {
+        "role":  "B",
+        "pid":  14516,
+        "status":  [
+                       "No source selected",
+                       "Not sharing",
+                       "Send: waiting for source / peer\nReceive: Microsoft H264 Video Decoder MFT\nSent 0 | Received 0 | Queue 0/2 | 20 Mbps, GOP 120\nEncoder latency on | Decoder real-time on",
+                       "Authenticated peer connected | waiting for video IDR",
+                       "  Peer: Online  |  Connection: Connected  |  Sharing: Not sharing  |  Video: Incoming peer  |  Audio: Inactive"
+                   ]
+    }
+]

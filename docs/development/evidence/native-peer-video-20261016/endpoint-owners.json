@@ -1,0 +1,17 @@
+﻿[
+    {
+        "LocalAddress":  "::",
+        "LocalPort":  50835,
+        "OwningProcess":  34396
+    },
+    {
+        "LocalAddress":  "::",
+        "LocalPort":  42802,
+        "OwningProcess":  34396
+    },
+    {
+        "LocalAddress":  "::",
+        "LocalPort":  42801,
+        "OwningProcess":  35768
+    }
+]

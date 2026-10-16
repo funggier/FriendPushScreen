@@ -1,0 +1,19 @@
+{
+  "commit": "8f33876f52c9e08e20c7aef44d5ba650a89a0b11",
+  "run_id": 38912126386,
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/funggier/FriendPushScreen/actions/runs/38912126386",
+  "jobs": [
+    {
+      "name": "Windows x64 Release",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Windows x64 Debug",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

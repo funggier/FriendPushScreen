@@ -1,0 +1,37 @@
+﻿{
+    "phase":  "red",
+    "test":  "Native live Diagnostics internal scroll matches forced clean repaint",
+    "A_pid":  33204,
+    "control":  10947744,
+    "text_length":  25,
+    "rect":  {
+                 "left":  757,
+                 "top":  573,
+                 "right":  1221,
+                 "bottom":  853
+             },
+    "rounds":  [
+                   {
+                       "round":  0,
+                       "pixels_changed_by_forced_clean_repaint":  11247,
+                       "pass":  false
+                   },
+                   {
+                       "round":  1,
+                       "pixels_changed_by_forced_clean_repaint":  28396,
+                       "pass":  false
+                   },
+                   {
+                       "round":  2,
+                       "pixels_changed_by_forced_clean_repaint":  33336,
+                       "pass":  false
+                   },
+                   {
+                       "round":  3,
+                       "pixels_changed_by_forced_clean_repaint":  12578,
+                       "pass":  false
+                   }
+               ],
+    "pass":  false,
+    "utc":  "2026-10-16T13:52:42.8318712Z"
+}

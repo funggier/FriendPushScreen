@@ -152,3 +152,14 @@ Required properties:
 Tailscale may supply encrypted routing, but application peer authorization must remain route-independent.
 
 **Rule:** Direct Internet cannot become GREEN until secure handshake and peer identity are proven on the exact transport selected by DG-001.
+
+## 2026-10-16 native No Audio loopback evaluation
+
+The [native peer-video qualification report](../development/reports/FPS-20261016-native-peer-video-qualification.md) records actual mutually authenticated H.264 exchange between two portable applications, independent CPU/GPU codecs, bounded consumer ownership, recovery and feedback checks.
+
+- **DG-001 remains OPEN/provisional.** Pinned MsQuic/OpenSSL2.6.3 enables this development increment; it is not a permanent selection. Same-workload encrypted TCP comparison, scheduled synthetic audio multiplexing, non-loopback/one-public-port and WAN loss inputs remain outstanding.
+- **DG-002 policy is unchanged.** DDA remains the Monitor backend and WGC the Window backend. Actual primary-monitor masking/affinity and owned WGC window/viewer rejection are qualified; physical negative-origin/non-primary network monitor and capture-card paths are not inferred.
+- **DG-006 remains OPEN for distribution.** Exact package/runtime hashes and upstream notices are preserved. Full distribution/licensing closure is not supplied by local runtime success.
+- **DG-008 remains OPEN for Direct Internet.** Normal TLS validation, mutual client credentials, exact DER peer pins, explicit full-fingerprint pairing, protected persistent identities and negative tests are proven for loopback. DNS, self-LAN, Internet and Tailscale are not enabled/qualified by this increment.
+
+No firewall/router, OS trust-store, registry, main-branch, tag or release mutation is required or implied.

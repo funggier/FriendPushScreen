@@ -1,0 +1,5 @@
+﻿unit=1 key=1 parameter_sets=1 size=538
+unit=2 key=0 parameter_sets=0 size=2480
+unit=3 key=0 parameter_sets=0 size=648
+visible=1920x1080 coded=1920x1080 encoder_low_latency=1 decoder_realtime=1 encoder_gpu=120 encoder_cpu=0 decoder_gpu=119 decoder_cpu=0 encoded=119 decoded=119 rendered=119 drops=0 pending_peak=1 last=119 quality_fail=0 geometry_fail=0 pending_tail=1
+PEER_MEDIA_RUNTIME_PASS

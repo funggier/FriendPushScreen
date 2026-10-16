@@ -1,0 +1,42 @@
+﻿[
+    {
+        "scenario":  "cpu-cpu-1920-1080-120",
+        "exit_code":  0,
+        "log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\sdd\\2026-10-16-secure-dual-instance-video\\app-qualify-01\\media-cpu-cpu-1920-1080-120.log"
+    },
+    {
+        "scenario":  "cpu-gpu-1920-1080-120",
+        "exit_code":  0,
+        "log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\sdd\\2026-10-16-secure-dual-instance-video\\app-qualify-01\\media-cpu-gpu-1920-1080-120.log"
+    },
+    {
+        "scenario":  "gpu-cpu-1920-1080-120",
+        "exit_code":  0,
+        "log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\sdd\\2026-10-16-secure-dual-instance-video\\app-qualify-01\\media-gpu-cpu-1920-1080-120.log"
+    },
+    {
+        "scenario":  "gpu-gpu-1920-1080-120",
+        "exit_code":  0,
+        "log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\sdd\\2026-10-16-secure-dual-instance-video\\app-qualify-01\\media-gpu-gpu-1920-1080-120.log"
+    },
+    {
+        "scenario":  "gpu-gpu-1919-1079-90",
+        "exit_code":  0,
+        "log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\sdd\\2026-10-16-secure-dual-instance-video\\app-qualify-01\\media-gpu-gpu-1919-1079-90.log"
+    },
+    {
+        "scenario":  "cpu-cpu-641-1153-90",
+        "exit_code":  0,
+        "log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\sdd\\2026-10-16-secure-dual-instance-video\\app-qualify-01\\media-cpu-cpu-641-1153-90.log"
+    },
+    {
+        "scenario":  "gpu-gpu-641-1153-90",
+        "exit_code":  0,
+        "log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\sdd\\2026-10-16-secure-dual-instance-video\\app-qualify-01\\media-gpu-gpu-641-1153-90.log"
+    },
+    {
+        "scenario":  "gpu-gpu-1920-1080-120-buffered",
+        "exit_code":  0,
+        "log":  "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\sdd\\2026-10-16-secure-dual-instance-video\\app-qualify-01\\media-gpu-gpu-1920-1080-120-buffered.log"
+    }
+]

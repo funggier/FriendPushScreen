@@ -1,0 +1,21 @@
+﻿{
+    "source":  "8f33876f52c9e08e20c7aef44d5ba650a89a0b11",
+    "ui_codec_matrix_app_sha256":  "9925646C6BA503C26AECDEB5BA29F998CF29D47C437052AADBFD529A5E56F1E8",
+    "final_app_sha256":  "F117743C53205EE1494CEF4A303417FF01B7671BD0F62564997CEFB3A295D01A",
+    "runtime_sha256":  "290B6C8716AC09EEA043913F86164E0B2F5096C666C9F1CA81C0C5C1864E1CB0",
+    "A":  {
+              "pid":  24544,
+              "share_port":  42801,
+              "fingerprint":  "DEBFD1AE4F4E111281BB6C937397F86A5B37E6BD5028949870FE2114FA285D93"
+          },
+    "B":  {
+              "pid":  20764,
+              "share_port":  42802,
+              "fingerprint":  "6E262775CD803C4E4CA0F7DB6C44A6A8F14372AC6070CF7CA6A246605CEBED93"
+          },
+    "private_identity_material_included":  false,
+    "notes":  "Public diagnostics and owned synthetic source captures only. Each run retains its own PID/source context. Public fingerprints persist across app restarts. No private identity material or arbitrary user desktop capture included.",
+    "historical_source":  "ea2b68aa157b035a4dc5f0099be9787895d4ea11",
+    "historical_app_sha256":  "E336E6357AD38C2CD386200CFAB701A625DD7D635495090C393BED0453E82A58",
+    "fixture_sha256":  "275042FEF8FBDA8E8B8BCF88653C1320BB00DBFC7A74CC4407A2D3FD79301181"
+}

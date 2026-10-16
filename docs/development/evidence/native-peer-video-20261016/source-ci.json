@@ -1,0 +1,19 @@
+{
+  "source": "a21b6518a8e15db374dae128bb319ed90f41c6e6",
+  "run_id": 38906825060,
+  "url": "https://github.com/funggier/FriendPushScreen/actions/runs/38906825060",
+  "workflow": "Windows Build",
+  "event": "push",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "Windows x64 Debug",
+      "conclusion": "success"
+    },
+    {
+      "name": "Windows x64 Release",
+      "conclusion": "success"
+    }
+  ],
+  "scope": "Exact implementation commit; final documentation head is verified separately before delivery"
+}

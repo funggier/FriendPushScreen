@@ -1,0 +1,19 @@
+﻿{
+    "phase":  "before",
+    "seconds":  180,
+    "started_utc":  "2026-10-16T13:35:17.7117197Z",
+    "completed_utc":  "2026-10-16T13:38:17.7449007Z",
+    "sample_interval_target_ms":  8,
+    "test":  "Actual visible incoming fixture stripe remains blue on A and red on B",
+    "affinity_mode":  "FPS_FORCE_FEEDBACK_MASK=1 diagnostic fallback",
+    "A_pid":  12020,
+    "B_pid":  2664,
+    "statistics":  {
+                       "samples":  10790,
+                       "unexpected_A":  110,
+                       "unexpected_B":  13,
+                       "max_bad_streak_A":  96,
+                       "max_bad_streak_B":  2
+                   },
+    "pass":  false
+}
