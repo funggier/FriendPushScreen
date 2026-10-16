@@ -1,0 +1,146 @@
+{
+  "session": {
+    "session_id": "proc-1792112591769-176",
+    "label": "FPS final actual UI matrix",
+    "pid": 28796,
+    "program": "powershell.exe",
+    "args": [
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\codec-ui-qualification\\QualifyCodecUi.ps1"
+    ],
+    "launcher": "direct",
+    "cwd": "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback",
+    "running": false,
+    "exit_code": 1,
+    "signal": null,
+    "started_at": "2026-10-16T01:03:11.769Z",
+    "completed_at": "2026-10-16T01:03:27.619Z",
+    "streams_closed": true,
+    "closed_at": "2026-10-16T01:03:27.619Z",
+    "elapsed_ms": 15850,
+    "next_seq": 17,
+    "dropped_through_seq": 0,
+    "buffered_event_count": 16
+  },
+  "after_seq": 0,
+  "overflowed": false,
+  "earliest_available_seq": 1,
+  "events": [
+    {
+      "seq": 1,
+      "timestamp": "2026-10-16T01:03:20.297Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "{\"encoder\":\"GPU\",\"decoder\":\"GPU\",\"encoder_choice\":\"[GPU] Intelr Quick Sync Video H.264 Encoder MFT\",\"decoder_choice\":\"[GPU] Microsoft H264 Video Decoder MFT\",\"status\":\"Encoder: [GPU] Intelr Quick Sync Video H.264 Encoder MFT\\nDecoder: [GPU] Microsoft H264 Video Decoder MFT\\nTarget 12 Mbps | Keyframe 90 frames | Encoder low latency off\\nDecoder low latency on\",\"source_preserved\":true,\"time\":\"2026-10-16T01:03:20.2747113Z\"}\r\n"
+    },
+    {
+      "seq": 2,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "Wrong live mode CPU/GPU: Encoder: [CPU] H264 Encoder MFT\r\nDecoder: [waiting] Microsoft H264 Video Decoder MFT\r\n"
+    },
+    {
+      "seq": 3,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "Target 12 Mbps | Keyframe 90 frames | Encoder low latency off\r\nDecoder low latency on\r\nEncoder: NV12 pool exhausted (0x800705B4)\r\n"
+    },
+    {
+      "seq": 4,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "At T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\code\r\n"
+    },
+    {
+      "seq": 5,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "c-ui-qualification\\QualifyCodecUi.ps1:28 char:108\r\n"
+    },
+    {
+      "seq": 6,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "+ ... .dec+'\\]')){throw \"Wrong live mode $($case.enc)/$($case.dec): $status ...\r\n"
+    },
+    {
+      "seq": 7,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n"
+    },
+    {
+      "seq": 8,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "    + CategoryInfo          : OperationStopped: (Wrong live mode...ed (0x800705B4):String) [], RuntimeException\r\n"
+    },
+    {
+      "seq": 9,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "    + FullyQualifiedErrorId : Wrong live mode CPU/GPU: Encoder: [CPU] H264 Encoder MFT\r\n"
+    },
+    {
+      "seq": 10,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "Decoder: [waiting] Microsoft H264 Video Decoder MFT\r\n"
+    },
+    {
+      "seq": 11,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "Target 12 Mbps | Keyframe 90 frames | Encoder low latency off\r\n"
+    },
+    {
+      "seq": 12,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "Decoder low latency on\r\n"
+    },
+    {
+      "seq": 13,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "Encoder: NV12 pool exhausted (0x800705B4)\r\n"
+    },
+    {
+      "seq": 14,
+      "timestamp": "2026-10-16T01:03:27.606Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": " \r\n"
+    },
+    {
+      "seq": 15,
+      "timestamp": "2026-10-16T01:03:27.619Z",
+      "type": "exit",
+      "exit_code": 1,
+      "signal": null
+    },
+    {
+      "seq": 16,
+      "timestamp": "2026-10-16T01:03:27.619Z",
+      "type": "streams_closed"
+    }
+  ],
+  "event_count": 16,
+  "has_more": false,
+  "next_cursor": 16
+}

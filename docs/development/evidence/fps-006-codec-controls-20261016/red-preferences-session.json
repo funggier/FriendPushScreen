@@ -1,0 +1,130 @@
+{
+  "session": {
+    "session_id": "proc-1792111119800-157",
+    "label": "FPS codec UI RED persistence tests",
+    "pid": 8172,
+    "program": "powershell.exe",
+    "args": [
+      "-NoProfile",
+      "-Command",
+      "& cmake --build build --config Debug --target FriendPushScreenTests --parallel 8; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; & ctest --test-dir build -C Debug --output-on-failure; exit $LASTEXITCODE"
+    ],
+    "launcher": "direct",
+    "cwd": "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback",
+    "running": false,
+    "exit_code": 8,
+    "signal": null,
+    "started_at": "2026-10-16T00:38:39.800Z",
+    "completed_at": "2026-10-16T00:38:42.495Z",
+    "streams_closed": true,
+    "closed_at": "2026-10-16T00:38:42.495Z",
+    "elapsed_ms": 2695,
+    "next_seq": 15,
+    "dropped_through_seq": 0,
+    "buffered_event_count": 14
+  },
+  "after_seq": 0,
+  "overflowed": false,
+  "earliest_available_seq": 1,
+  "events": [
+    {
+      "seq": 1,
+      "timestamp": "2026-10-16T00:38:39.960Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework\r\n"
+    },
+    {
+      "seq": 2,
+      "timestamp": "2026-10-16T00:38:39.984Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "\r\n"
+    },
+    {
+      "seq": 3,
+      "timestamp": "2026-10-16T00:38:40.338Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  settings_store_tests.cpp\r\n"
+    },
+    {
+      "seq": 4,
+      "timestamp": "2026-10-16T00:38:42.355Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  FriendPushScreenTests.vcxproj -> T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\build\\Debug\\FriendPushScreenTests.exe\r\n"
+    },
+    {
+      "seq": 5,
+      "timestamp": "2026-10-16T00:38:42.397Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "Test project T:/Space/Projects/ProjectsProgram/FriendPushScreen/.worktrees/fps-006-encode-decode-local-loopback/build\n"
+    },
+    {
+      "seq": 6,
+      "timestamp": "2026-10-16T00:38:42.398Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "    Start 1: FriendPushScreenTests\n"
+    },
+    {
+      "seq": 7,
+      "timestamp": "2026-10-16T00:38:42.483Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "1/1 Test #1: FriendPushScreenTests ............***Failed    0.08 sec\n"
+    },
+    {
+      "seq": 8,
+      "timestamp": "2026-10-16T00:38:42.483Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:253: expected true: saved.find(line) != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:264: expected true: saved.find(\"video_encoder_mode=prefer_gpu\\n\") != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:265: expected true: saved.find(\"video_decoder_mode=prefer_gpu\\n\") != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:266: expected true: saved.find(\"video_bitrate_mbps=20\\n\") != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:267: expected true: saved.find(\"video_keyframe_interval=120\\n\") != std::string::npos\nT:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\tests\\settings_store_tests.cpp:268: expected true: saved.find(\"video_low_latency=true\\n\") != std::string::npos\n\n"
+    },
+    {
+      "seq": 9,
+      "timestamp": "2026-10-16T00:38:42.483Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "\n0% tests passed, 1 tests failed out of 1\n"
+    },
+    {
+      "seq": 10,
+      "timestamp": "2026-10-16T00:38:42.483Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "\nTotal Test time (real) =   0.09 sec\n\nThe following tests FAILED:\n"
+    },
+    {
+      "seq": 11,
+      "timestamp": "2026-10-16T00:38:42.483Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "\t  1 - FriendPushScreenTests (Failed)\n"
+    },
+    {
+      "seq": 12,
+      "timestamp": "2026-10-16T00:38:42.484Z",
+      "type": "output",
+      "stream": "stderr",
+      "text": "Errors while running CTest\n"
+    },
+    {
+      "seq": 13,
+      "timestamp": "2026-10-16T00:38:42.495Z",
+      "type": "exit",
+      "exit_code": 8,
+      "signal": null
+    },
+    {
+      "seq": 14,
+      "timestamp": "2026-10-16T00:38:42.495Z",
+      "type": "streams_closed"
+    }
+  ],
+  "event_count": 14,
+  "has_more": false,
+  "next_cursor": 14
+}

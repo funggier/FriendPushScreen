@@ -1,0 +1,6 @@
+﻿{
+    "missing_status":  "Codec error: Encoder: Selected H264 encoder unavailable (0xC00D5212)",
+    "selected_recovery":  "[GPU] Intel® Quick Sync Video H.264 Encoder MFT",
+    "recovered_status":  "Encoder: [GPU] Intel® Quick Sync Video H.264 Encoder MFT\nDecoder: [CPU] Microsoft H264 Video Decoder MFT\nTarget 12 Mbps | Keyframe 90 frames | Encoder low latency off\nDecoder low latency on",
+    "source_preserved":  true
+}

@@ -1,0 +1,55 @@
+{
+  "session": {
+    "session_id": "proc-1792113013057-181",
+    "label": "FPS codec fault and viewer regression checks",
+    "pid": 30772,
+    "program": "powershell.exe",
+    "args": [
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\codec-ui-qualification\\FinalFaultAndLayout.ps1"
+    ],
+    "launcher": "direct",
+    "cwd": "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback",
+    "running": false,
+    "exit_code": 0,
+    "signal": null,
+    "started_at": "2026-10-16T01:10:13.057Z",
+    "completed_at": "2026-10-16T01:10:19.839Z",
+    "streams_closed": true,
+    "closed_at": "2026-10-16T01:10:19.839Z",
+    "elapsed_ms": 6782,
+    "next_seq": 4,
+    "dropped_through_seq": 0,
+    "buffered_event_count": 3
+  },
+  "after_seq": 0,
+  "overflowed": false,
+  "earliest_available_seq": 1,
+  "events": [
+    {
+      "seq": 1,
+      "timestamp": "2026-10-16T01:10:19.823Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "SETTINGS_GEOMETRY_PASS F11_ESC_PASS STOP_START_PASS MISSING_CODEC_ERROR_PASS RECOVERY_PASS\r\n"
+    },
+    {
+      "seq": 2,
+      "timestamp": "2026-10-16T01:10:19.839Z",
+      "type": "exit",
+      "exit_code": 0,
+      "signal": null
+    },
+    {
+      "seq": 3,
+      "timestamp": "2026-10-16T01:10:19.839Z",
+      "type": "streams_closed"
+    }
+  ],
+  "event_count": 3,
+  "has_more": false,
+  "next_cursor": 3
+}

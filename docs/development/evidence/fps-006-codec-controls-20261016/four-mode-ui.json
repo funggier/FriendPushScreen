@@ -1,0 +1,38 @@
+﻿[
+    {
+        "encoder":  "GPU",
+        "decoder":  "GPU",
+        "encoder_choice":  "[GPU] Intel® Quick Sync Video H.264 Encoder MFT",
+        "decoder_choice":  "[GPU] Microsoft H264 Video Decoder MFT",
+        "status":  "Encoder: [GPU] Intel® Quick Sync Video H.264 Encoder MFT\nDecoder: [GPU] Microsoft H264 Video Decoder MFT\nTarget 12 Mbps | Keyframe 90 frames | Encoder low latency off\nDecoder low latency on",
+        "source_preserved":  true,
+        "time":  "2026-10-16T01:07:26.8457610Z"
+    },
+    {
+        "encoder":  "CPU",
+        "decoder":  "GPU",
+        "encoder_choice":  "[CPU] H264 Encoder MFT",
+        "decoder_choice":  "[GPU] Microsoft H264 Video Decoder MFT",
+        "status":  "Encoder: [CPU] H264 Encoder MFT\nDecoder: [GPU] Microsoft H264 Video Decoder MFT\nTarget 12 Mbps | Keyframe 90 frames | Encoder low latency off\nDecoder low latency on",
+        "source_preserved":  true,
+        "time":  "2026-10-16T01:07:34.1618200Z"
+    },
+    {
+        "encoder":  "GPU",
+        "decoder":  "CPU",
+        "encoder_choice":  "[GPU] Intel® Quick Sync Video H.264 Encoder MFT",
+        "decoder_choice":  "[CPU] Microsoft H264 Video Decoder MFT",
+        "status":  "Encoder: [GPU] Intel® Quick Sync Video H.264 Encoder MFT\nDecoder: [CPU] Microsoft H264 Video Decoder MFT\nTarget 12 Mbps | Keyframe 90 frames | Encoder low latency off\nDecoder low latency on",
+        "source_preserved":  true,
+        "time":  "2026-10-16T01:07:41.4506269Z"
+    },
+    {
+        "encoder":  "CPU",
+        "decoder":  "CPU",
+        "encoder_choice":  "[CPU] H264 Encoder MFT",
+        "decoder_choice":  "[CPU] Microsoft H264 Video Decoder MFT",
+        "status":  "Encoder: [CPU] H264 Encoder MFT\nDecoder: [CPU] Microsoft H264 Video Decoder MFT\nTarget 12 Mbps | Keyframe 90 frames | Encoder low latency off\nDecoder low latency on",
+        "source_preserved":  true,
+        "time":  "2026-10-16T01:07:48.7561821Z"
+    }
+]

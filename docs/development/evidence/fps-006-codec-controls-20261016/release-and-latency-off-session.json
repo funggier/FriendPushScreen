@@ -1,0 +1,200 @@
+{
+  "session": {
+    "session_id": "proc-1792112701785-177",
+    "label": "FPS CPU buffered encoding lease regression",
+    "pid": 19944,
+    "program": "powershell.exe",
+    "args": [
+      "-NoProfile",
+      "-Command",
+      "& cmake --build build --config Release --parallel 8; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; & ctest --test-dir build -C Release --output-on-failure; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; $cases=@(@{name='gpu-gpu';arg='--no-low-latency'},@{name='cpu-gpu';arg='--no-low-latency --software-encode'},@{name='gpu-cpu';arg='--no-low-latency --software-decode'},@{name='cpu-cpu';arg='--no-low-latency --software'}); foreach($case in $cases){ $p=Start-Process -FilePath '.\\build\\Release\\FriendPushScreenCodecLoopProbe.exe' -ArgumentList $case.arg -RedirectStandardOutput ('.superpowers\\codec-ui-qualification\\latency-off-'+$case.name+'.out') -RedirectStandardError ('.superpowers\\codec-ui-qualification\\latency-off-'+$case.name+'.err') -PassThru; $null=$p.Handle; if(-not $p.WaitForExit(10000)){Stop-Process -Id $p.Id; Write-Output ('TIMEOUT '+$case.name);exit 3}; $p.Refresh(); $ec=$p.ExitCode; Get-Content -LiteralPath ('.superpowers\\codec-ui-qualification\\latency-off-'+$case.name+'.out') -Tail 2; if($null -eq $ec -or $ec -ne 0){exit 4}};exit 0"
+    ],
+    "launcher": "direct",
+    "cwd": "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback",
+    "running": false,
+    "exit_code": 0,
+    "signal": null,
+    "started_at": "2026-10-16T01:05:01.785Z",
+    "completed_at": "2026-10-16T01:05:14.965Z",
+    "streams_closed": true,
+    "closed_at": "2026-10-16T01:05:14.965Z",
+    "elapsed_ms": 13180,
+    "next_seq": 25,
+    "dropped_through_seq": 0,
+    "buffered_event_count": 24
+  },
+  "after_seq": 0,
+  "overflowed": false,
+  "earliest_available_seq": 1,
+  "events": [
+    {
+      "seq": 1,
+      "timestamp": "2026-10-16T01:05:01.928Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework\r\n"
+    },
+    {
+      "seq": 2,
+      "timestamp": "2026-10-16T01:05:01.951Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "\r\n"
+    },
+    {
+      "seq": 3,
+      "timestamp": "2026-10-16T01:05:02.157Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  FriendPushScreenConversionTests.vcxproj -> T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\build\\Release\\FriendPushScreenConversionTests.exe\r\n"
+    },
+    {
+      "seq": 4,
+      "timestamp": "2026-10-16T01:05:02.176Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  FriendPushScreenCodecProbe.vcxproj -> T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\build\\Release\\FriendPushScreenCodecProbe.exe\r\n"
+    },
+    {
+      "seq": 5,
+      "timestamp": "2026-10-16T01:05:02.181Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  mf_video_codec.cpp\r\n"
+    },
+    {
+      "seq": 6,
+      "timestamp": "2026-10-16T01:05:02.199Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  mf_video_codec.cpp\r\n  mf_video_codec.cpp\r\n"
+    },
+    {
+      "seq": 7,
+      "timestamp": "2026-10-16T01:05:02.258Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  mf_video_codec.cpp\r\n"
+    },
+    {
+      "seq": 8,
+      "timestamp": "2026-10-16T01:05:03.745Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  FriendPushScreenCaptureLoopProbe.vcxproj -> T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\build\\Release\\FriendPushScreenCaptureLoopProbe.exe\r\n"
+    },
+    {
+      "seq": 9,
+      "timestamp": "2026-10-16T01:05:03.835Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  FriendPushScreenCodecLoopProbe.vcxproj -> T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\build\\Release\\FriendPushScreenCodecLoopProbe.exe\r\n"
+    },
+    {
+      "seq": 10,
+      "timestamp": "2026-10-16T01:05:03.876Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  FriendPushScreenTests.vcxproj -> T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\build\\Release\\FriendPushScreenTests.exe\r\n"
+    },
+    {
+      "seq": 11,
+      "timestamp": "2026-10-16T01:05:03.912Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "  FriendPushScreen.vcxproj -> T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\build\\Release\\FriendPushScreen.exe\r\n"
+    },
+    {
+      "seq": 12,
+      "timestamp": "2026-10-16T01:05:03.966Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "Test project T:/Space/Projects/ProjectsProgram/FriendPushScreen/.worktrees/fps-006-encode-decode-local-loopback/build\n"
+    },
+    {
+      "seq": 13,
+      "timestamp": "2026-10-16T01:05:03.967Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "    Start 1: FriendPushScreenTests\n"
+    },
+    {
+      "seq": 14,
+      "timestamp": "2026-10-16T01:05:04.045Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "1/1 Test #1: FriendPushScreenTests ............   Passed    0.08 sec\n"
+    },
+    {
+      "seq": 15,
+      "timestamp": "2026-10-16T01:05:04.046Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "\n100% tests passed out of 1\n\nTotal Test time (real) =   0.08 sec\n"
+    },
+    {
+      "seq": 16,
+      "timestamp": "2026-10-16T01:05:06.558Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "RESULT input=120 encoded=120 decoded=120 keyframes=3 quality_fail=0 queue_max=1 drops=0 seconds=2.04813 fps=58.5901 bytes=4430834 encoder_gpu=120 decoder_gpu=120 encoder_cpu=0 decoder_cpu=0\r\nSYNTHETIC_LOOP_PASS\r\n"
+    },
+    {
+      "seq": 17,
+      "timestamp": "2026-10-16T01:05:09.247Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "RESULT input=120 encoded=120 decoded=120 keyframes=3 quality_fail=0 queue_max=1 drops=0 seconds=2.05788 fps=58.3124 bytes=1107283 encoder_gpu=0 decoder_gpu=120 encoder_cpu=120 decoder_cpu=0\r\n"
+    },
+    {
+      "seq": 18,
+      "timestamp": "2026-10-16T01:05:09.247Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "SYNTHETIC_LOOP_PASS\r\n"
+    },
+    {
+      "seq": 19,
+      "timestamp": "2026-10-16T01:05:11.973Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "RESULT input=120 encoded=120 decoded=120 keyframes=3 quality_fail=0 queue_max=1 drops=0 seconds=2.04343 fps=58.7247 bytes=4430834 encoder_gpu=120 decoder_gpu=0 encoder_cpu=0 decoder_cpu=120\r\n"
+    },
+    {
+      "seq": 20,
+      "timestamp": "2026-10-16T01:05:11.973Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "SYNTHETIC_LOOP_PASS\r\n"
+    },
+    {
+      "seq": 21,
+      "timestamp": "2026-10-16T01:05:14.954Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "RESULT input=120 encoded=120 decoded=120 keyframes=3 quality_fail=0 queue_max=1 drops=0 seconds=2.13758 fps=56.1382 bytes=1107283 encoder_gpu=0 decoder_gpu=0 encoder_cpu=120 decoder_cpu=120\r\n"
+    },
+    {
+      "seq": 22,
+      "timestamp": "2026-10-16T01:05:14.954Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "SYNTHETIC_LOOP_PASS\r\n"
+    },
+    {
+      "seq": 23,
+      "timestamp": "2026-10-16T01:05:14.965Z",
+      "type": "exit",
+      "exit_code": 0,
+      "signal": null
+    },
+    {
+      "seq": 24,
+      "timestamp": "2026-10-16T01:05:14.965Z",
+      "type": "streams_closed"
+    }
+  ],
+  "event_count": 24,
+  "has_more": false,
+  "next_cursor": 24
+}

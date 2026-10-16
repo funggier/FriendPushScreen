@@ -1,0 +1,90 @@
+{
+  "session": {
+    "session_id": "proc-1792112836970-178",
+    "label": "FPS final binary UI regression matrix",
+    "pid": 24440,
+    "program": "powershell.exe",
+    "args": [
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback\\.superpowers\\codec-ui-qualification\\RunFinalUi.ps1"
+    ],
+    "launcher": "direct",
+    "cwd": "T:\\Space\\Projects\\ProjectsProgram\\FriendPushScreen\\.worktrees\\fps-006-encode-decode-local-loopback",
+    "running": false,
+    "exit_code": 0,
+    "signal": null,
+    "started_at": "2026-10-16T01:07:16.970Z",
+    "completed_at": "2026-10-16T01:07:49.110Z",
+    "streams_closed": true,
+    "closed_at": "2026-10-16T01:07:49.110Z",
+    "elapsed_ms": 32140,
+    "next_seq": 9,
+    "dropped_through_seq": 0,
+    "buffered_event_count": 8
+  },
+  "after_seq": 0,
+  "overflowed": false,
+  "earliest_available_seq": 1,
+  "events": [
+    {
+      "seq": 1,
+      "timestamp": "2026-10-16T01:07:26.850Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "{\"encoder\":\"GPU\",\"decoder\":\"GPU\",\"encoder_choice\":\"[GPU] Intelr Quick Sync Video H.264 Encoder MFT\",\"decoder_choice\":\"[GPU] Microsoft H264 Video Decoder MFT\",\"status\":\"Encoder: [GPU] Intelr Quick Sync Video H.264 Encoder MFT\\nDecoder: [GPU] Microsoft H264 Video Decoder MFT\\nTarget 12 Mbps | Keyframe 90 frames | Encoder low latency off\\nDecoder low latency on\",\"source_preserved\":true,\"time\":\"2026-10-16T01:07:26.8457610Z\"}\r\n"
+    },
+    {
+      "seq": 2,
+      "timestamp": "2026-10-16T01:07:34.162Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "{\"encoder\":\"CPU\",\"decoder\":\"GPU\",\"encoder_choice\":\"[CPU] H264 Encoder MFT\",\"decoder_choice\":\"[GPU] Microsoft H264 Video Decoder MFT\",\"status\":\"Encoder: [CPU] H264 Encoder MFT\\nDecoder: [GPU] Microsoft H264 Video Decoder MFT\\nTarget 12 Mbps | Keyframe 90 frames | Encoder low latency off\\nDecoder low latency on\",\"source_preserved\":true,\"time\":\"2026-10-16T01:07:34.1618200Z\"}\r\n"
+    },
+    {
+      "seq": 3,
+      "timestamp": "2026-10-16T01:07:41.450Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "{\"encoder\":\"GPU\",\"decoder\":\"CPU\",\"encoder_choice\":\"[GPU] Intelr Quick Sync Video H.264 Encoder MFT\",\"decoder_choice\":\"[CPU] Microsoft H264 Video Decoder MFT\",\"status\":\"Encoder: [GPU] Intelr Quick Sync Video H.264 Encoder MFT\\nDecoder: [CPU] Microsoft H264 Video Decoder MFT\\nTarget 12 Mbps | Keyframe 90 frames | Encoder low latency off\\nDecoder low latency on\",\"source_preserved\":true,\"time\":\"2026-10-16T01:07:41.4506269Z\"}\r\n"
+    },
+    {
+      "seq": 4,
+      "timestamp": "2026-10-16T01:07:48.757Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "{\"encoder\":\"CPU\",\"decoder\":\"CPU\",\"encoder_choice\":\"[CPU] H264 Encoder MFT\",\"decoder_choice\":\"[CPU] Microsoft H264 Video Decoder MFT\",\"status\":\"Encoder: [CPU] H264 Encoder MFT\\nDecoder: [CPU] Microsoft H264 Video Decoder MFT\\nTarget 12 Mbps | Keyframe 90 frames | Encoder low latency off\\nDecoder low latency on\",\"source_preserved\":true,\"time\":\"2026-10-16T01:07:48.7561821Z\"}\r\n"
+    },
+    {
+      "seq": 5,
+      "timestamp": "2026-10-16T01:07:49.091Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "INVALID_INPUT_PASS DRAFT_RETENTION_PASS FOUR_MODE_UI_PASS\r\n"
+    },
+    {
+      "seq": 6,
+      "timestamp": "2026-10-16T01:07:49.091Z",
+      "type": "output",
+      "stream": "stdout",
+      "text": "RESTART_AND_FINAL_UI_PASS\r\n"
+    },
+    {
+      "seq": 7,
+      "timestamp": "2026-10-16T01:07:49.110Z",
+      "type": "exit",
+      "exit_code": 0,
+      "signal": null
+    },
+    {
+      "seq": 8,
+      "timestamp": "2026-10-16T01:07:49.110Z",
+      "type": "streams_closed"
+    }
+  ],
+  "event_count": 8,
+  "has_more": false,
+  "next_cursor": 8
+}

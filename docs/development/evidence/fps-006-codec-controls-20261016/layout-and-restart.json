@@ -1,0 +1,19 @@
+﻿{
+    "settings_open":  {
+                          "width":  1264,
+                          "height":  691
+                      },
+    "settings_hidden":  {
+                            "width":  1264,
+                            "height":  691
+                        },
+    "fullscreen":  {
+                       "width":  2560,
+                       "height":  1440
+                   },
+    "escaped":  {
+                    "width":  1264,
+                    "height":  691
+                },
+    "stop_start":  "PASS"
+}

@@ -1,0 +1,9 @@
+﻿{
+    "pid":  6508,
+    "root":  6167614,
+    "encoder":  "[CPU] H264 Encoder MFT  ▾",
+    "decoder":  "[GPU] Microsoft H264 Video Decoder MFT  ▾",
+    "bitrate":  "12",
+    "keyframe":  "90",
+    "binary_sha256":  "7F0FAC0675184092A0ACEAC69397ED8D8C40AEE25DC6C216757CC4007F40CA81"
+}

@@ -1,0 +1,8 @@
+﻿{
+    "source_commit":  "d116ab13ec9422174aa9ed7d761672d14f5b42a8",
+    "branch":  "fps-006-encode-decode-local-loopback",
+    "app_sha256":  "7F0FAC0675184092A0ACEAC69397ED8D8C40AEE25DC6C216757CC4007F40CA81",
+    "codec_probe_sha256":  "6084C2AE0E5BE72DF15E84E637EE57F7774ACD565CE00F943275CE0A38A935D6",
+    "time":  "2026-10-16T01:12:31.5461035Z",
+    "wip_files_unchanged":  15
+}
