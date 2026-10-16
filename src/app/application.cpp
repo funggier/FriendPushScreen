@@ -13,6 +13,8 @@
 #include "platform/windows/os_probe.h"
 #include "ui/settings_store.h"
 
+#include <mmsystem.h>
+#include <sstream>
 #include <objbase.h>
 #include <roapi.h>
 
@@ -408,7 +410,10 @@ Application::CreateCaptureSession(
 }
 
 void Application::StopCaptureSession() {
+    RecordCodecMetrics("stop");
     codec_loop_.reset();
+    codec_start_tick_ = 0;
+    if (timer_resolution_) { timeEndPeriod(1); timer_resolution_ = false; }
     codec_failed_ = false;
     if (capture_session_ != nullptr) {
         capture_session_->Stop();
@@ -506,6 +511,7 @@ void Application::StartCapturePreview() {
         return;
     }
 
+    timer_resolution_ = timeBeginPeriod(1) == TIMERR_NOERROR;
     last_capture_state_ =
         capture_session_->State();
     capture_status_ =
@@ -553,8 +559,9 @@ void Application::ToggleCapturePreview() {
     }
 }
 
-void Application::TickCapturePreview() {
-    if (!renderer_initialized_ || capture_session_ == nullptr) return;
+bool Application::TickCapturePreview() {
+    if (!renderer_initialized_ || capture_session_ == nullptr) return false;
+    const auto rendered_before = codec_loop_ ? codec_loop_->Metrics().rendered_frames : 0;
     capture::CapturedFrame frame{};
     const bool acquired = capture_session_->TryAcquireFrame(frame) && frame.IsValid();
     const auto state = capture_session_->State();
@@ -568,10 +575,10 @@ void Application::TickCapturePreview() {
             UpdateCaptureUi();
             if (state == capture::CaptureSessionState::SourceLost) RefreshCaptureSources();
         }
-        return;
+        return false;
     }
     last_capture_state_ = state;
-    if (codec_failed_) return;
+    if (codec_failed_) return false;
     const auto sink = [this](const capture::CapturedFrame& decoded) {
         if (!renderer_.RenderFrame(decoded)) return false;
         last_preview_frame_ = decoded;
@@ -586,6 +593,8 @@ void Application::TickCapturePreview() {
             const auto width = (frame.width + 1U) & ~1U;
             const auto height = (frame.height + 1U) & ~1U;
             if (!codec_loop_ || codec_loop_->Width() != width || codec_loop_->Height() != height) {
+                RecordCodecMetrics("resize");
+                codec_start_tick_ = GetTickCount64();
                 codec_loop_ = std::make_unique<media::VideoLocalLoop>();
                 media::VideoCodecConfig config;
                 config.width = width; config.height = height;
@@ -606,12 +615,32 @@ void Application::TickCapturePreview() {
         renderer_.RenderPlaceholder();
         diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Error, "codec", capture_status_);
         UpdateCaptureUi();
-        return;
+        return false;
     }
     if (GetTickCount64() - last_codec_status_tick_ >= 1000) {
         last_codec_status_tick_ = GetTickCount64();
         UpdateCaptureUi();
+        RecordCodecMetrics("progress");
     }
+    return acquired || (codec_loop_ && codec_loop_->Metrics().rendered_frames > rendered_before);
+}
+
+void Application::RecordCodecMetrics(const char* stage) {
+    if (!codec_metrics_ || !codec_loop_ || codec_start_tick_ == 0) return;
+    const auto& m = codec_loop_->Metrics();
+    const auto tail = codec_loop_->TailLatency();
+    const double seconds = (GetTickCount64() - codec_start_tick_) / 1000.0;
+    std::ostringstream out;
+    out << stage << " seconds=" << seconds << " capture=" << m.capture_frames
+        << " encoded=" << m.encoded_access_units << " decoded=" << m.decoded_frames
+        << " rendered=" << m.rendered_frames << " fps=" << (seconds > 0 ? m.rendered_frames / seconds : 0)
+        << " queue_max=" << m.max_queue_depth << " drops=" << m.dropped_frames
+        << " encode_p95_ms=" << tail.encode_p95_ms << " decode_p95_ms=" << tail.decode_p95_ms
+        << " e2e_p95_ms=" << tail.end_to_end_p95_ms << " gpu_input=" << codec_loop_->EncoderInfo().gpu_frames
+        << " gpu_output=" << codec_loop_->DecoderInfo().gpu_frames
+        << " encoder=" << codec_loop_->EncoderInfo().candidate.name
+        << " decoder=" << codec_loop_->DecoderInfo().candidate.name;
+    diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Info, "codec-metrics", out.str());
 }
 
 void Application::HandleUiCommand(
@@ -831,6 +860,8 @@ int Application::Run(
     raw_preview_ = GetEnvironmentVariableW(L"FPS_RAW_PREVIEW", option, 2) == 1 && option[0] == L'1';
     option[0] = 0;
     force_software_codec_ = GetEnvironmentVariableW(L"FPS_FORCE_SOFTWARE_CODEC", option, 2) == 1 && option[0] == L'1';
+    option[0] = 0;
+    codec_metrics_ = GetEnvironmentVariableW(L"FPS_CODEC_METRICS", option, 2) == 1 && option[0] == L'1';
 
     const auto os =
         platform::windows::
@@ -867,11 +898,6 @@ int Application::Run(
             } else {
                 renderer_.RenderPlaceholder();
             }
-        });
-
-    main_window_.SetFrameCallback(
-        [this]() {
-            TickCapturePreview();
         });
 
     main_window_.SetUiCommandCallback(
@@ -935,37 +961,24 @@ int Application::Run(
     RefreshDiagnostics();
 
     MSG message{};
-
-    while (true) {
-        const BOOL result =
-            GetMessageW(
-                &message,
-                nullptr,
-                0,
-                0);
-
-        if (result == 0) {
-            break;
+    bool quitting = false;
+    while (!quitting) {
+        // A 100 ms WM_TIMER limited the decoded path to 10 fps. Service UI
+        // messages before each capture/codec step; Present paces active frames.
+        for (unsigned count = 0; count < 64 && PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE); ++count) {
+            if (message.message == WM_QUIT) { quitting = true; break; }
+            if (main_window_.HandleShortcut(message)) continue;
+            TranslateMessage(&message);
+            DispatchMessageW(&message);
         }
-
-        if (result == -1) {
-            StopCaptureSession();
-
-            if (should_uninitialize) {
-                RoUninitialize();
-            }
-
-            return 2;
+        if (quitting) break;
+        if (!TickCapturePreview()) {
+            const bool active = capture_session_ && !codec_failed_ &&
+                capture_session_->State() != capture::CaptureSessionState::SourceLost &&
+                capture_session_->State() != capture::CaptureSessionState::Error;
+            MsgWaitForMultipleObjectsEx(0, nullptr, active ? 1 : INFINITE,
+                QS_ALLINPUT, MWMO_INPUTAVAILABLE);
         }
-
-        if (main_window_.
-                HandleShortcut(
-                    message)) {
-            continue;
-        }
-
-        TranslateMessage(&message);
-        DispatchMessageW(&message);
     }
 
     StopCaptureSession();

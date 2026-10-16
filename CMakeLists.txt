@@ -78,6 +78,7 @@ target_link_libraries(FriendPushScreen PRIVATE
     User32
     UxTheme
     WindowsApp
+    Winmm
 )
 
 

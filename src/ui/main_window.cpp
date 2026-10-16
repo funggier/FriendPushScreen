@@ -21,8 +21,6 @@ constexpr wchar_t kWindowClassName[] =
 constexpr wchar_t kRenderSurfaceClassName[] =
     L"FriendPushScreenRenderSurface";
 
-constexpr UINT_PTR kRenderTimerId = 1;
-constexpr UINT kRenderTimerMs = 100;
 constexpr UINT kDeferredUiCommandMessage =
     WM_APP + 0x70;
 
@@ -151,11 +149,6 @@ std::wstring NormalizeWin32MultilineText(
 void MainWindow::SetResizeCallback(
     ResizeCallback callback) {
     resize_callback_ = std::move(callback);
-}
-
-void MainWindow::SetFrameCallback(
-    FrameCallback callback) {
-    frame_callback_ = std::move(callback);
 }
 
 void MainWindow::SetUiCommandCallback(
@@ -487,12 +480,6 @@ bool MainWindow::Create(
         });
 
     LayoutChildren();
-
-    SetTimer(
-        hwnd_,
-        kRenderTimerId,
-        kRenderTimerMs,
-        nullptr);
 
     ShowWindow(
         hwnd_,
@@ -1045,14 +1032,6 @@ LRESULT MainWindow::HandleMessage(
         LayoutChildren();
         return 0;
 
-    case WM_TIMER:
-        if (wparam ==
-                kRenderTimerId &&
-            frame_callback_) {
-            frame_callback_();
-        }
-        return 0;
-
     case WM_COMMAND:
         if (LOWORD(wparam) ==
                 kSettingsToggleButtonId &&
@@ -1119,9 +1098,6 @@ LRESULT MainWindow::HandleMessage(
         return 0;
 
     case WM_DESTROY:
-        KillTimer(
-            hwnd,
-            kRenderTimerId);
         PostQuitMessage(0);
         return 0;
 

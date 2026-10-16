@@ -47,16 +47,24 @@ LRESULT CALLBACK FixtureProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
     }
     return DefWindowProcW(hwnd,msg,wp,lp);
 }
+template<class F> bool Timed(const char* stage,F&& action) {
+    const auto start=std::chrono::steady_clock::now();
+    const bool result=action();
+    const double ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
+    if(ms>=100)std::cout<<"STALL stage="<<stage<<" ms="<<ms<<"\n"<<std::flush;
+    return result;
+}
 ULONGLONG FileTimeValue(const FILETIME& time) {return (static_cast<ULONGLONG>(time.dwHighDateTime)<<32)|time.dwLowDateTime;}
 ULONGLONG CpuTime() {FILETIME a{},b{},c{},d{};GetProcessTimes(GetCurrentProcess(),&a,&b,&c,&d);return FileTimeValue(c)+FileTimeValue(d);}
 }
 int main(int argc,char** argv) {
-    std::string source_kind="window";double seconds=10;bool software=false;bool require_1080=false;
+    std::string source_kind="window";double seconds=10;bool software=false;bool require_1080=false;bool fixture_only=false;
     for(int n=1;n<argc;++n) {
         const std::string arg=argv[n];
         if(arg=="--source" && n+1<argc)source_kind=argv[++n];
         else if(arg=="--seconds" && n+1<argc)seconds=std::stod(argv[++n]);
         else if(arg=="--software")software=true;
+        else if(arg=="--fixture-only")fixture_only=true;
         else if(arg=="--require-1080p60")require_1080=true;
         else {std::cerr<<"Unknown argument "<<arg<<"\n";return 2;}
     }
@@ -93,6 +101,15 @@ int main(int argc,char** argv) {
         });
         fixture=ready.get();
         if(!fixture)return 2;
+    }
+    if(fixture_only) {
+        if(!fixture)return 2;
+        std::cout<<"FIXTURE_READY hwnd="<<reinterpret_cast<std::uintptr_t>(fixture)<<"\n"<<std::flush;
+        const auto until=std::chrono::steady_clock::now()+std::chrono::duration<double>(seconds);
+        while(std::chrono::steady_clock::now()<until && IsWindow(fixture))Sleep(20);
+        fixture_thread.request_stop();fixture_thread.join();
+        if(SUCCEEDED(ro))RoUninitialize();
+        return 0;
     }
     HWND window=CreateWindowExW(WS_EX_NOACTIVATE,wc.lpszClassName,L"FPS-006 H.264 DECODED local loop",
         WS_OVERLAPPEDWINDOW|WS_VISIBLE,1600,850,800,520,nullptr,nullptr,instance,nullptr);
@@ -143,7 +160,7 @@ int main(int argc,char** argv) {
         ULONGLONG cpu_start=CpuTime();SIZE_T max_private=0,min_private=MAXSIZE_T,max_ws=0;
         std::uint64_t source_gaps=0,last_source_seq=0;
         unsigned width=0,height=0;
-        const auto sink=[&](const capture::CapturedFrame& frame){return renderer.RenderFrame(frame);};
+        const auto sink=[&](const capture::CapturedFrame& frame){return Timed("present",[&]{return renderer.RenderFrame(frame);});};
         while(!quit) {
             MSG message{};
             while(PeekMessageW(&message,nullptr,0,0,PM_REMOVE)) {
@@ -153,7 +170,7 @@ int main(int argc,char** argv) {
             auto now=std::chrono::steady_clock::now();
             const auto rendered_before=loop.Metrics().rendered_frames;
             capture::CapturedFrame frame;
-            const bool acquired=capture_session->TryAcquireFrame(frame) && frame.IsValid();
+            const bool acquired=Timed("capture",[&]{return capture_session->TryAcquireFrame(frame);}) && frame.IsValid();
             if(acquired) {
                 if(last_source_seq && frame.sequence>last_source_seq+1)source_gaps+=frame.sequence-last_source_seq-1;
                 last_source_seq=frame.sequence;
@@ -168,9 +185,9 @@ int main(int argc,char** argv) {
                         <<" async="<<loop.EncoderInfo().asynchronous<<"\nDECODER "<<loop.DecoderInfo().candidate.name
                         <<" surfaces="<<loop.DecoderInfo().surface_io<<"\n"<<std::flush;
                 }
-                if(!loop.Push(frame,sink)){failed=true;break;}
+                if(!Timed("push",[&]{return loop.Push(frame,sink);})){failed=true;break;}
             }
-            if(initialized && !loop.Poll(sink)){failed=true;break;}
+            if(initialized && !Timed("poll",[&]{return loop.Poll(sink);})){failed=true;break;}
             if(capture_session->State()==capture::CaptureSessionState::Error ||
                 capture_session->State()==capture::CaptureSessionState::SourceLost) {failed=true;break;}
             now=std::chrono::steady_clock::now();

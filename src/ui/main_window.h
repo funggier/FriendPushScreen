@@ -39,8 +39,6 @@ class MainWindow {
 public:
     using ResizeCallback =
         std::function<void(UINT, UINT)>;
-    using FrameCallback =
-        std::function<void()>;
     using UiCommandCallback =
         std::function<void(const UiCommand&)>;
     using CommandCallback =
@@ -60,9 +58,6 @@ public:
 
     void SetResizeCallback(
         ResizeCallback callback);
-
-    void SetFrameCallback(
-        FrameCallback callback);
 
     void SetUiCommandCallback(
         UiCommandCallback callback);
@@ -136,7 +131,6 @@ private:
     SettingsPanel settings_panel_;
 
     ResizeCallback resize_callback_;
-    FrameCallback frame_callback_;
     UiCommandCallback ui_command_callback_;
     CommandCallback diagnostics_ready_callback_;
     std::deque<UiCommand> deferred_ui_commands_;

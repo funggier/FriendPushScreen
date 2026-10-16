@@ -45,7 +45,8 @@ private:
             source);
 
     void StopCaptureSession();
-    void TickCapturePreview();
+    bool TickCapturePreview();
+    void RecordCodecMetrics(const char* stage);
     void UpdateCaptureUi();
 
     void HandleUiCommand(
@@ -89,6 +90,9 @@ private:
     std::unique_ptr<media::VideoLocalLoop> codec_loop_;
     bool codec_failed_{false};
     bool raw_preview_{false};
+    bool codec_metrics_{false};
+    bool timer_resolution_{false};
+    ULONGLONG codec_start_tick_{0};
     bool force_software_codec_{false};
     ULONGLONG last_codec_status_tick_{0};
     bool renderer_initialized_{false};

@@ -4,6 +4,7 @@ param(
  [ValidateSet('Debug','Release')][string]$Configuration='Release',
  [switch]$Require1080p60,
  [switch]$ForceSoftware,
+ [switch]$SkipGpuCounters,
  [string]$EvidenceDirectory
 )
 $ErrorActionPreference='Stop'
@@ -33,17 +34,17 @@ $probeProcessId=$process.Id
 # Force opening/retaining the process handle before an early exit (Windows PowerShell).
 $processHandle=$process.Handle
 Write-Output ('EVIDENCE_DIR='+$EvidenceDirectory+' PROBE_PID='+$probeProcessId)
-@{source=$Source;seconds=$Seconds;configuration=$Configuration;exe=$exe;args=$probeArgs;process_id=$probeProcessId;started_utc=$started.ToUniversalTime().ToString('o');git_head=(& git -C $repo rev-parse HEAD);git_status=@(& git -C $repo status --porcelain);binary_sha256=(Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash} | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 (Join-Path $EvidenceDirectory 'identity.json')
+@{source=$Source;seconds=$Seconds;configuration=$Configuration;exe=$exe;args=$probeArgs;process_id=$probeProcessId;gpu_counters_enabled=(-not $SkipGpuCounters);started_utc=$started.ToUniversalTime().ToString('o');git_head=(& git -C $repo rev-parse HEAD);git_status=@(& git -C $repo status --porcelain);binary_sha256=(Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash} | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 (Join-Path $EvidenceDirectory 'identity.json')
 $gpuSamples=@();$processSamples=@();$counterError=$null;$timedOut=$false
 while(-not $process.HasExited){
  try{
   $live=Get-Process -Id $probeProcessId -ErrorAction Stop
   $processSamples+=[PSCustomObject]@{utc=(Get-Date).ToUniversalTime().ToString('o');cpu_seconds=$live.CPU;private_bytes=$live.PrivateMemorySize64;working_set_bytes=$live.WorkingSet64}
  }catch{}
- try{
+ if(-not $SkipGpuCounters){try{
   $rows=Get-CimInstance Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine -Filter ("Name LIKE 'pid_"+$probeProcessId+"_%'") -ErrorAction Stop
   foreach($row in $rows){$gpuSamples+=[PSCustomObject]@{utc=(Get-Date).ToUniversalTime().ToString('o');name=$row.Name;utilization_percent=$row.UtilizationPercentage}}
- }catch{$counterError=$_.Exception.Message}
+ }catch{$counterError=$_.Exception.Message}}
  if(((Get-Date)-$started).TotalSeconds -gt $Seconds+45){$timedOut=$true;Stop-Process -Id $probeProcessId -ErrorAction SilentlyContinue;break}
  Start-Sleep -Seconds 1
  $process.Refresh()
