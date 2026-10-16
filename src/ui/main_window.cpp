@@ -1,4 +1,5 @@
 #include "ui/main_window.h"
+#include "capture/feedback_protection.h"
 
 #include "diagnostics/diagnostics_service.h"
 #include "resource.h"
@@ -380,6 +381,7 @@ bool MainWindow::Create(
         return false;
     }
 
+    capture::ConfigureCaptureExclusion(hwnd_);
     const BOOL use_dark_mode = TRUE;
     constexpr DWORD kImmersiveDarkModeAttribute = 20;
     DwmSetWindowAttribute(

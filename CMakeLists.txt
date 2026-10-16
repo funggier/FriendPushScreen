@@ -27,6 +27,7 @@ add_executable(FriendPushScreen WIN32
     src/ui/settings_panel.cpp
     src/ui/theme.cpp
     src/capture/capture_source.cpp
+    src/capture/feedback_protection.cpp
     src/capture/capture_source_catalog.cpp
     src/capture/desktop_duplication_capture.cpp
     src/capture/windows_graphics_capture.cpp
@@ -140,6 +141,7 @@ enable_testing()
 add_executable(FriendPushScreenTests
     tests/test_main.cpp
     tests/peer_identity_tests.cpp
+    tests/feedback_protection_tests.cpp
     tests/diagnostics_formatter_tests.cpp
     tests/platform_filter_tests.cpp
     tests/diagnostics_service_tests.cpp
@@ -153,6 +155,7 @@ add_executable(FriendPushScreenTests
     tests/video_loop_metrics_tests.cpp
     tests/mft_video_media_type_tests.cpp
     src/capture/capture_source.cpp
+    src/capture/feedback_protection.cpp
     src/capture/capture_source_catalog.cpp
     src/capture/desktop_duplication_capture.cpp
     src/capture/windows_graphics_capture.cpp
@@ -234,6 +237,7 @@ add_executable(FriendPushScreenCaptureLoopProbe
     src/media/video_loop_metrics.cpp
     src/media/capture_device_probe.cpp
     src/capture/capture_source.cpp
+    src/capture/feedback_protection.cpp
     src/capture/capture_source_catalog.cpp
     src/capture/desktop_duplication_capture.cpp
     src/capture/windows_graphics_capture.cpp
