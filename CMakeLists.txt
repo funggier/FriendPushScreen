@@ -57,6 +57,8 @@ add_executable(FriendPushScreen WIN32
     src/media/mft_video_transform_activation.cpp
     src/media/mft_transform_session.cpp
     src/media/mf_video_codec.cpp
+    src/media/video_frame_normalizer.cpp
+    src/media/video_peer_stream.cpp
     src/media/video_local_loop.cpp
     src/graphics/d3d11_video_converter.cpp
 )
@@ -191,9 +193,12 @@ add_executable(FriendPushScreenTests
     src/ui/theme.cpp
     src/media/mft_transform_session.cpp
     src/media/mf_video_codec.cpp
+    src/media/video_frame_normalizer.cpp
+    src/media/video_peer_stream.cpp
     src/media/video_local_loop.cpp
     src/graphics/d3d11_video_converter.cpp
     tests/video_local_loop_tests.cpp
+    tests/video_peer_stream_tests.cpp
 )
 target_include_directories(FriendPushScreenTests PRIVATE
     tests
@@ -226,6 +231,8 @@ add_test(NAME FriendPushScreenTests COMMAND FriendPushScreenTests)
 
 add_executable(FriendPushScreenCaptureLoopProbe
     tools/capture_loop_probe/main.cpp
+    src/media/video_frame_normalizer.cpp
+    src/media/video_peer_stream.cpp
     src/media/video_local_loop.cpp
     src/media/mf_video_codec.cpp
     src/media/mft_transform_session.cpp
@@ -271,3 +278,5 @@ fps_copy_msquic_runtime(FriendPushScreenPeerProbe)
 
 add_test(NAME FriendPushScreenSecurePeerTests COMMAND FriendPushScreenPeerProbe --self-test "${CMAKE_CURRENT_BINARY_DIR}/secure-peer-tests")
 set_tests_properties(FriendPushScreenSecurePeerTests PROPERTIES TIMEOUT 45)
+
+target_link_libraries(FriendPushScreenCaptureLoopProbe PRIVATE fps_network)

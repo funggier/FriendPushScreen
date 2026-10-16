@@ -32,6 +32,7 @@ struct VideoWireFrame {
     VideoFormat format;
     bool keyframe{};
     CursorRecord cursor;
+    std::shared_ptr<void> receive_credit; // Local lifetime only; never serialized.
     std::vector<std::uint8_t> bytes;
 };
 bool ValidateVideoFormat(const VideoFormat&);
@@ -39,5 +40,6 @@ std::vector<std::uint8_t> EncodeControl(const ControlMessage&);
 std::optional<ControlMessage> DecodeControl(std::span<const std::uint8_t>,std::string&);
 std::vector<std::uint8_t> EncodeVideo(const VideoWireFrame&);
 std::optional<VideoWireFrame> DecodeVideo(std::span<const std::uint8_t>,std::string&);
+bool IsValidVideoWireFrame(const VideoWireFrame&);
 bool HasRandomAccessParameterSets(std::span<const std::uint8_t>);
 }

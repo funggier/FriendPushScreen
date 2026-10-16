@@ -1,5 +1,6 @@
 #pragma once
 #include "media/mf_video_codec.h"
+#include "media/video_frame_normalizer.h"
 #include "media/video_loop_metrics.h"
 #include <functional>
 #include <map>
@@ -49,9 +50,7 @@ private:
         capture::CapturedCursor cursor;
     };
     std::map<std::uint64_t,Tracking> tracking_;
-    Microsoft::WRL::ComPtr<ID3D11Device> device_;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext> context_;
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> pad_;
+    VideoFrameNormalizer normalizer_;
     VideoLoopState state_{VideoLoopState::Stopped};
     std::string error_;
     std::uint64_t cpu_input_frames_{0},padded_frames_{0},encoded_bytes_{0};

@@ -16,6 +16,7 @@ void RunRuntimePathsTests();
 void RunVideoPipelineModelTests();
 void RunVideoLoopMetricsTests();
 void RunMftVideoMediaTypeTests();
+void RunVideoPeerStreamTests();
 void RunVideoLocalLoopTests();
 
 int main() {
@@ -38,5 +39,6 @@ int main() {
     RunVideoLoopMetricsTests();
     RunMftVideoMediaTypeTests();
     RunVideoLocalLoopTests();
+    RunVideoPeerStreamTests();
     return fps::test::FailureCount() == 0 ? 0 : 1;
 }

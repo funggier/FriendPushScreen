@@ -31,7 +31,7 @@ bool VideoLocalLoop::Initialize(ID3D11Device* device,VideoCodecConfig config,
     config_=config;clock_=VideoFrameClock(config.fps_numerator,config.fps_denominator);
     queue_=BoundedEncodedQueue(2);tracking_.clear();metrics_.Reset();
     encode_tail_.clear();decode_tail_.clear();e2e_tail_.clear();error_.clear();
-    device_=device;context_.Reset();pad_.Reset();if(device)device->GetImmediateContext(&context_);
+    normalizer_.Configure(device,config.width,config.height);
     cpu_input_frames_=0;padded_frames_=0;encoded_bytes_=0;state_=VideoLoopState::Starting;
     if(!encoder_->Initialize(device,config,encoder_policy))return Fail("Encoder: "+encoder_->Error());
     if(!decoder_->Initialize(device,config,decoder_policy))return Fail("Decoder: "+decoder_->Error());
@@ -39,38 +39,13 @@ bool VideoLocalLoop::Initialize(ID3D11Device* device,VideoCodecConfig config,
 }
 void VideoLocalLoop::Stop() {
     encoder_->Stop();decoder_->Stop();
-    tracking_.clear();queue_.Clear();pad_.Reset();context_.Reset();device_.Reset();state_=VideoLoopState::Stopped;
+    tracking_.clear();queue_.Clear();normalizer_.Stop();state_=VideoLoopState::Stopped;
 }
 bool VideoLocalLoop::Normalize(const capture::CapturedFrame& source,capture::CapturedFrame& frame) {
-    if(!source.IsValid() || source.width>config_.width || source.height>config_.height ||
-        config_.width-source.width>1 || config_.height-source.height>1)return Fail("Capture size changed; restart codec");
-    if(source.width==config_.width && source.height==config_.height) {frame=source;return true;}
-    if(!device_ || !context_)return Fail("Padding requires D3D11 device");
-    ++padded_frames_;frame=source;frame.width=config_.width;frame.height=config_.height;
-    frame.bgra.clear();frame.row_pitch=0;frame.texture.Reset();
-    if(!pad_) {
-        D3D11_TEXTURE2D_DESC desc{};desc.Width=config_.width;desc.Height=config_.height;
-        desc.MipLevels=1;desc.ArraySize=1;desc.SampleDesc.Count=1;desc.Format=DXGI_FORMAT_B8G8R8A8_UNORM;
-        desc.BindFlags=D3D11_BIND_RENDER_TARGET|D3D11_BIND_SHADER_RESOURCE;
-        if(FAILED(device_->CreateTexture2D(&desc,nullptr,&pad_)))return Fail("Padding texture failed");
-        std::vector<std::uint8_t> black(static_cast<size_t>(config_.width)*config_.height*4,0);
-        context_->UpdateSubresource(pad_.Get(),0,nullptr,black.data(),config_.width*4,0);
-    }
-    if(source.HasGpuTexture()) {
-        Microsoft::WRL::ComPtr<ID3D11Device> owner;source.texture->GetDevice(&owner);
-        D3D11_TEXTURE2D_DESC desc{};source.texture->GetDesc(&desc);
-        if(owner.Get()!=device_.Get() || desc.Width<source.width || desc.Height<source.height ||
-            desc.Format!=DXGI_FORMAT_B8G8R8A8_UNORM || desc.SampleDesc.Count!=1)return Fail("Invalid padding GPU source");
-        const D3D11_BOX box{0,0,0,source.width,source.height,1};
-        context_->CopySubresourceRegion(pad_.Get(),0,0,0,0,source.texture.Get(),0,&box);
-    } else {
-        const UINT pitch=source.row_pitch ? source.row_pitch : source.width*4;
-        if(pitch<source.width*4 || static_cast<std::uint64_t>(pitch)*source.height>source.bgra.size())
-            return Fail("Invalid padding CPU source");
-        const D3D11_BOX box{0,0,0,source.width,source.height,1};
-        context_->UpdateSubresource(pad_.Get(),0,&box,source.bgra.data(),pitch,0);
-    }
-    frame.texture=pad_;return true;
+    std::string error;
+    if(!normalizer_.Normalize(source,frame,error))return Fail(error);
+    if(source.width!=config_.width||source.height!=config_.height)++padded_frames_;
+    return true;
 }
 bool VideoLocalLoop::Push(const capture::CapturedFrame& source,const FrameSink& sink) {
     if(state_==VideoLoopState::Stopped || state_==VideoLoopState::Error)return false;
@@ -141,15 +116,8 @@ bool VideoLocalLoop::Consume(std::vector<capture::CapturedFrame>& frames,const F
         auto& t=found->second;auto latency=Now()-t.decode_start;
         metrics_.OnDecoded(latency);Record(decode_tail_,latency);
         frame.cursor=std::move(t.cursor);
-        if(frame.width!=t.width || frame.height!=t.height) {
-            if(!context_ || !device_ || frame.width<t.width || frame.height<t.height)return Fail("Decoded visible size invalid");
-            D3D11_TEXTURE2D_DESC desc{};frame.texture->GetDesc(&desc);desc.Width=t.width;desc.Height=t.height;
-            Microsoft::WRL::ComPtr<ID3D11Texture2D> cropped;
-            if(FAILED(device_->CreateTexture2D(&desc,nullptr,&cropped)))return Fail("Visible texture failed");
-            const D3D11_BOX box{0,0,0,t.width,t.height,1};
-            context_->CopySubresourceRegion(cropped.Get(),0,0,0,0,frame.texture.Get(),0,&box);
-            frame.texture=cropped;frame.width=t.width;frame.height=t.height;
-        }
+        std::string crop_error;
+        if(!normalizer_.RestoreVisible(frame,t.width,t.height,crop_error))return Fail(crop_error);
         if(!sink(frame))return Fail("Decoded preview renderer failed");
         const auto e2e=Now()-t.arrival;
         metrics_.OnRendered(e2e);Record(e2e_tail_,e2e);tracking_.erase(found);

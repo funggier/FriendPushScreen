@@ -43,6 +43,7 @@ bool FrameValid(const VideoWireFrame& f) {
         !f.bytes.empty()&&f.bytes.size()<=kMaxMediaBytes-136&&f.cursor.bgra.size()<=kMaxMediaBytes-136-f.bytes.size();
 }
 }
+bool IsValidVideoWireFrame(const VideoWireFrame& f){return FrameValid(f);}
 bool ValidateVideoFormat(const VideoFormat& f) {
     return f.coded_width&&f.coded_height&&f.coded_width<=4096&&f.coded_height<=4096&&
         f.coded_width%2==0&&f.coded_height%2==0&&f.visible_width&&f.visible_height&&
