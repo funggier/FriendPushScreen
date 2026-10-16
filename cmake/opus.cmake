@@ -30,3 +30,6 @@ add_library(fps_audio STATIC src/audio/audio_model.cpp src/audio/opus_codec.cpp)
 target_include_directories(fps_audio PUBLIC src)
 target_link_libraries(fps_audio PRIVATE Opus::opus)
 fps_apply_warnings(fps_audio)
+
+target_sources(fps_audio PRIVATE src/audio/wasapi_audio.cpp)
+target_link_libraries(fps_audio PRIVATE Ole32 Uuid)

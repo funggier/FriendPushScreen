@@ -308,3 +308,9 @@ fps_apply_warnings(FriendPushScreenFeedbackProbe)
 fps_copy_msquic_runtime(FriendPushScreenFeedbackProbe)
 target_sources(FriendPushScreenTests PRIVATE tests/audio_tests.cpp)
 target_link_libraries(FriendPushScreenTests PRIVATE fps_audio)
+
+target_sources(FriendPushScreenTests PRIVATE tests/wasapi_audio_tests.cpp)
+
+add_executable(FriendPushScreenAudioProbe tools/audio_probe/main.cpp)
+target_link_libraries(FriendPushScreenAudioProbe PRIVATE fps_audio)
+fps_apply_warnings(FriendPushScreenAudioProbe)
