@@ -24,6 +24,25 @@ int main(int argc,char** argv) {
             std::cout<<"{\"sources\":[";bool first=true;for(const auto& s:catalog.sources){if(!first)std::cout<<',';first=false;std::cout<<"{\"id\":\""<<Json(s.id)<<"\",\"name\":\""<<Json(s.name)<<"\",\"supported\":"<<(s.supported?"true":"false")<<"}";}
             std::cout<<"],\"outputs\":[";first=true;for(const auto& o:catalog.outputs){if(!first)std::cout<<',';first=false;std::cout<<"{\"id\":\""<<Json(o.id)<<"\",\"name\":\""<<Json(o.name)<<"\",\"default\":"<<(o.is_default?"true":"false")<<"}";}
             std::cout<<"],\"process\":\""<<Json(catalog.process_reason)<<"\"}\n";
+        }else if(mode=="--meter"||mode=="--capture-test") {
+            WasapiAudioSource source;
+            if(!source.Start(sourceId,error)){std::cerr<<error;result=3;}
+            else {
+                std::uint64_t frames=0,samples=0;double energy=0,peak=0,cs=0,sn=0;
+                const auto start=GetTickCount64();
+                while(GetTickCount64()-start<seconds*1000ULL) {
+                    std::vector<AudioPcmChunk> chunks;if(!source.Poll(chunks,error)){result=4;break;}
+                    for(const auto& chunk:chunks)for(std::size_t i=0;i+1<chunk.samples.size();i+=2) {
+                        const double left=chunk.samples[i],right=chunk.samples[i+1];
+                        energy+=left*left+right*right;peak=std::max({peak,std::abs(left),std::abs(right)});samples+=2;
+                        const double phase=6.283185307179586*440*static_cast<double>(frames++)/48000;
+                        cs+=left*std::cos(phase);sn+=left*std::sin(phase);
+                    }
+                    Sleep(1);
+                }
+                if(mode=="--capture-test"&&frames<10000)result=6;
+                std::cout<<"{\"mode\":\""<<mode<<"\",\"result\":"<<result<<",\"frames\":"<<frames<<",\"rms\":"<<std::sqrt(energy/std::max<std::uint64_t>(1,samples))<<",\"peak\":"<<peak<<",\"tone440_amplitude\":"<<2*std::sqrt(cs*cs+sn*sn)/std::max<std::uint64_t>(1,frames)<<",\"error\":\""<<Json(error)<<"\"}\n";
+            }
         }else if(mode=="--tone") {
             WasapiAudioRenderer tone;
             if(!tone.Start(outputId,error)){std::cerr<<error;result=3;}

@@ -180,7 +180,7 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
                 const auto status=self.api->StreamOpen(handle,QUIC_STREAM_OPEN_FLAG_NONE,StreamCallback,stream.get(),&stream->handle);
                 if(QUIC_FAILED(status)){self.Error(&c,"Control stream open failed",status);self.CloseProtocol(c,"Control stream unavailable");break;}
                 c.control=stream.get();c.streams.push_back(std::move(stream));
-                const std::uint16_t priority=65535;self.api->SetParam(c.control->handle,QUIC_PARAM_STREAM_PRIORITY,sizeof(priority),&priority);
+
                 const auto start=self.api->StreamStart(c.control->handle,QUIC_STREAM_START_FLAG_IMMEDIATE);
                 if(QUIC_FAILED(start)){self.CloseProtocol(c,"Control stream start failed");break;}
                 if(!self.Send(*c.control,{0,0,0,0},true,false)){self.CloseProtocol(c,"Control stream announcement failed");break;}
@@ -203,7 +203,7 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
                     raw->receiveAccounted=true;++self.metrics.receive_media_count;
                     self.metrics.max_receive_media_count=std::max(self.metrics.max_receive_media_count,self.metrics.receive_media_count);
                 }
-            } else {c.control=raw;const std::uint16_t priority=65535;self.api->SetParam(raw->handle,QUIC_PARAM_STREAM_PRIORITY,sizeof(priority),&priority);self.Announce(c);}
+            } else {c.control=raw;self.Announce(c);}
             break;
         }
         case QUIC_CONNECTION_EVENT_SHUTDOWN_INITIATED_BY_TRANSPORT:
@@ -450,7 +450,8 @@ TransportSendResult SecurePeerTransport::SendVideo(std::vector<std::uint8_t> byt
     ++self.metrics.send_media_count;self.metrics.send_media_bytes+=bytes.size();
     self.metrics.max_send_media_count=std::max(self.metrics.max_send_media_count,self.metrics.send_media_count);
     self.metrics.max_send_media_bytes=std::max(self.metrics.max_send_media_bytes,self.metrics.send_media_bytes);
-    const std::uint16_t priority=0;self.api->SetParam(raw->handle,QUIC_PARAM_STREAM_PRIORITY,sizeof(priority),&priority);
+    // SetParam is synchronous on an established connection. Never call it while
+    // holding the mutex needed by MsQuic callbacks; the worker orders control/audio/video.
     status=self.api->StreamStart(raw->handle,QUIC_STREAM_START_FLAG_IMMEDIATE);
     if(QUIC_FAILED(status)||!self.Send(*raw,std::move(bytes),false,true)) {
         self.api->StreamShutdown(raw->handle,QUIC_STREAM_SHUTDOWN_FLAG_ABORT,kExpiredMedia);return TransportSendResult::Backpressure;

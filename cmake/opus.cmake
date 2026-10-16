@@ -38,3 +38,5 @@ target_sources(fps_audio PRIVATE src/audio/audio_session.cpp)
 
 target_sources(fps_audio PRIVATE src/audio/peer_audio.cpp)
 target_link_libraries(fps_audio PRIVATE fps_network)
+
+target_sources(fps_audio PRIVATE src/audio/audio_worker.cpp)

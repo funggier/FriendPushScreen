@@ -17,7 +17,19 @@ struct PeerAudioSnapshot {
     std::string source,output,status,error;
     AudioCatalog catalog;
 };
-class PeerAudio {
+class IPeerAudio {
+public:
+    using ControlSender=std::function<bool(std::vector<std::uint8_t>)>;
+    using AudioSender=std::function<bool(std::vector<std::uint8_t>)>;
+    virtual ~IPeerAudio()=default;
+    virtual void Configure(AudioPreferences,bool)=0;
+    virtual void Bind(std::uint64_t,std::uint64_t)=0;
+    virtual void OnControl(std::uint64_t,std::span<const std::uint8_t>)=0;
+    virtual void OnAudio(std::uint64_t,std::span<const std::uint8_t>)=0;
+    virtual void Tick(const ControlSender&,const AudioSender&)=0;
+    virtual PeerAudioSnapshot Snapshot()const=0;
+};
+class PeerAudio final:public IPeerAudio {
 public:
     using ControlSender=std::function<bool(std::vector<std::uint8_t>)>;
     using AudioSender=std::function<bool(std::vector<std::uint8_t>)>;

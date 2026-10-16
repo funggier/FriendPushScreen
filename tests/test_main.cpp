@@ -3,6 +3,8 @@
 void RunWasapiAudioTests();
 void RunPeerAudioTests();
 void RunAudioUiTests();
+void RunAudioRetryTests();
+void RunAudioWorkerTests();
 void RunAudioTests();
 void RunFeedbackProtectionTests();
 void RunPeerSessionTests();
@@ -31,6 +33,8 @@ int main() {
     RunWasapiAudioTests();
     RunPeerAudioTests();
     RunAudioUiTests();
+    RunAudioRetryTests();
+    RunAudioWorkerTests();
     RunAudioTests();
     RunPeerIdentityTests();
     RunPeerProtocolTests();

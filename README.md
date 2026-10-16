@@ -18,7 +18,7 @@ V1 targets:
 - H.264 compatibility baseline
 - capability-dependent HEVC and AV1
 - sender Audio Source dropdown: No Audio / System / Device / capability-dependent Application Audio
-- receiver remote-audio mute/unmute and local volume
+- receiver remote-audio mute/unmute, local volume and selectable playback device
 - LAN / Direct IP-DDNS / Tailscale connection modes
 - secure Direct Internet requirement with a one-public-UDP-port operational target when feasible
 - low-latency Direct P2P preference
@@ -133,7 +133,7 @@ See:
 - `docs/development/QUALIFICATION-MATRIX.md`
 - `docs/architecture/DECISION-GATES.md`
 
-Build instructions are available in `docs/BUILDING.md`. The current executable includes native diagnostics, unified capture, and decoded H.264 local preview. Secure peer video is available for the loopback evaluation described below. Audio capture/playback and non-loopback connectivity remain later qualification tasks.
+Build instructions are available in `docs/BUILDING.md`. The current executable includes native diagnostics, unified capture, and decoded H.264 local preview. Secure peer video is available for the loopback evaluation described below. Native WASAPI/Opus audio and selectable playback devices now have local/secure-loopback evidence; non-loopback connectivity remains gated. See docs/development/reports/FPS-20261017-native-audio-qualification.md for measured limits.
 
 ## Two portable instances on one PC
 
@@ -155,3 +155,7 @@ The application bounds media to two access units per direction, waits for the re
 Both application windows are excluded from capture where Windows supports it. Monitor capture also applies the checked black-mask fallback, and selecting an application's own viewer window is rejected. Physical feedback, recovery and sustained performance results must be read from the dated qualification report, not inferred from these implementation notes.
 
 `FPS_CODEC_METRICS=1` enables bounded diagnostic traces and actual codec/transport counters. These development diagnostics are opt-in; normal video operation does not require them.
+
+## Shared audio on the localhost evaluation
+
+Choose an Audio Source, then Share. Remote Audio Output selects Default Output Device or a specific output independently from the source. Receiver mute/volume apply locally. No Audio stops outgoing audio while video and incoming media continue. Source/output IDs are saved. For two copies on one PC, choose different loopback-source and playback endpoints; the app blocks a route that would digitally recapture its own/peer playback. Application/process capture is unsupported on the Windows19045 reference machine. This evaluation uses matched ALPN2 builds and is not remote-network/V1 acceptance.

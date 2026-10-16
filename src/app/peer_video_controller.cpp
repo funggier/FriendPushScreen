@@ -1,5 +1,6 @@
 #include "app/peer_video_controller.h"
 #include "network/peer_video_flow.h"
+#include "audio/audio_worker.h"
 #include <bcrypt.h>
 #include <objbase.h>
 #include <mmsystem.h>
@@ -112,21 +113,21 @@ struct PeerVideoController::Impl {
     void Worker(std::stop_token stop) {
         const auto com=CoInitializeEx(nullptr,COINIT_MULTITHREADED);
         {
-        SecurePeerTransport transport;audio::PeerAudio audioEngine;bool precision=false;std::uint64_t lastAudioSnapshot=0,syncedWorkerAudioConnection=0;
+        SecurePeerTransport transport;audio::PeerAudioWorker audioEngine;bool precision=false;std::uint64_t lastAudioSnapshot=0;
         while(!stop.stop_requested()) {
             std::deque<Command> pending;std::deque<Command> videos;
             {std::lock_guard lock(mutex);pending.swap(commands);}
             for(auto& command:pending) {
                 if(command.epoch<workerEpoch)continue;
                 if(command.kind==CommandKind::Start) {
-                    workerEpoch=command.epoch;audioEngine.Bind(0,0);std::string reason;
+                    workerEpoch=command.epoch;audioEngine.Configure(0,0,{},false);std::string reason;
                     if(transport.Start(*identity,command.peer,{directory/"transport",command.port,true,250},reason)) {
                         if(!precision)precision=timeBeginPeriod(1)==TIMERR_NOERROR;
                         {std::lock_guard lock(mutex);actualPort=transport.ListenPort();runtime=transport.RuntimeInfo();}
                         Notice notice;notice.kind=NoticeKind::Started;notice.epoch=workerEpoch;NoticeOut(std::move(notice));
                     }else {{std::lock_guard lock(mutex);actualPort=0;}Failure(reason);}
                 } else if(command.kind==CommandKind::Stop) {
-                    workerEpoch=command.epoch;audioEngine.Bind(0,0);transport.Stop();if(precision){timeEndPeriod(1);precision=false;}
+                    workerEpoch=command.epoch;audioEngine.Configure(0,0,{},false);transport.Stop();if(precision){timeEndPeriod(1);precision=false;}
                     std::lock_guard lock(mutex);actualPort=0;transportMetrics={};
                 } else if(command.epoch==workerEpoch) {
                     switch(command.kind) {
@@ -138,9 +139,8 @@ struct PeerVideoController::Impl {
                         break;
                     case CommandKind::Video:videos.push_back(std::move(command));break;
                     case CommandKind::AudioState:
-                        audioEngine.Configure(command.audio_preferences,command.audio_share);
-                        audioEngine.Bind(command.connection,command.audio_session);syncedWorkerAudioConnection=command.connection;break;
-                    case CommandKind::AudioControl:audioEngine.OnControl(command.connection,command.bytes);break;
+                        audioEngine.Configure(command.connection,command.audio_session,command.audio_preferences,command.audio_share);break;
+                    case CommandKind::AudioControl:audioEngine.OnControl(command.connection,std::move(command.bytes));break;
                     case CommandKind::Close:transport.Disconnect(command.connection);break;
                     default:break;
                     }
@@ -148,11 +148,13 @@ struct PeerVideoController::Impl {
             }
             auto events=transport.PollEvents();
             for(auto& event:events) {
-                if(event.kind==TransportEventKind::Audio){audioEngine.OnAudio(event.connection_id,event.bytes);continue;}
+                if(event.kind==TransportEventKind::Audio){audioEngine.OnAudio(std::move(event));continue;}
                 Notice notice;notice.epoch=workerEpoch;notice.event=std::move(event);NoticeOut(std::move(notice));
             }
-            audioEngine.Tick([&](std::vector<std::uint8_t> bytes){return transport.SendControl(bytes,syncedWorkerAudioConnection)==TransportSendResult::Sent;},
-                [&](std::vector<std::uint8_t> bytes){return transport.SendAudio(std::move(bytes),syncedWorkerAudioConnection)==TransportSendResult::Sent;});
+            audioEngine.Dispatch([&](const audio::AudioOutbound& packet) {
+                return packet.control?transport.SendControl(packet.bytes,packet.connection)==TransportSendResult::Sent:
+                    transport.SendAudio(packet.bytes,packet.connection)==TransportSendResult::Sent;
+            });
             for(auto& command:videos)if(command.epoch==workerEpoch) {
                 if(transport.SendVideo(std::move(command.bytes),command.connection,std::move(command.credit))!=TransportSendResult::Sent) {
                     Notice lost;lost.kind=NoticeKind::SendLost;lost.epoch=workerEpoch;lost.event.kind=TransportEventKind::MediaSendLost;lost.event.connection_id=command.connection;NoticeOut(std::move(lost));
@@ -167,7 +169,7 @@ struct PeerVideoController::Impl {
                 if(actualPort&&GetTickCount64()-lastWake>=10){lastWake=GetTickCount64();if(wake)SetEvent(wake);}
                 condition.wait_for(lock,std::chrono::milliseconds(actualPort?1:100),[&]{return stop.stop_requested()||!commands.empty();});}
         }
-        audioEngine.Bind(0,0);transport.Stop();if(precision)timeEndPeriod(1);
+        audioEngine.Configure(0,0,{},false);transport.Stop();if(precision)timeEndPeriod(1);
         }
         if(SUCCEEDED(com))CoUninitialize();
     }

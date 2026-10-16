@@ -333,3 +333,13 @@ add_custom_command(TARGET FriendPushScreen POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
     "$<TARGET_FILE_DIR:FriendPushScreen>/LICENSE")
+
+find_program(FPS_POWERSHELL NAMES powershell REQUIRED)
+add_test(NAME FriendPushScreenSeparateProcessTests
+  COMMAND "${FPS_POWERSHELL}" -NoProfile -File
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/secure_peer_process_tests.ps1"
+    -ProbePath "$<TARGET_FILE:FriendPushScreenPeerProbe>"
+    -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/secure-peer-process-tests-$<CONFIG>")
+set_tests_properties(FriendPushScreenSeparateProcessTests PROPERTIES TIMEOUT 30)
+
+target_sources(FriendPushScreenTests PRIVATE tests/audio_worker_tests.cpp)
