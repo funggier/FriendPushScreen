@@ -1,5 +1,7 @@
 #include "capture/feedback_protection.h"
 #include "test_support.h"
+#include "capture/capture_source_catalog.h"
+#include "platform/windows/monitor_probe.h"
 #include <array>
 using namespace fps::capture;
 void RunFeedbackProtectionTests() {
@@ -36,6 +38,18 @@ void RunFeedbackProtectionTests() {
         DestroyWindow(self);
     }
     if(atom)UnregisterClassW(wc.lpszClassName,wc.hInstance);
+
+    // Production monitor descriptors carry a display name, not an HMONITOR.
+    const auto monitorSources=BuildCaptureSourceCatalogFromProbes(fps::platform::windows::ProbeMonitors(),{},{});
+    // Headless CI may expose no monitor; the physical probe is a separate gate.
+    if(!monitorSources.empty()) {
+        auto monitor=monitorSources.front();monitor.native_handle=0;
+        CapturedFrame tiny;tiny.width=tiny.height=2;tiny.row_pitch=8;tiny.bgra.assign(16,0x44);
+        FeedbackProtection monitorProtection;
+        FPS_EXPECT_TRUE(monitorProtection.Apply(tiny,monitor,error));
+        monitor.native_id="missing-monitor";monitor.native_handle=reinterpret_cast<std::uintptr_t>(MonitorFromPoint({0,0},MONITOR_DEFAULTTOPRIMARY));
+        FPS_EXPECT_TRUE(!monitorProtection.Apply(tiny,monitor,error));
+    }
 
     Microsoft::WRL::ComPtr<ID3D11Device> device;Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;
     auto hr=D3D11CreateDevice(nullptr,D3D_DRIVER_TYPE_HARDWARE,nullptr,0,nullptr,0,D3D11_SDK_VERSION,&device,nullptr,&context);

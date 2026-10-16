@@ -13,6 +13,17 @@ bool Geometry(const CapturedFrame& f,std::span<const PixelRect> masks,std::strin
         error="Feedback protection: invalid mask rectangle";return false;
     }return true;
 }
+struct MonitorSearch {std::wstring name;HMONITOR monitor{};};
+BOOL CALLBACK MatchMonitor(HMONITOR monitor,HDC,LPRECT,LPARAM parameter) {
+    auto& search=*reinterpret_cast<MonitorSearch*>(parameter);MONITORINFOEXW info{};info.cbSize=sizeof(info);
+    if(GetMonitorInfoW(monitor,&info)&&search.name==info.szDevice){search.monitor=monitor;return FALSE;}return TRUE;
+}
+HMONITOR FindCaptureMonitor(const CaptureSourceDescriptor& source) {
+    if(source.native_id.empty()||source.native_id.size()>255)return nullptr;
+    wchar_t name[256]{};
+    if(!MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,source.native_id.c_str(),-1,name,256))return nullptr;
+    MonitorSearch search{name};EnumDisplayMonitors(nullptr,nullptr,MatchMonitor,reinterpret_cast<LPARAM>(&search));return search.monitor;
+}
 BOOL CALLBACK ViewerRect(HWND window,LPARAM parameter) {
     if(!IsWindowVisible(window)||IsIconic(window)||!IsFriendPushViewer(window))return TRUE;
     RECT rect{};if(GetWindowRect(window,&rect)&&rect.right>rect.left&&rect.bottom>rect.top) {
@@ -104,7 +115,7 @@ bool FeedbackProtection::Apply(CapturedFrame& frame,const CaptureSourceDescripto
     }
     if(source.kind!=CaptureSourceKind::Monitor)return true;
     MONITORINFO info{sizeof(info)};
-    if(!GetMonitorInfoW(reinterpret_cast<HMONITOR>(source.native_handle),&info)) {
+    if(!GetMonitorInfoW(FindCaptureMonitor(source),&info)) {
         error="Feedback protection: capture monitor no longer exists";return false;
     }
     std::vector<ScreenRect> current;EnumWindows(ViewerRect,reinterpret_cast<LPARAM>(&current));

@@ -80,6 +80,9 @@ struct PeerVideoController::Impl {
         if(loss?lossTraces++>=200:traces++>=200)return;
         std::ofstream log(directory/"video-trace.log",std::ios::app);log<<GetTickCount64()<<" "<<text<<"\n";
     }
+    Impl(std::unique_ptr<media::IVideoEncoder> encoder,std::unique_ptr<media::IVideoDecoder> decoder):
+        sender(encoder?std::move(encoder):std::unique_ptr<media::IVideoEncoder>(std::make_unique<media::MftVideoEncoder>())),
+        receiver(decoder?std::move(decoder):std::unique_ptr<media::IVideoDecoder>(std::make_unique<media::MftVideoDecoder>())){}
     ~Impl(){
         receiver.Stop();sender.Stop();sendWindow.Reset(0,0);receipts.reset();
         if(worker.joinable()){worker.request_stop();condition.notify_all();worker.join();}
@@ -165,7 +168,19 @@ struct PeerVideoController::Impl {
     }
     media::VideoPeerSender::Sink SenderSink(){return [this](VideoWireFrame&& wire){return QueueVideo(std::move(wire));};}
     void SenderFailed(){error=sender.Error();sender.Stop();senderRunning=false;wantsShare=false;if(session)session->StopShare();}
-    void ReceiverFailed(){error=receiver.Error();receiver.Stop();receiverRunning=false;clearPending=true;}
+    void ReceiverFailed(){
+        error=receiver.Error();receiver.Stop();receiverRunning=false;clearPending=true;
+        if(session&&session->State().connected) {
+            const auto& state=session->State();ControlMessage message;message.type=ControlType::Error;
+            message.session=state.token;message.generation=state.incoming_generation;
+            message.text="Remote decoder: ";
+            for(const unsigned char c:error) {
+                if(message.text.size()==1024)break;
+                message.text.push_back(c>=32&&c<127?static_cast<char>(c):'?');
+            }
+            QueueControl(message,state.connection);
+        }
+    }
     void Actions() {
         if(!session)return;
         for(auto& action:session->TakeActions()) {
@@ -178,12 +193,12 @@ struct PeerVideoController::Impl {
             case SessionActionKind::StartSender:
                 sendWindow.Reset(action.message.session,action.message.generation);skippedCapture=0;
                 senderRunning=sender.Initialize(device.Get(),action.message.format,codec,encodePolicy,action.message.session,action.message.generation);
-                if(!senderRunning)SenderFailed();break;
+                if(!senderRunning)SenderFailed();else error.clear();break;
             case SessionActionKind::StopSender:sender.Stop();senderRunning=false;sendWindow.Reset(0,0);break;
             case SessionActionKind::StartReceiver:
                 if(action.message.value!=1)clearPending=true;
                 receiverRunning=receiver.Configure(device.Get(),action.message.format,codec,decodePolicy,action.message.session,action.message.generation);
-                if(!receiverRunning)ReceiverFailed();else session->ReceiverReady(action.message.generation);break;
+                if(!receiverRunning)ReceiverFailed();else {error.clear();session->ReceiverReady(action.message.generation);}break;
             case SessionActionKind::StopReceiver:receiver.Stop();receiverRunning=false;if(action.message.value!=1)clearPending=true;break;
             case SessionActionKind::ForceKeyframe:if(senderRunning&&!sender.RequestKeyframe())SenderFailed();break;
             case SessionActionKind::RecoverReceiver:
@@ -200,7 +215,8 @@ struct PeerVideoController::Impl {
     }
 };
 
-PeerVideoController::PeerVideoController():impl_(std::make_unique<Impl>()){}
+PeerVideoController::PeerVideoController(std::unique_ptr<media::IVideoEncoder> encoder,std::unique_ptr<media::IVideoDecoder> decoder):
+    impl_(std::make_unique<Impl>(std::move(encoder),std::move(decoder))){}
 PeerVideoController::~PeerVideoController()=default;
 bool PeerVideoController::Initialize(ID3D11Device* device,const std::filesystem::path& directory,std::string& error) {
     auto& p=*impl_;if(p.worker.joinable()){error="Peer controller already initialized";return false;}
@@ -231,7 +247,7 @@ void PeerVideoController::ConfigureCodecs(media::VideoCodecConfig config,media::
     p.restartSender=p.senderRunning&&(encoder!=p.encodePolicy||config.encoder_id!=p.codec.encoder_id||
         config.target_bitrate_bps!=p.codec.target_bitrate_bps||config.keyframe_interval_frames!=p.codec.keyframe_interval_frames||
         config.low_latency!=p.codec.low_latency);
-    p.restartReceiver=p.receiverRunning&&(decoder!=p.decodePolicy||config.decoder_id!=p.codec.decoder_id);
+    p.restartReceiver=p.session&&p.session->State().receiving&&(decoder!=p.decodePolicy||config.decoder_id!=p.codec.decoder_id);
     p.codec=std::move(config);p.encodePolicy=encoder;p.decodePolicy=decoder;
 }
 bool PeerVideoController::Listen(std::uint16_t port,std::string& error) {
@@ -337,10 +353,18 @@ bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
         }
         p.Actions();
     }
-    if(p.restartReceiver&&p.receiverRunning) {
-        p.restartReceiver=false;const auto state=p.session->State();p.clearPending=true;
-        if(!p.receiver.Configure(p.device.Get(),state.incoming_format,p.codec,p.decodePolicy,state.token,state.incoming_generation))p.ReceiverFailed();
-        else p.session->OnMediaLost(state.connection);
+    if(p.restartReceiver) {
+        p.restartReceiver=false;const auto state=p.session->State();
+        if(state.receiving) {
+            const bool wasRunning=p.receiverRunning;p.clearPending=true;
+            p.receiverRunning=p.receiver.Configure(p.device.Get(),state.incoming_format,p.codec,p.decodePolicy,state.token,state.incoming_generation);
+            if(!p.receiverRunning)p.ReceiverFailed();
+            else {
+                p.error.clear();
+                if(wasRunning)p.session->OnMediaLost(state.connection);
+                else p.session->ReceiverReady(state.incoming_generation);
+            }
+        }
     }
     p.session->Tick(GetTickCount64());p.Actions();
     if(p.clearPending){p.clearPending=false;clear();}

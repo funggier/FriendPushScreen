@@ -19,7 +19,7 @@ public:
     using FrameSink=media::VideoPeerReceiver::Sink;
     using ClearSink=std::function<void()>;
     using EncodedObserver=std::function<void(const network::VideoWireFrame&)>;
-    PeerVideoController();
+    explicit PeerVideoController(std::unique_ptr<media::IVideoEncoder> encoder={},std::unique_ptr<media::IVideoDecoder> decoder={});
     ~PeerVideoController();
     bool Initialize(ID3D11Device*,const std::filesystem::path&,std::string&);
     const network::PublicPeerIdentity* Identity()const;

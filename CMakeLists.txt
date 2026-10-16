@@ -296,3 +296,12 @@ add_executable(FriendPushScreenVideoPeerProbe tools/video_peer_probe/main.cpp
 target_include_directories(FriendPushScreenVideoPeerProbe PRIVATE src)
 target_link_libraries(FriendPushScreenVideoPeerProbe PRIVATE fps_network D3D11 Dxgi Mf Mfplat Mfuuid Ole32 OleAut32)
 fps_apply_warnings(FriendPushScreenVideoPeerProbe)
+# Physical capture qualification; reuse the established capture probe dependencies.
+get_target_property(fps_feedback_probe_sources FriendPushScreenCaptureLoopProbe SOURCES)
+list(REMOVE_ITEM fps_feedback_probe_sources tools/capture_loop_probe/main.cpp)
+add_executable(FriendPushScreenFeedbackProbe tools/feedback_probe/main.cpp ${fps_feedback_probe_sources})
+target_include_directories(FriendPushScreenFeedbackProbe PRIVATE src)
+get_target_property(fps_feedback_probe_libraries FriendPushScreenCaptureLoopProbe LINK_LIBRARIES)
+target_link_libraries(FriendPushScreenFeedbackProbe PRIVATE ${fps_feedback_probe_libraries})
+fps_apply_warnings(FriendPushScreenFeedbackProbe)
+fps_copy_msquic_runtime(FriendPushScreenFeedbackProbe)
