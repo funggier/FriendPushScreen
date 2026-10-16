@@ -1,6 +1,6 @@
 # Secure dual-instance video: design for the next network milestone
 
-**Status:** PROPOSED — written design for user review; not an implementation or network qualification.
+**Status:** APPROVED DESIGN — user approval 2026-10-16 09:23:50 Asia/Bangkok; Native implementation authorized continuously, without further routine confirmation. This is not a network qualification.
 **Date:** 2026-10-16 (Asia/Bangkok)
 **Source baseline:** 23038b26675a991b34da309c2daee8dbbcaf3c05
 **Execution workspace:** existing canonical linked worktree, fps-006-encode-decode-local-loopback.
@@ -11,7 +11,7 @@
 
 The approved [V1 amendment](2026-10-15-v1-audio-connectivity-amendment.md) already requires this development strategy. Reuse the qualified capture/MF H.264/D3D11 foundation and independent encoder/decoder controls. The new work adds the absent peer/session/media transport rather than relabeling a local codec loop as a connection.
 
-This is an architectural change: no networking subsystem exists at the baseline. The written design must be reviewed before its implementation plan and production implementation. User authorization to continue the system is recorded; this document is not marked approved in advance.
+This is an architectural change: no networking subsystem exists at the baseline. The user reviewed and approved this written design from commit 000c6a03164c1f1f15902eb3565ea357ab250589, selected Native, and explicitly authorized plan preparation and implementation without further confirmation. Preserve that authorization rather than repeating the handoff gate.
 
 DG-001, DG-006 and DG-008 remain open until their required evidence exists. Existing FPS-006 results remain GREEN for their original local-loop scope and source identities.
 
@@ -179,4 +179,4 @@ Documentation and upstream main may change. The evaluated implementation must re
 
 ## 14. Design self-review
 
-Reviewed against the actual source and approved amendment: local-loop/network claims are separate; audio remains optional for this increment and required where applicable for eventual V1; no permanent transport/license/security gate is closed in advance; candidate rejection paths and bounds are explicit; Windows 10 is preserved; no UI Auto connection mode is introduced; existing worktrees/main/tags/releases remain untouched. Written-spec approval and implementation-plan review remain pending.
+Reviewed against the actual source and approved amendment: local-loop/network claims are separate; audio remains optional for this increment and required where applicable for eventual V1; no permanent transport/license/security gate is closed in advance; candidate rejection paths and bounds are explicit; Windows 10 is preserved; no UI Auto connection mode is introduced; existing worktrees/main/tags/releases remain untouched. Written-spec approval and continuous Native execution authorization were received at 2026-10-16 09:23:50 Asia/Bangkok. Implementation and runtime qualification remain to be performed.

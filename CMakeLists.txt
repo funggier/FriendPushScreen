@@ -9,6 +9,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_definitions(UNICODE _UNICODE NOMINMAX)
 
 include(cmake/warnings.cmake)
+include(cmake/msquic.cmake)
+
+add_library(fps_network STATIC src/network/peer_identity.cpp src/network/secure_peer_transport.cpp)
+target_include_directories(fps_network PUBLIC src)
+target_link_libraries(fps_network PUBLIC fps_msquic_headers Crypt32 Ncrypt Bcrypt Ws2_32 Advapi32)
+fps_apply_warnings(fps_network)
 
 
 add_executable(FriendPushScreen WIN32
@@ -133,6 +139,7 @@ enable_testing()
 
 add_executable(FriendPushScreenTests
     tests/test_main.cpp
+    tests/peer_identity_tests.cpp
     tests/diagnostics_formatter_tests.cpp
     tests/platform_filter_tests.cpp
     tests/diagnostics_service_tests.cpp
@@ -245,3 +252,16 @@ fps_apply_warnings(FriendPushScreenCaptureLoopProbe)
 target_link_libraries(FriendPushScreenCaptureLoopProbe PRIVATE
     D3D11 D3DCompiler Dxgi Dxguid Mf Mfplat Mfreadwrite Mfuuid
     Ole32 OleAut32 User32 Gdi32 Dwmapi WindowsApp Psapi Comctl32 UxTheme Winmm)
+
+target_link_libraries(FriendPushScreenTests PRIVATE fps_network)
+fps_copy_msquic_runtime(FriendPushScreenTests)
+target_link_libraries(FriendPushScreen PRIVATE fps_network)
+fps_copy_msquic_runtime(FriendPushScreen)
+
+add_executable(FriendPushScreenPeerProbe tools/peer_probe/main.cpp)
+target_link_libraries(FriendPushScreenPeerProbe PRIVATE fps_network)
+fps_apply_warnings(FriendPushScreenPeerProbe)
+fps_copy_msquic_runtime(FriendPushScreenPeerProbe)
+
+add_test(NAME FriendPushScreenSecurePeerTests COMMAND FriendPushScreenPeerProbe --self-test "${CMAKE_CURRENT_BINARY_DIR}/secure-peer-tests")
+set_tests_properties(FriendPushScreenSecurePeerTests PROPERTIES TIMEOUT 45)

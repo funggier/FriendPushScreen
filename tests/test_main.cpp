@@ -1,5 +1,6 @@
 #include "test_support.h"
 
+void RunPeerIdentityTests();
 void RunDiagnosticsFormatterTests();
 void RunPlatformFilterTests();
 void RunDiagnosticsServiceTests();
@@ -17,6 +18,7 @@ void RunVideoLocalLoopTests();
 int main() {
     FPS_EXPECT_TRUE(true);
     FPS_EXPECT_EQ(2 + 2, 4);
+    RunPeerIdentityTests();
     RunDiagnosticsFormatterTests();
     RunPlatformFilterTests();
     RunDiagnosticsServiceTests();
