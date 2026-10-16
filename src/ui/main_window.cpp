@@ -116,6 +116,11 @@ ViewerViewport CalculateViewerViewport(
 bool ShouldDeferUiCommand(
     UiCommandType type) {
     switch (type) {
+    case UiCommandType::ExportPeerIdentity:
+    case UiCommandType::PairWithFriend:
+    case UiCommandType::DisconnectPeer:
+    case UiCommandType::ToggleShareRequest:
+    case UiCommandType::ToggleConnectionRequest:
     case UiCommandType::ApplyVideoSettings:
     case UiCommandType::SelectCaptureSource:
     case UiCommandType::ToggleCapturePreview:
@@ -294,6 +299,17 @@ MainWindow::PromptDiagnosticsSavePath() {
         path.data()};
 }
 
+std::optional<std::filesystem::path> MainWindow::PromptPairingPath(bool save) {
+    std::array<wchar_t,32768> path{};
+    if(save)wcscpy_s(path.data(),path.size(),L"My-FriendPushScreen.friendpair");
+    constexpr wchar_t filter[]=L"Friend identity (*.friendpair)\0*.friendpair\0All files (*.*)\0*.*\0\0";
+    OPENFILENAMEW dialog{};dialog.lStructSize=sizeof(dialog);dialog.hwndOwner=hwnd_;
+    dialog.lpstrFilter=filter;dialog.lpstrFile=path.data();dialog.nMaxFile=static_cast<DWORD>(path.size());
+    dialog.lpstrDefExt=L"friendpair";dialog.Flags=OFN_PATHMUSTEXIST|OFN_NOCHANGEDIR|(save?OFN_OVERWRITEPROMPT:OFN_FILEMUSTEXIST);
+    if(!(save?GetSaveFileNameW(&dialog):GetOpenFileNameW(&dialog)))return std::nullopt;
+    return std::filesystem::path(path.data());
+}
+
 bool MainWindow::Create(
     HINSTANCE instance,
     int show_command) {
@@ -381,7 +397,9 @@ bool MainWindow::Create(
         return false;
     }
 
-    capture::ConfigureCaptureExclusion(hwnd_);
+    wchar_t force_mask[2]{};
+    if(!(GetEnvironmentVariableW(L"FPS_FORCE_FEEDBACK_MASK",force_mask,2)==1&&force_mask[0]==L'1'))
+        capture::ConfigureCaptureExclusion(hwnd_);
     const BOOL use_dark_mode = TRUE;
     constexpr DWORD kImmersiveDarkModeAttribute = 20;
     DwmSetWindowAttribute(
@@ -659,9 +677,14 @@ void MainWindow::LayoutChildren() {
 std::wstring MainWindow::BuildStatusSummary(
     const UiState& state) const {
     std::wstring text =
-        L"  Peer: Offline  |  Connection: ";
+        state.connection_state==ConnectionUiState::Connected?L"  Peer: Online  |  Connection: ":
+        (state.peer_fingerprint.empty()?L"  Peer: Not paired  |  Connection: ":L"  Peer: Paired  |  Connection: ");
 
     switch (state.connection_state) {
+    case ConnectionUiState::Error:
+        text += L"Error"; break;
+    case ConnectionUiState::Listening:
+        text += L"Listening"; break;
     case ConnectionUiState::Disconnected:
         text += L"Disconnected";
         break;
@@ -687,7 +710,8 @@ std::wstring MainWindow::BuildStatusSummary(
         break;
     }
 
-    text += L"  |  Incoming Audio: ";
+    text += state.receiving_video?L"  |  Video: Incoming peer":L"  |  Video: No incoming stream";
+    text += L"  |  Audio: ";
 
     if (state.preferences.receiver_muted) {
         text += L"Muted";

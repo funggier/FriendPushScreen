@@ -37,7 +37,7 @@ public:
     bool RenderPlaceholder();
 
     bool RenderFrame(
-        const capture::CapturedFrame& frame);
+        const capture::CapturedFrame& frame, bool wait_for_vblank = true);
 
     RendererMode Mode() const noexcept {
         return device_.Mode();
@@ -68,7 +68,7 @@ private:
         const capture::CapturedCursor& cursor);
 
     bool DrawFrame(
-        const capture::CapturedFrame& frame);
+        const capture::CapturedFrame& frame, bool wait_for_vblank = true);
 
     D3D11Device device_;
 

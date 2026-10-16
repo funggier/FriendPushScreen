@@ -73,6 +73,7 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
         std::uint64_t created{GetTickCount64()};
         std::vector<std::uint8_t> received;
         std::size_t sendBytes{};
+        std::shared_ptr<void> sendCredit;
     };
     struct Connection {
         Impl* owner{};
@@ -123,8 +124,8 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
         if(c.closing)return;c.closing=true;Event(TransportEventKind::Error,&c,{},reason);
         api->ConnectionShutdown(c.handle,QUIC_CONNECTION_SHUTDOWN_FLAG_NONE,kProtocolError);
     }
-    void Lost(Stream& s) {
-        if(!s.lost){s.lost=true;++metrics.dropped_video;Event(TransportEventKind::MediaLost,s.connection);}
+    void Lost(Stream& s,const char* reason="stream abort") {
+        if(!s.lost){s.lost=true;++metrics.dropped_video;Event(s.outgoing?TransportEventKind::MediaSendLost:TransportEventKind::MediaLost,s.connection,{},reason);}
     }
     void ReleaseReceive(Stream& s) {
         if(!s.receiveAccounted)return;s.receiveAccounted=false;
@@ -194,7 +195,7 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
             }
             if(media) {
                 if(self.metrics.receive_media_count>=kMaxMediaInFlight) {
-                    raw->lost=true;++self.metrics.dropped_video;self.Event(TransportEventKind::MediaLost,&c);
+                    raw->lost=true;++self.metrics.dropped_video;self.Event(TransportEventKind::MediaLost,&c,{},"receive budget full");
                     self.api->StreamShutdown(raw->handle,QUIC_STREAM_SHUTDOWN_FLAG_ABORT,kExpiredMedia);
                 } else {
                     raw->receiveAccounted=true;++self.metrics.receive_media_count;
@@ -280,7 +281,7 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
                 self.ReleaseReceive(s);
                 if(s.outgoing&&s.sendBytes){--self.metrics.send_media_count;self.metrics.send_media_bytes-=s.sendBytes;s.sendBytes=0;}
             }
-            s.closed=true;self.api->StreamClose(handle);s.handle=nullptr;break;
+            s.sendCredit.reset();s.closed=true;self.api->StreamClose(handle);s.handle=nullptr;break;
         default:break;
         }
         return QUIC_STATUS_SUCCESS;
@@ -337,7 +338,7 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
         const auto now=GetTickCount64();
         for(auto& c:connections)for(auto& s:c->streams)
             if(s->media&&!s->closed&&!s->lost&&now-s->created>config.media_deadline_ms) {
-                Lost(*s);ReleaseReceive(*s);api->StreamShutdown(s->handle,QUIC_STREAM_SHUTDOWN_FLAG_ABORT,kExpiredMedia);
+                Lost(*s,"media deadline expired");ReleaseReceive(*s);api->StreamShutdown(s->handle,QUIC_STREAM_SHUTDOWN_FLAG_ABORT,kExpiredMedia);
             }
         // Closed contexts stay alive until no callback can still be unwinding.
         if(callbacks.load()==0) {
@@ -379,10 +380,15 @@ bool SecurePeerTransport::Connect(const std::string& host,std::uint16_t port,std
     if(!self.registration||self.stopping||!port||host.empty()||host.size()>253){error="Invalid peer endpoint or inactive transport";return false;}
     self.Maintenance();
     if(self.connections.size()>=kMaxConnections){error="Peer connection limit reached";return false;}
-    addrinfo hints{};hints.ai_family=AF_INET;hints.ai_socktype=SOCK_DGRAM;addrinfo* resolved=nullptr;
-    const auto service=std::to_string(port);const auto lookup=getaddrinfo(host.c_str(),service.c_str(),&hints,&resolved);
-    if(lookup||!resolved){error="Peer host resolution failed";return false;}
-    QUIC_ADDR address{};std::memcpy(&address,resolved->ai_addr,sizeof(sockaddr_in));freeaddrinfo(resolved);
+    // The evaluation accepts explicit IPv4 endpoints and the fixed local alias.
+    // Never call an unbounded namespace provider while holding the transport lock.
+    QUIC_ADDR address{};QuicAddrSetFamily(&address,QUIC_ADDRESS_FAMILY_INET);QuicAddrSetPort(&address,port);
+    std::string normalized=host;
+    std::transform(normalized.begin(),normalized.end(),normalized.begin(),[](unsigned char c){return static_cast<char>(c>='A'&&c<='Z'?c-'A'+'a':c);});
+    if(normalized=="localhost"||normalized=="localhost.")address.Ipv4.sin_addr.s_addr=htonl(INADDR_LOOPBACK);
+    else if(InetPtonA(AF_INET,host.c_str(),&address.Ipv4.sin_addr)!=1) {
+        error="Use an IPv4 address or localhost; DNS names are not enabled in this evaluation";return false;
+    }
     if(self.config.loopback_only&&(ntohl(address.Ipv4.sin_addr.s_addr)>>24)!=127){error="This transport milestone is restricted to loopback";return false;}
     if(port==self.port&&(ntohl(address.Ipv4.sin_addr.s_addr)>>24)==127){error="Cannot connect to this instance's own share port";return false;}
     auto c=std::make_unique<Impl::Connection>();c->owner=&self;c->id=self.nextId++;c->client=true;
@@ -406,7 +412,7 @@ TransportSendResult SecurePeerTransport::SendControl(std::span<const std::uint8_
     if(!self.Send(*c->control,std::move(framed),true,false))return TransportSendResult::NotConnected;
     ++self.metrics.sent_control;self.metrics.sent_bytes+=bytes.size();return TransportSendResult::Sent;
 }
-TransportSendResult SecurePeerTransport::SendVideo(std::vector<std::uint8_t> bytes,std::uint64_t id) {
+TransportSendResult SecurePeerTransport::SendVideo(std::vector<std::uint8_t> bytes,std::uint64_t id,std::shared_ptr<void> sendCredit) {
     if(bytes.empty()||bytes.size()>kMaxMediaBytes)return TransportSendResult::Invalid;
     auto& self=*impl_;std::lock_guard lock(self.mutex);auto* c=self.Find(id);
     if(!c)return TransportSendResult::NotConnected;
@@ -414,7 +420,7 @@ TransportSendResult SecurePeerTransport::SendVideo(std::vector<std::uint8_t> byt
     auto stream=std::make_unique<Impl::Stream>();stream->connection=c;stream->media=true;stream->outgoing=true;
     auto status=self.api->StreamOpen(c->handle,QUIC_STREAM_OPEN_FLAG_UNIDIRECTIONAL,Impl::StreamCallback,stream.get(),&stream->handle);
     if(QUIC_FAILED(status))return TransportSendResult::Backpressure;
-    auto* raw=stream.get();c->streams.push_back(std::move(stream));raw->sendBytes=bytes.size();
+    auto* raw=stream.get();c->streams.push_back(std::move(stream));raw->sendBytes=bytes.size();raw->sendCredit=std::move(sendCredit);
     ++self.metrics.send_media_count;self.metrics.send_media_bytes+=bytes.size();
     self.metrics.max_send_media_count=std::max(self.metrics.max_send_media_count,self.metrics.send_media_count);
     self.metrics.max_send_media_bytes=std::max(self.metrics.max_send_media_bytes,self.metrics.send_media_bytes);

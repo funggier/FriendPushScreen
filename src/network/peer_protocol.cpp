@@ -56,7 +56,8 @@ bool ValidateVideoFormat(const VideoFormat& f) {
 }
 std::vector<std::uint8_t> EncodeControl(const ControlMessage& m) {
     const auto type=static_cast<std::uint8_t>(m.type);
-    if(type<1||type>9||!m.session||m.stream!=1)return {};
+    if(type<1||type>11||!m.session||m.stream!=1)return {};
+    if(m.type==ControlType::VideoConsumed&&(!m.generation||!m.value))return {};
     std::size_t payload=0;
     if(m.type==ControlType::Hello){if(m.capabilities&~3U)return {};payload=8;}
     if(m.type==ControlType::VideoFormat){if(!ValidateVideoFormat(m.format))return {};payload=36;}
@@ -70,7 +71,7 @@ std::vector<std::uint8_t> EncodeControl(const ControlMessage& m) {
 }
 std::optional<ControlMessage> DecodeControl(std::span<const std::uint8_t> bytes,std::string& error) {
     error="Invalid control protocol record";Reader r{bytes};std::uint16_t flags=0;
-    if(!r.Header('C',flags,kMaxControlBytes)||(flags&255)!=0||(flags>>8)<1||(flags>>8)>9||bytes.size()<40)return std::nullopt;
+    if(!r.Header('C',flags,kMaxControlBytes)||(flags&255)!=0||(flags>>8)<1||(flags>>8)>11||bytes.size()<40)return std::nullopt;
     ControlMessage m;m.type=static_cast<ControlType>(flags>>8);m.session=r.U64();m.generation=r.U64();m.value=r.U64();m.stream=r.U32();
     if(m.type==ControlType::Hello){m.capabilities=r.U32();m.listen_port=r.U16();if(r.U16()!=0)r.valid=false;}
     if(m.type==ControlType::VideoFormat)m.format=r.Format();

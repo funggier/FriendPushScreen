@@ -1,4 +1,5 @@
 #include "network/peer_protocol.h"
+#include "network/peer_video_flow.h"
 #include "test_support.h"
 #include <limits>
 using namespace fps::network;
@@ -9,7 +10,7 @@ void RunPeerProtocolTests() {
     bad={4096,4096,4096,4096};FPS_EXPECT_TRUE(!ValidateVideoFormat(bad));
     bad=f;bad.fps_denominator=0;FPS_EXPECT_TRUE(!ValidateVideoFormat(bad));
     for(auto type:{ControlType::Hello,ControlType::ShareStart,ControlType::VideoFormat,ControlType::ShareStop,
-        ControlType::KeyframeRequest,ControlType::Ping,ControlType::Pong,ControlType::Goodbye,ControlType::Error}) {
+        ControlType::KeyframeRequest,ControlType::Ping,ControlType::Pong,ControlType::Goodbye,ControlType::Error,ControlType::VideoReady,ControlType::VideoConsumed}) {
         ControlMessage m;m.type=type;m.session=123;m.generation=7;m.value=99;m.listen_port=42801;m.format=f;m.text="controlled error";
         const auto bytes=EncodeControl(m);FPS_EXPECT_TRUE(!bytes.empty());
         const auto decoded=DecodeControl(bytes,error);FPS_EXPECT_TRUE(decoded.has_value());
@@ -23,6 +24,24 @@ void RunPeerProtocolTests() {
             mutated=bytes;mutated.push_back(0);FPS_EXPECT_TRUE(!DecodeControl(mutated,error));
         }
     }
+    PeerVideoSendWindow window;window.Reset(123,7);
+    auto first=std::make_shared<int>(1),second=std::make_shared<int>(2);
+    std::weak_ptr<int> held_first=first,held_second=second;
+    FPS_EXPECT_TRUE(window.Submit(1,100,std::move(first)));
+    FPS_EXPECT_TRUE(window.Submit(2,110,std::move(second)));
+    FPS_EXPECT_TRUE(!held_first.expired()&&!held_second.expired());
+    FPS_EXPECT_TRUE(!window.CanSubmit());FPS_EXPECT_TRUE(!window.Submit(3,120,{}));
+    ControlMessage consumed;consumed.type=ControlType::VideoConsumed;consumed.session=123;consumed.generation=7;consumed.value=1;
+    const auto consumed_wire=EncodeControl(consumed);FPS_EXPECT_TRUE(!consumed_wire.empty());
+    consumed.generation=6;FPS_EXPECT_TRUE(!window.Acknowledge(consumed));
+    consumed.generation=7;consumed.session=999;FPS_EXPECT_TRUE(!window.Acknowledge(consumed));
+    consumed.session=123;consumed.value=999;FPS_EXPECT_TRUE(!window.Acknowledge(consumed));
+    consumed.value=1;FPS_EXPECT_TRUE(window.Acknowledge(consumed));
+    FPS_EXPECT_TRUE(held_first.expired()&&!held_second.expired());
+    FPS_EXPECT_TRUE(!window.Acknowledge(consumed));FPS_EXPECT_TRUE(window.CanSubmit());
+    FPS_EXPECT_TRUE(!window.Expire(359));FPS_EXPECT_TRUE(window.Expire(360));
+    FPS_EXPECT_TRUE(held_second.expired());FPS_EXPECT_EQ(window.Pending(),std::size_t{0});
+    FPS_EXPECT_TRUE(window.Submit(3,400,{}));window.Reset(123,8);FPS_EXPECT_EQ(window.Pending(),std::size_t{0});
     VideoWireFrame v;v.session=789;v.generation=3;v.sequence=42;v.source_sequence=21;
     v.timestamp_100ns=700;v.duration_100ns=166666;v.capture_time_100ns=800;v.format=f;v.keyframe=true;
     v.bytes={0,0,0,1,0x67,1,0,0,0,1,0x68,1,0,0,1,0x65,3,4};

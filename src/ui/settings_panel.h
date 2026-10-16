@@ -157,8 +157,9 @@ private:
     HWND host_edit_{nullptr};
     HWND remote_port_label_{nullptr};
     HWND remote_port_edit_{nullptr};
-    HWND connect_button_{nullptr};
+    HWND connect_button_{nullptr},disconnect_button_{nullptr};
     HWND connection_status_{nullptr};
+    HWND export_identity_button_{nullptr},pair_friend_button_{nullptr},own_identity_label_{nullptr},peer_identity_label_{nullptr};
 
     HWND audio_heading_{nullptr};
     HWND audio_source_label_{nullptr};
@@ -183,6 +184,8 @@ private:
     HWND save_button_{nullptr};
 
     std::vector<std::string> capture_source_ids_;
+    std::vector<capture::CaptureSourceDescriptor> applied_sources_;
+    std::string applied_source_id_;
 
     CommandCallback command_callback_;
 

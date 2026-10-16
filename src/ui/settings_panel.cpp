@@ -28,6 +28,8 @@ constexpr int kConnectionModeId = 2102;
 constexpr int kHostEditId = 2103;
 constexpr int kRemotePortEditId = 2104;
 constexpr int kConnectButtonId = 2105;
+constexpr int kExportIdentityId=2127,kPairFriendId=2128,kDisconnectPeerId=2129;
+constexpr int kPairSectionHeight=220;
 constexpr int kAudioSourceId = 2106;
 constexpr int kMuteButtonId = 2107;
 constexpr int kVolumeSliderId = 2108;
@@ -1678,10 +1680,16 @@ void SettingsPanel::InitializeControls(
             instance,
             kConnectButtonId,
             L"Connect");
+    disconnect_button_=CreateButton(instance,kDisconnectPeerId,L"Disconnect");
     connection_status_ =
         CreateLabel(
             instance,
             L"Disconnected");
+
+    export_identity_button_=CreateButton(instance,kExportIdentityId,L"Export Identity...");
+    pair_friend_button_=CreateButton(instance,kPairFriendId,L"Pair with Friend...");
+    own_identity_label_=CreateLabel(instance,L"Your SHA-256: initializing...");
+    peer_identity_label_=CreateLabel(instance,L"Friend SHA-256: not paired");
 
     audio_heading_ =
         CreateLabel(
@@ -1864,8 +1872,9 @@ void SettingsPanel::ApplyDefaultFont() {
         host_edit_,
         remote_port_label_,
         remote_port_edit_,
-        connect_button_,
+        connect_button_,disconnect_button_,
         connection_status_,
+        export_identity_button_,pair_friend_button_,own_identity_label_,peer_identity_label_,
         audio_heading_,
         audio_source_label_,
         audio_source_button_,
@@ -1955,7 +1964,7 @@ void SettingsPanel::LayoutControls() {
         };
 
     const auto move = [&](HWND control,int x,int y,int w,int h) {
-        place(control,x,y + (y >= 316 ? kVideoSectionHeight : 0),w,h);
+        place(control,x,y + (y >= 316 ? kVideoSectionHeight : 0) + (y >= 560 ? kPairSectionHeight : 0),w,h);
     };
     place(video_heading_,kPadding,316,field_width,20);
     place(encoder_label_,kPadding,342,field_width,18);
@@ -2135,8 +2144,9 @@ void SettingsPanel::LayoutControls() {
         connect_button_,
         kPadding,
         460,
-        field_width,
+        half,
         kButtonHeight);
+    move(disconnect_button_,kPadding+half+kGap,460,half,kButtonHeight);
     move(
         connection_status_,
         kPadding,
@@ -2144,6 +2154,10 @@ void SettingsPanel::LayoutControls() {
         field_width,
         48);
 
+    place(export_identity_button_,kPadding,552+kVideoSectionHeight,half,kButtonHeight);
+    place(pair_friend_button_,kPadding+half+kGap,552+kVideoSectionHeight,half,kButtonHeight);
+    place(own_identity_label_,kPadding,592+kVideoSectionHeight,field_width,72);
+    place(peer_identity_label_,kPadding,668+kVideoSectionHeight,field_width,72);
     move(
         audio_heading_,
         kPadding,
@@ -2261,9 +2275,9 @@ void SettingsPanel::LayoutControls() {
             button_width,
             kButtonHeight);
 
-        content_height_ = 1342 + kVideoSectionHeight;
+        content_height_ = 1342 + kVideoSectionHeight + kPairSectionHeight;
     } else {
-        content_height_ = 1012 + kVideoSectionHeight;
+        content_height_ = 1012 + kVideoSectionHeight + kPairSectionHeight;
     }
 
     SetWindowPos(
@@ -2851,37 +2865,25 @@ std::wstring host;
         PortText(
             state.preferences.remote_port));
 
-const bool share_requested =
-        state.share_state ==
-        ShareUiState::ShareRequested;
-
-    SetWindowTextW(
-        share_button_,
-        share_requested
-            ? L"Cancel Share Request"
-            : L"Start Share");
-
-    SetWindowTextW(
-        share_status_,
-        share_requested
-            ? L"Share requested - media pipeline is not active in FPS-004."
-            : L"Not sharing");
-
-    const bool connect_requested =
-        state.connection_state ==
-        ConnectionUiState::ConnectRequested;
-
-    SetWindowTextW(
-        connect_button_,
-        connect_requested
-            ? L"Cancel Connect Request"
-            : L"Connect");
-
-    SetWindowTextW(
-        connection_status_,
-        connect_requested
-            ? L"Connect requested - transport is not implemented in FPS-004."
-            : L"Disconnected - choose a mode/endpoint, then Connect.");
+    const bool sharing=state.share_state!=ShareUiState::NotSharing;
+    SetTextIfDifferent(share_button_,sharing?L"Stop Share":L"Start Share");
+    SetTextIfDifferent(share_status_,Utf8ToWide(state.share_status.empty()?"Not sharing":state.share_status));
+    SetTextIfDifferent(connect_button_,state.connection_state==ConnectionUiState::Connected?L"Connected":
+        (state.connection_state==ConnectionUiState::ConnectRequested?L"Connecting...":L"Connect"));
+    EnableWindow(connect_button_,state.connection_state==ConnectionUiState::Connected||state.connection_state==ConnectionUiState::ConnectRequested?FALSE:TRUE);
+    EnableWindow(disconnect_button_,state.transport_active?TRUE:FALSE);
+    SetTextIfDifferent(connection_status_,Utf8ToWide(state.peer_status.empty()?"Pair with your friend, then Connect":state.peer_status));
+    const auto fingerprint=[](const char* label,const std::string& value) {
+        std::string text(label);
+        if(value.empty())return Utf8ToWide(text+"not paired");
+        for(std::size_t i=0;i<value.size();++i){if(i&&i%8==0)text+=' ';text+=value[i];}
+        return Utf8ToWide(text);
+    };
+    SetTextIfDifferent(own_identity_label_,fingerprint("Your SHA-256:\n",state.own_fingerprint));
+    SetTextIfDifferent(peer_identity_label_,fingerprint("Friend SHA-256:\n",state.peer_fingerprint));
+    EnableWindow(share_port_edit_,state.transport_active?FALSE:TRUE);
+    EnableWindow(host_edit_,state.connection_state==ConnectionUiState::Connected?FALSE:TRUE);
+    EnableWindow(remote_port_edit_,state.connection_state==ConnectionUiState::Connected?FALSE:TRUE);
 
     switch (state.preferences.audio_source) {
     case AudioSourceKind::None:
@@ -3037,13 +3039,12 @@ void SettingsPanel::SetCaptureSources(
         return;
     }
 
-    HideDropLists();
-
-    SendMessageW(
-        source_list_,
-        LB_RESETCONTENT,
-        0,
-        0);
+    const bool refresh=sources!=applied_sources_||selected_source_id!=applied_source_id_;
+    if(refresh) {
+        HideDropLists();
+        SendMessageW(source_list_,LB_RESETCONTENT,0,0);
+        applied_sources_=sources;applied_source_id_=selected_source_id;
+    }
 
     capture_source_ids_.clear();
     capture_source_ids_.reserve(
@@ -3069,7 +3070,7 @@ void SettingsPanel::SetCaptureSources(
             label += L" [Unavailable]";
         }
 
-        SendMessageW(
+        if(refresh)SendMessageW(
             source_list_,
             LB_ADDSTRING,
             0,
@@ -3095,7 +3096,7 @@ void SettingsPanel::SetCaptureSources(
     }
 
     if (selected_index >= 0) {
-        SendMessageW(
+        if(refresh)SendMessageW(
             source_list_,
             LB_SETCURSEL,
             static_cast<WPARAM>(
@@ -3471,6 +3472,9 @@ LRESULT SettingsPanel::HandleMessage(
                 });
                 return 0;
 
+            case kExportIdentityId:Emit(UiCommand{UiCommandType::ExportPeerIdentity});return 0;
+            case kDisconnectPeerId:Emit(UiCommand{UiCommandType::DisconnectPeer});return 0;
+            case kPairFriendId:Emit(UiCommand{UiCommandType::PairWithFriend});return 0;
             case kConnectButtonId:
                 Emit(UiCommand{
                     UiCommandType::

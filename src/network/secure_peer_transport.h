@@ -10,7 +10,7 @@ namespace fps::network {
 inline constexpr std::size_t kMaxControlBytes=64*1024;
 inline constexpr std::size_t kMaxMediaBytes=8*1024*1024;
 inline constexpr std::size_t kMaxMediaInFlight=2;
-enum class TransportEventKind { Connected,Disconnected,Control,Video,MediaLost,Error };
+enum class TransportEventKind { Connected,Disconnected,Control,Video,MediaLost,MediaSendLost,Error };
 struct TransportEvent {
     TransportEventKind kind{TransportEventKind::Error};
     std::uint64_t connection_id{0};
@@ -40,7 +40,7 @@ public:
     bool Start(const PeerIdentity&,const PublicPeerIdentity&,TransportConfig,std::string& error);
     bool Connect(const std::string& host,std::uint16_t port,std::string& error);
     TransportSendResult SendControl(std::span<const std::uint8_t>,std::uint64_t connection_id=0);
-    TransportSendResult SendVideo(std::vector<std::uint8_t>,std::uint64_t connection_id=0);
+    TransportSendResult SendVideo(std::vector<std::uint8_t>,std::uint64_t connection_id=0,std::shared_ptr<void> send_credit={});
     std::vector<TransportEvent> PollEvents();
     TransportMetrics Metrics()const;
     std::uint16_t ListenPort()const;

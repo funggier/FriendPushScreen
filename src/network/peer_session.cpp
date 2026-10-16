@@ -33,7 +33,7 @@ void PeerSession::ClearActive() {
     const auto id=state_.connection;
     if(state_.sharing)Emit(SessionActionKind::StopSender,id);
     if(state_.receiving)Emit(SessionActionKind::StopReceiver,id);
-    state_={};last_sequence_=pending_generation_=stopped_generation_=0;
+    awaiting_ready_=false;state_={};last_sequence_=pending_generation_=stopped_generation_=0;
 }
 void PeerSession::Activate(std::uint64_t id) {
     auto& next=links_.at(id);
@@ -52,11 +52,10 @@ void PeerSession::BeginShare() {
     if(!state_.connected||!share_intent_)return;
     if(state_.sharing)Emit(SessionActionKind::StopSender,state_.connection);
     if(++generation_==0)++generation_;
-    state_.sharing=true;state_.outgoing_generation=generation_;state_.outgoing_format=desired_;
+    state_.sharing=false;awaiting_ready_=true;state_.outgoing_generation=generation_;state_.outgoing_format=desired_;
     Send(state_.connection,ControlType::ShareStart,generation_);
     Send(state_.connection,ControlType::VideoFormat,generation_);
-    ControlMessage m;m.session=state_.token;m.generation=generation_;m.format=desired_;
-    Emit(SessionActionKind::StartSender,state_.connection,m);
+
 }
 bool PeerSession::OnControl(std::uint64_t id,const ControlMessage& message,std::uint64_t now) {
     auto found=links_.find(id);if(found==links_.end()||found->second.closing)return false;
@@ -73,6 +72,14 @@ bool PeerSession::OnControl(std::uint64_t id,const ControlMessage& message,std::
     if(id!=state_.connection||message.session!=state_.token)return true;
     link.last_seen=now;
     switch(message.type) {
+    case ControlType::VideoConsumed:break; // Consumed credits belong to the active controller send window.
+    case ControlType::VideoReady:
+        if(awaiting_ready_&&message.generation==state_.outgoing_generation) {
+            awaiting_ready_=false;state_.sharing=true;
+            ControlMessage start;start.session=state_.token;start.generation=state_.outgoing_generation;start.format=desired_;
+            Emit(SessionActionKind::StartSender,id,start);
+        }
+        break;
     case ControlType::ShareStart:
         if(!message.generation)return FailLink(id,"Missing stream generation");
         if(message.generation<=std::max({stopped_generation_,state_.incoming_generation,pending_generation_}))return true;
@@ -111,18 +118,23 @@ bool PeerSession::AcceptVideo(std::uint64_t id,const VideoWireFrame& frame,std::
         !frame.sequence||frame.sequence<=last_sequence_)return false;
     last_sequence_=frame.sequence;links_.at(id).last_seen=now;return true;
 }
+void PeerSession::ReceiverReady(std::uint64_t generation) {
+    if(state_.connected&&state_.receiving&&generation==state_.incoming_generation)
+        Send(state_.connection,ControlType::VideoReady,generation);
+}
 void PeerSession::OnMediaLost(std::uint64_t id) {
     if(!state_.connected||id!=state_.connection)return;
     if(state_.receiving){Emit(SessionActionKind::RecoverReceiver,id);Send(id,ControlType::KeyframeRequest,state_.incoming_generation);}
 }
 bool PeerSession::RequestShare(VideoFormat format) {
     if(!ValidateVideoFormat(format))return false;
-    if(share_intent_&&desired_==format&&state_.sharing)return true;
+    if(share_intent_&&desired_==format&&(state_.sharing||awaiting_ready_))return true;
     desired_=format;share_intent_=true;BeginShare();return true;
 }
 void PeerSession::StopShare() {
     share_intent_=false;
-    if(state_.sharing) {
+    if(state_.sharing||awaiting_ready_) {
+        awaiting_ready_=false;
         Send(state_.connection,ControlType::ShareStop,state_.outgoing_generation);
         Emit(SessionActionKind::StopSender,state_.connection);state_.sharing=false;
     }

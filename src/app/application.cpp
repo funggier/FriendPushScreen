@@ -11,6 +11,7 @@
 #include "diagnostics/diagnostics_formatter.h"
 #include "diagnostics/logger.h"
 #include "platform/windows/os_probe.h"
+#include "platform/windows/runtime_paths.h"
 #include "ui/settings_store.h"
 
 #include <mmsystem.h>
@@ -203,6 +204,7 @@ void Application::OnDiagnosticsReady() {
     text += "Mode: ";
     text += WideStatusToUtf8(
         renderer_status_);
+    if(peer_)text += "\nPeer: "+peer_->Snapshot().status;
     text += "\n\n";
     text += diagnostics::
         FormatDiagnosticsText(
@@ -325,9 +327,10 @@ void Application::UpdateCaptureUi() {
     main_window_.SetCaptureSources(
         capture_sources_,
         selected_source_id_,
-        preview_active,
+        preview_active && local_preview_intent_,
         ui_state_.preferences.show_cursor,
         capture_status_);
+    if(peer_&&peer_->IsActive())return;
     std::ostringstream video;
     if (raw_preview_) {
         video << "Raw preview diagnostic override: video codecs are bypassed.";
@@ -348,7 +351,7 @@ void Application::UpdateCaptureUi() {
     } else if (codec_failed_ && codec_loop_) {
         video << "Codec error: " << codec_loop_->Error();
     } else {
-        video << "H.264 local preview. Choose send/receive codecs independently, then Apply Video.";
+        video << "H.264 send / receive codecs are independent. Local Preview is optional.";
     }
     if (force_software_codec_) video << "\nDiagnostic override: CPU encoder + CPU decoder forced.";
     main_window_.SetVideoCodecStatus(Utf8ToWide(video.str()));
@@ -445,7 +448,7 @@ void Application::StopCaptureSession() {
         capture_session_.reset();
     }
 
-    last_preview_frame_ = {};
+    if(!displaying_peer_)last_preview_frame_ = {};
     last_capture_state_ =
         capture::CaptureSessionState::Stopped;
 }
@@ -475,17 +478,14 @@ void Application::SelectCaptureSource(
         return;
     }
 
-    if (capture_session_ != nullptr) {
-        StopCaptureSession();
-        if (renderer_initialized_) {
-            renderer_.RenderPlaceholder();
-        }
-    }
-
-    selected_source_ = *found;
-    selected_source_id_ = found->id;
-    capture_status_ =
-        "Ready to preview";
+    const bool resume_share=peer_&&peer_->WantsShare();
+    const bool resume_capture=local_preview_intent_||resume_share;
+    if(resume_share)peer_->StopShare();
+    StopCaptureSession();
+    if(renderer_initialized_&&!displaying_peer_)renderer_.RenderPlaceholder();
+    selected_source_=*found;selected_source_id_=found->id;capture_status_="Ready to preview / share";
+    if(resume_capture)StartCapturePreview();
+    if(resume_share&&capture_session_){std::string error;if(!peer_->StartShare(error))peer_error_=error;}
 
     UpdateCaptureUi();
 }
@@ -542,7 +542,7 @@ void Application::StartCapturePreview() {
     capture_status_ =
         capture_session_->StatusText();
 
-    if (renderer_initialized_) {
+    if (renderer_initialized_ && !displaying_peer_) {
         renderer_.RenderPlaceholder();
     }
 
@@ -550,6 +550,9 @@ void Application::StartCapturePreview() {
 }
 
 void Application::StopCapturePreview() {
+    local_preview_intent_=false;
+    codec_loop_.reset();codec_failed_=false;
+    if(peer_&&peer_->WantsShare()){UpdateCaptureUi();return;}
     StopCaptureSession();
 
     if (renderer_initialized_) {
@@ -565,92 +568,61 @@ void Application::StopCapturePreview() {
 }
 
 void Application::ToggleCapturePreview() {
-    bool preview_active = false;
-
-    if (capture_session_ != nullptr) {
-        const auto state =
-            capture_session_->State();
-        preview_active =
-            state ==
-                capture::CaptureSessionState::Starting ||
-            state ==
-                capture::CaptureSessionState::Previewing;
-    }
-
-    if (preview_active) {
-        StopCapturePreview();
-    } else {
-        StartCapturePreview();
-    }
+    if(local_preview_intent_)StopCapturePreview();
+    else {local_preview_intent_=true;if(!capture_session_)StartCapturePreview();UpdateCaptureUi();}
 }
 
 bool Application::TickCapturePreview() {
-    if (!renderer_initialized_ || capture_session_ == nullptr) return false;
-    const auto rendered_before = codec_loop_ ? codec_loop_->Metrics().rendered_frames : 0;
-    capture::CapturedFrame frame{};
-    const bool acquired = capture_session_->TryAcquireFrame(frame) && frame.IsValid();
-    const auto state = capture_session_->State();
-    if (state == capture::CaptureSessionState::SourceLost || state == capture::CaptureSessionState::Error) {
-        codec_loop_.reset();
-        last_preview_frame_ = {};
-        renderer_.RenderPlaceholder();
-        if (state != last_capture_state_) {
-            last_capture_state_ = state;
-            capture_status_ = capture_session_->StatusText();
-            UpdateCaptureUi();
-            if (state == capture::CaptureSessionState::SourceLost) RefreshCaptureSources();
-        }
+    if(!renderer_initialized_||!capture_session_)return false;
+    capture::CapturedFrame frame{};const bool acquired=capture_session_->TryAcquireFrame(frame)&&frame.IsValid();
+    const auto state=capture_session_->State();
+    if(state==capture::CaptureSessionState::SourceLost||state==capture::CaptureSessionState::Error) {
+        if(peer_)peer_->StopShare();codec_loop_.reset();
+        if(!displaying_peer_){last_preview_frame_={};renderer_.RenderPlaceholder();}
+        if(state!=last_capture_state_){last_capture_state_=state;capture_status_=capture_session_->StatusText();UpdateCaptureUi();UpdatePeerUi(true);RefreshCaptureSources();}
         return false;
     }
-    last_capture_state_ = state;
-    if (codec_failed_) return false;
-    const auto sink = [this](const capture::CapturedFrame& decoded) {
-        if (!renderer_.RenderFrame(decoded)) return false;
-        last_preview_frame_ = decoded;
-        return true;
+    last_capture_state_=state;
+    const bool sharing=peer_&&peer_->WantsShare();
+    if(acquired&&sharing&&selected_source_) {
+        auto protected_frame=frame;std::string error;
+        if(!feedback_.Apply(protected_frame,*selected_source_,error)) {
+            peer_->StopShare();peer_error_=error;capture_status_=error;UpdatePeerUi(true);return false;
+        }
+        if(!peer_->PushCapture(protected_frame)){capture_status_=peer_->Snapshot().error;UpdatePeerUi(true);}
+    }
+    if(!local_preview_intent_||(peer_&&peer_->IsReceiving()))return acquired;
+    if(codec_failed_)return acquired;
+    const auto sink=[this](const capture::CapturedFrame& decoded) {
+        if(!renderer_.RenderFrame(decoded))return false;last_preview_frame_=decoded;displaying_peer_=false;return true;
     };
-    bool ok = true;
-    if (raw_preview_) {
-        if (acquired) ok = sink(frame);
-        capture_status_ = "Raw capture preview (diagnostic)";
+    bool ok=true;
+    if(raw_preview_||sharing) {
+        codec_loop_.reset();
+        if(acquired)ok=sink(frame);
+        capture_status_=sharing?"Local source preview | outgoing H.264":"Raw capture preview (diagnostic)";
     } else {
-        if (acquired) {
-            const auto width = (frame.width + 1U) & ~1U;
-            const auto height = (frame.height + 1U) & ~1U;
-            if (!codec_loop_ || codec_loop_->Width() != width || codec_loop_->Height() != height) {
-                RecordCodecMetrics("resize");
-                codec_start_tick_ = GetTickCount64();
-                codec_loop_ = std::make_unique<media::VideoLocalLoop>();
-                auto config = ui::MakeVideoCodecConfig(ui_state_.preferences.video,width,height);
-                auto encoder_policy = ui_state_.preferences.video.encoder_mode;
-                auto decoder_policy = ui_state_.preferences.video.decoder_mode;
-                if (force_software_codec_) {
-                    encoder_policy = decoder_policy = media::VideoBackendPolicy::ForceSoftware;
-                    config.encoder_id.clear(); config.decoder_id.clear();
-                }
-                ok = codec_loop_->Initialize(renderer_.Device(),config,encoder_policy,decoder_policy);
+        if(acquired) {
+            const auto width=(frame.width+1U)&~1U,height=(frame.height+1U)&~1U;
+            if(!codec_loop_||codec_loop_->Width()!=width||codec_loop_->Height()!=height) {
+                RecordCodecMetrics("resize");codec_start_tick_=GetTickCount64();codec_loop_=std::make_unique<media::VideoLocalLoop>();
+                auto config=ui::MakeVideoCodecConfig(ui_state_.preferences.video,width,height);
+                auto encoder=ui_state_.preferences.video.encoder_mode,decoder=ui_state_.preferences.video.decoder_mode;
+                if(force_software_codec_){encoder=decoder=media::VideoBackendPolicy::ForceSoftware;config.encoder_id.clear();config.decoder_id.clear();}
+                ok=codec_loop_->Initialize(renderer_.Device(),config,encoder,decoder);
             }
-            if (ok) ok = codec_loop_->Push(frame, sink);
+            if(ok)ok=codec_loop_->Push(frame,sink);
         }
-        if (ok && codec_loop_) ok = codec_loop_->Poll(sink);
-        if (codec_loop_) capture_status_ = codec_loop_->Status();
-        else capture_status_ = "Waiting for capture to start H.264 local loop";
+        if(ok&&codec_loop_)ok=codec_loop_->Poll(sink);
+        capture_status_=codec_loop_?codec_loop_->Status():"Waiting for capture to start H.264 local preview";
     }
-    if (!ok) {
-        codec_failed_ = true;
-        capture_status_ = codec_loop_ ? codec_loop_->Status() : "Preview renderer failed";
-        last_preview_frame_ = {};
-        renderer_.RenderPlaceholder();
-        diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Error, "codec", capture_status_);
-        UpdateCaptureUi();
-        return false;
+    if(!ok) {
+        codec_failed_=true;capture_status_=codec_loop_?codec_loop_->Status():"Preview renderer failed";
+        last_preview_frame_={};renderer_.RenderPlaceholder();
+        diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Error,"codec",capture_status_);UpdateCaptureUi();return false;
     }
-    if (GetTickCount64() - last_codec_status_tick_ >= 1000) {
-        last_codec_status_tick_ = GetTickCount64();
-        UpdateCaptureUi();
-        RecordCodecMetrics("progress");
-    }
-    return acquired || (codec_loop_ && codec_loop_->Metrics().rendered_frames > rendered_before);
+    if(GetTickCount64()-last_codec_status_tick_>=1000){last_codec_status_tick_=GetTickCount64();UpdateCaptureUi();RecordCodecMetrics("progress");}
+    return acquired;
 }
 
 void Application::RecordCodecMetrics(const char* stage) {
@@ -682,27 +654,16 @@ void Application::HandleUiCommand(
         state_changed = true;
         break;
 
-    case ui::UiCommandType::ToggleShareRequest:
-        ui::ToggleShareRequest(
-            ui_state_);
-        state_changed = true;
-
-        diagnostics::Logger::Instance().
-            Log(
-                diagnostics::LogLevel::Info,
-                "ui",
-                ui_state_.share_state ==
-                        ui::ShareUiState::
-                            ShareRequested
-                    ? "share requested; "
-                      "media pipeline not active"
-                    : "share request cancelled");
-        break;
+    case ui::UiCommandType::ToggleShareRequest:ToggleShare();return;
+    case ui::UiCommandType::ExportPeerIdentity:ExportPeerIdentity();return;
+    case ui::UiCommandType::PairWithFriend:PairWithFriend();return;
+    case ui::UiCommandType::DisconnectPeer:DisconnectPeer();return;
 
     case ui::UiCommandType::ApplyVideoSettings:
         if (!ui::IsValidVideoPreferences(command.video)) return;
         RecordCodecMetrics("settings-change");
         ui_state_.preferences.video = command.video;
+        ConfigurePeerCodecs();
         codec_loop_.reset();
         codec_failed_ = false;
         codec_start_tick_ = 0;
@@ -732,23 +693,7 @@ void Application::HandleUiCommand(
         state_changed = true;
         break;
 
-    case ui::UiCommandType::
-        ToggleConnectionRequest:
-        ui::ToggleConnectionRequest(
-            ui_state_);
-        state_changed = true;
-
-        diagnostics::Logger::Instance().
-            Log(
-                diagnostics::LogLevel::Info,
-                "ui",
-                ui_state_.connection_state ==
-                        ui::ConnectionUiState::
-                            ConnectRequested
-                    ? "connect requested; "
-                      "transport not active"
-                    : "connect request cancelled");
-        break;
+    case ui::UiCommandType::ToggleConnectionRequest:ConnectPeer();return;
 
     case ui::UiCommandType::SetConnectionMode:
         if (command.value >= 0 &&
@@ -879,6 +824,116 @@ void Application::HandleUiCommand(
     }
 }
 
+
+void Application::PeerError(const std::string& message) {
+    peer_error_=message;
+    diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Error,"peer",message);
+    MessageBoxW(main_window_.Handle(),Utf8ToWide(message).c_str(),L"FriendPushScreen",MB_OK|MB_ICONERROR);
+    UpdatePeerUi(true);
+}
+void Application::ConfigurePeerCodecs() {
+    if(!peer_)return;
+    auto config=ui::MakeVideoCodecConfig(ui_state_.preferences.video,1920,1080);
+    auto encode=ui_state_.preferences.video.encoder_mode,decode=ui_state_.preferences.video.decoder_mode;
+    if(force_software_codec_){encode=decode=media::VideoBackendPolicy::ForceSoftware;config.encoder_id.clear();config.decoder_id.clear();}
+    peer_->ConfigureCodecs(std::move(config),encode,decode);
+}
+void Application::ExportPeerIdentity() {
+    if(!peer_){PeerError("Local peer identity is unavailable");return;}
+    const auto path=main_window_.PromptPairingPath(true);if(!path)return;
+    std::string error;
+    if(!peer_->ExportIdentity(*path,error)){PeerError(error);return;}
+    peer_error_.clear();UpdatePeerUi(true);
+}
+void Application::PairWithFriend() {
+    if(!peer_){PeerError("Local peer identity is unavailable");return;}
+    const auto path=main_window_.PromptPairingPath(false);if(!path)return;
+    std::string error;auto peer=network::ReadPublicBundle(*path,error);
+    if(!peer||!network::ValidateTrustedPeer(*peer_->Identity(),*peer,error)){PeerError(error);return;}
+    std::string prompt="Verify this friend's full SHA-256 fingerprint using an independent channel before authorizing:\n\n"+
+        peer->fingerprint+"\n\n"+peer->stable_name;
+    if(const auto* previous=peer_->TrustedPeer())prompt+="\n\nThis replaces the authorized friend:\n"+previous->fingerprint;
+    prompt+="\n\nAuthorize this exact identity?";
+    if(MessageBoxW(main_window_.Handle(),Utf8ToWide(prompt).c_str(),L"Authorize Friend Identity",MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2)!=IDYES)return;
+    if(!peer_->AuthorizePeer(*peer,error)){PeerError(error);return;}
+    if(!local_preview_intent_)StopCaptureSession();
+    peer_error_.clear();ConfigurePeerCodecs();UpdatePeerUi(true);
+}
+void Application::ToggleShare() {
+    if(!peer_){PeerError("Local peer identity is unavailable");return;}
+    if(peer_->WantsShare()) {
+        peer_->StopShare();if(!local_preview_intent_)StopCaptureSession();UpdatePeerUi(true);return;
+    }
+    if(!selected_source_||selected_source_->availability!=capture::CaptureAvailability::Available){PeerError("Select an available source before sharing");return;}
+    if(selected_source_->kind==capture::CaptureSourceKind::Window&&
+        capture::IsFriendPushViewer(reinterpret_cast<HWND>(selected_source_->native_handle))){PeerError("Cannot share a FriendPushScreen viewer window");return;}
+    std::string error;
+    if(!peer_->Listen(static_cast<std::uint16_t>(ui_state_.preferences.share_port),error)||!peer_->StartShare(error)){PeerError(error);return;}
+    if(!capture_session_)StartCapturePreview();
+    if(!capture_session_){peer_->StopShare();PeerError(capture_status_);return;}
+    peer_error_.clear();UpdatePeerUi(true);
+}
+void Application::ConnectPeer() {
+    if(!peer_){PeerError("Local peer identity is unavailable");return;}
+    std::string error;
+    if(!peer_->Connect(ui_state_.preferences.host,static_cast<std::uint16_t>(ui_state_.preferences.remote_port),
+        static_cast<std::uint16_t>(ui_state_.preferences.share_port),error)){PeerError(error);return;}
+    peer_error_.clear();UpdatePeerUi(true);
+}
+void Application::DisconnectPeer() {
+    if(peer_)peer_->Disconnect();
+    if(!local_preview_intent_)StopCaptureSession();
+    displaying_peer_=false;last_preview_frame_={};if(renderer_initialized_)renderer_.RenderPlaceholder();
+    peer_error_.clear();UpdatePeerUi(true);
+}
+bool Application::TickPeer() {
+    if(!peer_)return false;
+    const bool rendered=peer_->Poll([this](const capture::CapturedFrame& frame) {
+        if(!renderer_.RenderFrame(frame, false))return false;
+        last_preview_frame_=frame;displaying_peer_=true;return true;
+    },[this]{
+        if(displaying_peer_){displaying_peer_=false;last_preview_frame_={};if(renderer_initialized_)renderer_.RenderPlaceholder();}
+    });
+    UpdatePeerUi();return rendered;
+}
+void Application::UpdatePeerUi(bool force) {
+    if(!peer_)return;
+    const auto now=GetTickCount64();if(!force&&now-last_peer_ui_tick_<1000)return;last_peer_ui_tick_=now;
+    const auto p=peer_->Snapshot();
+    ui::PeerUiSnapshot state{p.active,p.connecting,p.connected,p.wants_share,p.sharing,p.receiving,
+        p.status,p.sharing?"Sharing H.264 | sent "+std::to_string(p.outgoing.delivered)+" frames":
+        (p.wants_share?"Waiting for paired friend / source frame":"Not sharing"),p.own_fingerprint,p.peer_fingerprint};
+    if(!peer_error_.empty())state.status+=" | "+peer_error_;
+    ui::ApplyPeerUiSnapshot(ui_state_,state);
+    main_window_.ApplyUiState(ui_state_);
+    if(p.active||p.connected) {
+        std::ostringstream video;
+        video<<"Send: "<<(p.encoder_gpu_frames?"[GPU] ":p.encoder_cpu_frames?"[CPU] ":"")<<(p.encoder.empty()?"waiting for source / peer":p.encoder)
+            <<"\nReceive: "<<(p.decoder_gpu_frames?"[GPU] ":p.decoder_cpu_frames?"[CPU] ":"")<<(p.decoder.empty()?"waiting for peer video":p.decoder)
+            <<"\nSent "<<p.outgoing.delivered<<" | Received "<<p.incoming.delivered<<" | Queue "<<p.outbound_pending<<"/2"
+            <<" | "<<ui_state_.preferences.video.bitrate_mbps<<" Mbps, GOP "<<ui_state_.preferences.video.keyframe_interval
+            <<"\nEncoder latency "<<(ui_state_.preferences.video.low_latency?"on":"off")<<" | Decoder real-time on";
+        if(!p.error.empty())video<<"\n"<<p.error;
+        main_window_.SetVideoCodecStatus(Utf8ToWide(video.str()));
+        if(codec_metrics_) {
+            std::ostringstream log;
+            log<<"connected="<<p.connected<<" sharing="<<p.sharing<<" receiving="<<p.receiving
+                <<" session="<<p.session<<" out_generation="<<p.outgoing_generation<<" in_generation="<<p.incoming_generation
+                <<" encoded="<<p.outgoing.encoded<<" sent="<<p.outgoing.delivered<<" decoded="<<p.incoming.decoded<<" rendered="<<p.incoming.delivered
+                <<" sent_bytes="<<p.transport.sent_bytes<<" received_bytes="<<p.transport.received_bytes
+                <<" tx_peak_count="<<p.max_outbound_pending<<" tx_peak_bytes="<<p.max_outbound_bytes
+                <<" rx_peak_count="<<p.transport.max_receive_media_count<<" rx_peak_bytes="<<p.transport.max_receive_media_bytes
+                <<" drops="<<p.transport.dropped_video<<" encoder_gpu="<<p.encoder_gpu_frames<<" encoder_cpu="<<p.encoder_cpu_frames
+                <<" decoder_gpu="<<p.decoder_gpu_frames<<" decoder_cpu="<<p.decoder_cpu_frames
+                <<" encode_p50_ms="<<p.encode_latency.p50_ms<<" encode_p95_ms="<<p.encode_latency.p95_ms<<" encode_p99_ms="<<p.encode_latency.p99_ms
+                <<" decode_p50_ms="<<p.decode_latency.p50_ms<<" decode_p95_ms="<<p.decode_latency.p95_ms<<" decode_p99_ms="<<p.decode_latency.p99_ms
+                <<" e2e_p50_ms="<<p.end_to_end.p50_ms<<" e2e_p95_ms="<<p.end_to_end.p95_ms<<" e2e_p99_ms="<<p.end_to_end.p99_ms
+                <<" encoder="<<p.encoder<<" decoder="<<p.decoder;
+            diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Info,"peer-metrics",log.str());
+        }
+    } else UpdateCaptureUi();
+}
+
 int Application::Run(
     HINSTANCE instance,
     int show_command) {
@@ -988,7 +1043,14 @@ int Application::Run(
         renderer_.RenderPlaceholder();
     }
 
-    ApplyUiState();
+    if(renderer_initialized_) {
+        peer_=std::make_unique<PeerVideoController>();std::string error;
+        if(!peer_->Initialize(renderer_.Device(),platform::windows::DefaultDataRoot()/"peer",error)) {
+            peer_error_=error;peer_.reset();ui_state_.peer_status=error;
+            diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Error,"peer",error);
+        }else ConfigurePeerCodecs();
+    }
+    ApplyUiState();UpdatePeerUi(true);
 
     // Normalize persisted values against this
     // Windows runtime (for example an Application
@@ -1010,16 +1072,18 @@ int Application::Run(
             DispatchMessageW(&message);
         }
         if (quitting) break;
-        if (!TickCapturePreview()) {
-            const bool active = capture_session_ && !codec_failed_ &&
-                capture_session_->State() != capture::CaptureSessionState::SourceLost &&
-                capture_session_->State() != capture::CaptureSessionState::Error;
-            MsgWaitForMultipleObjectsEx(0, nullptr, active ? 1 : INFINITE,
-                QS_ALLINPUT, MWMO_INPUTAVAILABLE);
+        const bool peer_rendered=TickPeer();
+        const bool capture_work=TickCapturePreview();
+        if(!peer_rendered&&!capture_work) {
+            const bool active=(capture_session_&&capture_session_->State()!=capture::CaptureSessionState::SourceLost&&
+                capture_session_->State()!=capture::CaptureSessionState::Error)||(peer_&&peer_->IsReceiving());
+            HANDLE wake=peer_?peer_->WakeEvent():nullptr;
+            MsgWaitForMultipleObjectsEx(wake?1:0,wake?&wake:nullptr,active?1:INFINITE,QS_ALLINPUT,MWMO_INPUTAVAILABLE);
         }
     }
 
     StopCaptureSession();
+    peer_.reset();
 
     diagnostics_service_.WaitForIdle(
         std::chrono::seconds{5});

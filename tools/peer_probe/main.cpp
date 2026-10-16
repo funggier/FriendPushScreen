@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include "tls_negative.h"
 using namespace fps::network;
 namespace {
 bool Check(bool condition,const char* label) {
@@ -83,12 +84,25 @@ bool NegativeTests(const std::filesystem::path& root) {
         }
         ok=Check(!accepted&&disconnected,"unknown client rejected before payload delivery")&&ok;
     }
+    for(bool missing_client:{true,false}) {
+        SecurePeerTransport server;
+        if(!server.Start(*b,a->Public(),{root/"b",0,true,250},error))return Check(false,"TLS rejection fixture server");
+        const auto expected=missing_client?b->Public().stable_name:std::string("fps-00000000000000000000000000000000.invalid");
+        const auto result=RunNativeTlsNegative(server,b->Public(),missing_client?nullptr:a.get(),expected,root/"negative-server-ca.pem");
+        ok=Check(result.setup,"native TLS negative connection actually attempted")&&ok;
+        ok=Check(result.finished&&!result.server_accepted,missing_client?"missing client credential rejected before payload":"normal TLS SAN mismatch rejected before payload")&&ok;
+        std::cout<<"TLS_REJECTION_STATUS="<<static_cast<unsigned long>(result.status)<<'\n';
+    }
     {
         SecurePeerTransport first,duplicate;
         ok=Check(first.Start(*a,b->Public(),{root/"a",0,true,250},error),"port conflict listener")&&ok;
         ok=Check(!duplicate.Start(*b,a->Public(),{root/"b",first.ListenPort(),true,250},error),"occupied UDP port rejected")&&ok;
         ok=Check(!first.Connect("127.0.0.1",first.ListenPort(),error),"self endpoint rejected")&&ok;
         ok=Check(!first.Connect("192.0.2.1",12345,error),"loopback qualification does not expose non-loopback")&&ok;
+        const auto lookup_started=GetTickCount64();
+        ok=Check(!first.Connect("not-resolved.invalid",12345,error)&&error.find("IPv4")!=std::string::npos,
+            "evaluation rejects DNS names explicitly without an unbounded resolver")&&ok;
+        ok=Check(GetTickCount64()-lookup_started<500,"endpoint validation is promptly bounded")&&ok;
     }
     {
         SecurePeerTransport sender,receiver;

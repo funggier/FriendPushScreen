@@ -4,6 +4,8 @@
 #include <Windows.h>
 
 #include "capture/capture_frame.h"
+#include "capture/feedback_protection.h"
+#include "app/peer_video_controller.h"
 #include "capture/capture_session.h"
 #include "capture/capture_source.h"
 #include "diagnostics/diagnostics_service.h"
@@ -29,6 +31,16 @@ public:
 
 private:
     void RefreshDiagnostics();
+    void UpdatePeerUi(bool force=false);
+    void ConfigurePeerCodecs();
+    void ToggleShare();
+    void ConnectPeer();
+    void DisconnectPeer();
+    void PairWithFriend();
+    void ExportPeerIdentity();
+    bool TickPeer();
+    void PeerError(const std::string& message);
+
     void OnDiagnosticsReady();
     void SaveDiagnostics();
 
@@ -62,6 +74,11 @@ private:
         diagnostics_service_;
 
     ui::UiState ui_state_{};
+    std::unique_ptr<PeerVideoController> peer_;
+    capture::FeedbackProtection feedback_;
+    bool local_preview_intent_{false},displaying_peer_{false};
+    ULONGLONG last_peer_ui_tick_{0};
+    std::string peer_error_;
 
     std::vector<
         capture::CaptureSourceDescriptor>

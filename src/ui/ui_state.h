@@ -16,6 +16,8 @@ enum class ConnectionMode {
 enum class ConnectionUiState {
     Disconnected,
     ConnectRequested,
+    Listening,
+    Error,
     Connected
 };
 
@@ -74,9 +76,17 @@ struct UiState {
     ConnectionUiState connection_state{
         ConnectionUiState::Disconnected};
 
+    bool receiving_video{false},transport_active{false};
+    std::string peer_status,share_status,own_fingerprint,peer_fingerprint;
     std::uint32_t windows_build{0};
     bool application_audio_supported{false};
 };
+
+struct PeerUiSnapshot {
+    bool active{},connecting{},connected{},share_intent{},sharing{},receiving{};
+    std::string status,share_status,own_fingerprint,peer_fingerprint;
+};
+void ApplyPeerUiSnapshot(UiState&,const PeerUiSnapshot&);
 
 bool SupportsApplicationAudio(std::uint32_t windows_build);
 

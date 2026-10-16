@@ -2,7 +2,7 @@
 
 FriendPushScreen is a Windows real-time screen-sharing project for two peers who want higher-quality, lower-latency video plus optional shared machine audio while continuing to use an external service such as Discord for voice and chat.
 
-> **Current state on this branch:** FPS-006 video capture → H.264 encode/decode → local preview is qualified. Settings now provide independent CPU/GPU encoder and decoder choices and encoding controls. Audio execution and network screen sharing remain later milestones.
+> **Current state on this branch:** FPS-006 local H.264 preview and independent CPU/GPU controls are qualified. Native mutually authenticated peer video is implemented for a loopback-only No Audio evaluation; actual two-instance qualification is in progress.
 
 ## V1 product boundary
 
@@ -133,4 +133,25 @@ See:
 - `docs/development/QUALIFICATION-MATRIX.md`
 - `docs/architecture/DECISION-GATES.md`
 
-Build instructions are available in `docs/BUILDING.md`. The current executable includes native diagnostics, unified capture, and decoded H.264 local preview. Audio capture/playback and secure peer/network streaming remain later tasks.
+Build instructions are available in `docs/BUILDING.md`. The current executable includes native diagnostics, unified capture, and decoded H.264 local preview. Secure peer video is available for the loopback evaluation described below. Audio capture/playback and non-loopback connectivity remain later qualification tasks.
+
+## Two portable instances on one PC
+
+This development increment uses native H.264 over pinned TLS 1.3 QUIC. The transport candidate remains provisional. It currently accepts IPv4 loopback endpoints or `localhost`; DNS, LAN, Internet and Tailscale are not qualified by this increment.
+
+1. Copy `FriendPushScreen.exe` and its pinned `msquic.dll` into two separate folders A and B. Create an empty `portable.flag` in each folder.
+2. Open both copies. Give A Share Port `42801` and B Share Port `42802`.
+3. Use **Export Identity** in each copy. Exchange only the public `.friendpair` files. Use **Pair with Friend**, compare the complete SHA-256 fingerprint with the other copy, and confirm only that known identity.
+4. In A, choose an owned capture source and click **Start Share**.
+5. In B, set Host `127.0.0.1`, Remote Port `42801`, and click **Connect**. B can receive without selecting any local source.
+6. To send B's picture back over the same connection, choose B's source and click **Start Share**. Both peers choose their encoder and decoder independently.
+
+**Stop Share** stops only your outgoing picture; incoming video and the connection continue. **Disconnect** cancels listening, reconnect and outgoing sharing. Starting the program does not share automatically. **Preview** is a separate local choice, and incoming video has viewer priority.
+
+Each portable folder owns a different persistent identity, public peer trust and settings. Private identity data is protected for the current Windows user and is never exported in the pairing file. Do not reuse the same data folder for both peers.
+
+The application bounds media to two access units per direction, waits for the remote decoder before sending, and returns send capacity after the remote consumer releases a frame. Genuine dependency loss requests a fresh generation and IDR with parameter sets. Peer presentation uses sync interval zero so waiting for a display refresh does not block capture and reception. Existing local preview keeps its default presentation behavior.
+
+Both application windows are excluded from capture where Windows supports it. Monitor capture also applies the checked black-mask fallback, and selecting an application's own viewer window is rejected. Physical feedback, recovery and sustained performance results must be read from the dated qualification report, not inferred from these implementation notes.
+
+`FPS_CODEC_METRICS=1` enables bounded diagnostic traces and actual codec/transport counters. These development diagnostics are opt-in; normal video operation does not require them.

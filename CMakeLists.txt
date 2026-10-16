@@ -58,6 +58,7 @@ add_executable(FriendPushScreen WIN32
     src/media/mft_transform_session.cpp
     src/media/mf_video_codec.cpp
     src/media/video_frame_normalizer.cpp
+    src/app/peer_video_controller.cpp
     src/media/video_peer_stream.cpp
     src/media/video_local_loop.cpp
     src/graphics/d3d11_video_converter.cpp
@@ -150,6 +151,8 @@ add_executable(FriendPushScreenTests
     tests/platform_filter_tests.cpp
     tests/diagnostics_service_tests.cpp
     tests/ui_state_tests.cpp
+    tests/peer_ui_state_tests.cpp
+    tests/peer_video_controller_tests.cpp
     tests/settings_store_tests.cpp
     tests/capture_source_catalog_tests.cpp
     tests/main_window_layout_tests.cpp
@@ -194,6 +197,7 @@ add_executable(FriendPushScreenTests
     src/media/mft_transform_session.cpp
     src/media/mf_video_codec.cpp
     src/media/video_frame_normalizer.cpp
+    src/app/peer_video_controller.cpp
     src/media/video_peer_stream.cpp
     src/media/video_local_loop.cpp
     src/graphics/d3d11_video_converter.cpp
@@ -232,6 +236,7 @@ add_test(NAME FriendPushScreenTests COMMAND FriendPushScreenTests)
 add_executable(FriendPushScreenCaptureLoopProbe
     tools/capture_loop_probe/main.cpp
     src/media/video_frame_normalizer.cpp
+    src/app/peer_video_controller.cpp
     src/media/video_peer_stream.cpp
     src/media/video_local_loop.cpp
     src/media/mf_video_codec.cpp
@@ -266,7 +271,7 @@ target_link_libraries(FriendPushScreenCaptureLoopProbe PRIVATE
     D3D11 D3DCompiler Dxgi Dxguid Mf Mfplat Mfreadwrite Mfuuid
     Ole32 OleAut32 User32 Gdi32 Dwmapi WindowsApp Psapi Comctl32 UxTheme Winmm)
 
-target_link_libraries(FriendPushScreenTests PRIVATE fps_network)
+target_link_libraries(FriendPushScreenTests PRIVATE fps_network Winmm)
 fps_copy_msquic_runtime(FriendPushScreenTests)
 target_link_libraries(FriendPushScreen PRIVATE fps_network)
 fps_copy_msquic_runtime(FriendPushScreen)
@@ -280,3 +285,14 @@ add_test(NAME FriendPushScreenSecurePeerTests COMMAND FriendPushScreenPeerProbe 
 set_tests_properties(FriendPushScreenSecurePeerTests PROPERTIES TIMEOUT 45)
 
 target_link_libraries(FriendPushScreenCaptureLoopProbe PRIVATE fps_network)
+
+add_executable(FriendPushScreenVideoPeerProbe tools/video_peer_probe/main.cpp
+    src/media/video_peer_stream.cpp src/media/video_frame_normalizer.cpp
+    src/media/mf_video_codec.cpp src/media/mft_transform_session.cpp
+    src/media/mft_video_transform_activation.cpp src/media/mft_video_codec_catalog.cpp
+    src/media/mft_video_media_type.cpp src/media/mf_d3d11_device_manager.cpp
+    src/media/video_codec_model.cpp src/media/video_frame_clock.cpp src/media/encoded_access_unit_queue.cpp
+    src/graphics/d3d11_video_converter.cpp)
+target_include_directories(FriendPushScreenVideoPeerProbe PRIVATE src)
+target_link_libraries(FriendPushScreenVideoPeerProbe PRIVATE fps_network D3D11 Dxgi Mf Mfplat Mfuuid Ole32 OleAut32)
+fps_apply_warnings(FriendPushScreenVideoPeerProbe)

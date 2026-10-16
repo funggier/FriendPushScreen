@@ -22,7 +22,8 @@ using namespace fps;
 namespace {
 graphics::PreviewRenderer* preview=nullptr;
 bool preview_ready=false;
-unsigned fixture_frame=0;
+unsigned fixture_frame=0,fixture_variant=0;
+std::string fixture_label;
 LRESULT CALLBACK WindowProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
     if(msg==WM_CLOSE){PostQuitMessage(0);return 0;}
     if(msg==WM_SIZE && preview && preview_ready)preview->Resize(LOWORD(lp),HIWORD(lp));
@@ -34,12 +35,12 @@ LRESULT CALLBACK FixtureProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
         HBRUSH background=CreateSolidBrush(RGB(24,36,48));FillRect(dc,&area,background);DeleteObject(background);
         const COLORREF colors[]{RGB(255,0,0),RGB(0,255,0),RGB(0,0,255),RGB(255,255,255)};
         for(int i=0;i<4;++i) {
-            RECT stripe{i*480,0,(i+1)*480,120};HBRUSH brush=CreateSolidBrush(colors[i]);FillRect(dc,&stripe,brush);DeleteObject(brush);
+            RECT stripe{i*480,0,(i+1)*480,120};HBRUSH brush=CreateSolidBrush(colors[(i+fixture_variant)%4]);FillRect(dc,&stripe,brush);DeleteObject(brush);
         }
         RECT moving{static_cast<LONG>((fixture_frame*12)%1600),400,static_cast<LONG>((fixture_frame*12)%1600+320),720};
         HBRUSH brush=CreateSolidBrush(RGB(220,170,80));FillRect(dc,&moving,brush);DeleteObject(brush);
         SetBkMode(dc,TRANSPARENT);SetTextColor(dc,RGB(255,255,255));
-        std::wstring text=L"FPS-006 real WGC source 1920x1080 | frame "+std::to_wstring(fixture_frame);
+        std::wstring text=L"FPS-006 real WGC source 1920x1080 | "+std::wstring(fixture_label.begin(),fixture_label.end())+L" | frame "+std::to_wstring(fixture_frame);
         TextOutW(dc,24,160,text.c_str(),static_cast<int>(text.size()));
         // The border marks the entire source extent so cropping is visible.
         HBRUSH border=CreateSolidBrush(RGB(255,255,255));FrameRect(dc,&area,border);DeleteObject(border);
@@ -65,6 +66,8 @@ int main(int argc,char** argv) {
         else if(arg=="--seconds" && n+1<argc)seconds=std::stod(argv[++n]);
         else if(arg=="--software")software=true;
         else if(arg=="--fixture-only")fixture_only=true;
+        else if(arg=="--fixture-label"&&n+1<argc)fixture_label=argv[++n];
+        else if(arg=="--fixture-variant"&&n+1<argc)fixture_variant=static_cast<unsigned>(std::stoul(argv[++n]))%4;
         else if(arg=="--require-1080p60")require_1080=true;
         else {std::cerr<<"Unknown argument "<<arg<<"\n";return 2;}
     }
@@ -81,7 +84,8 @@ int main(int argc,char** argv) {
         auto ready=created.get_future();
         // The capture producer must keep its own clock while encode/decode/present runs.
         fixture_thread=std::jthread([instance,signal=std::move(created)](std::stop_token stop) mutable {
-            HWND own=CreateWindowExW(0,L"FPS006MovingFixture",L"FPS-006 1080p moving source",
+            const auto title=fixture_label.empty()?std::wstring(L"FPS-006 1080p moving source"):std::wstring(fixture_label.begin(),fixture_label.end());
+            HWND own=CreateWindowExW(0,L"FPS006MovingFixture",title.c_str(),
                 WS_POPUP|WS_VISIBLE,0,0,1920,1080,nullptr,nullptr,instance,nullptr);
             if(own){UpdateWindow(own);DwmFlush();}
             signal.set_value(own);

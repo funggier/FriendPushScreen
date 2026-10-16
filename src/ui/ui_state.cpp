@@ -5,6 +5,14 @@
 
 namespace fps::ui {
 
+void ApplyPeerUiSnapshot(UiState& s,const PeerUiSnapshot& p) {
+    s.transport_active=p.active;s.receiving_video=p.receiving;
+    s.connection_state=p.connected?ConnectionUiState::Connected:(p.connecting?ConnectionUiState::ConnectRequested:
+        (p.active?ConnectionUiState::Listening:ConnectionUiState::Disconnected));
+    s.share_state=p.sharing?ShareUiState::Sharing:(p.share_intent?ShareUiState::ShareRequested:ShareUiState::NotSharing);
+    s.peer_status=p.status;s.share_status=p.share_status;s.own_fingerprint=p.own_fingerprint;s.peer_fingerprint=p.peer_fingerprint;
+}
+
 bool IsValidVideoPreferences(const VideoPreferences& preferences) {
     const auto valid_mode = [](media::VideoBackendPolicy mode) {
         return mode == media::VideoBackendPolicy::PreferHardware ||
@@ -140,12 +148,14 @@ void ToggleShareRequest(UiState& state) {
 
 void ToggleConnectionRequest(UiState& state) {
     switch (state.connection_state) {
+    case ConnectionUiState::Error:
     case ConnectionUiState::Disconnected:
         state.connection_state =
             ConnectionUiState::ConnectRequested;
         break;
 
     case ConnectionUiState::ConnectRequested:
+    case ConnectionUiState::Listening:
     case ConnectionUiState::Connected:
         state.connection_state =
             ConnectionUiState::Disconnected;

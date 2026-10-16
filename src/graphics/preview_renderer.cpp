@@ -538,7 +538,7 @@ bool PreviewRenderer::UploadCursor(
 }
 
 bool PreviewRenderer::DrawFrame(
-    const capture::CapturedFrame& frame) {
+    const capture::CapturedFrame& frame, bool wait_for_vblank) {
     if (!EnsurePipeline() ||
         frame_srv_ == nullptr ||
         view_width_ == 0 ||
@@ -730,7 +730,7 @@ bool PreviewRenderer::DrawFrame(
     }
 
     const HRESULT hr =
-        swap_chain->Present(1, 0);
+        swap_chain->Present(wait_for_vblank ? 1 : 0, 0);
     if (FAILED(hr)) {
         last_error_ = hr;
         return false;
@@ -741,12 +741,12 @@ bool PreviewRenderer::DrawFrame(
 }
 
 bool PreviewRenderer::RenderFrame(
-    const capture::CapturedFrame& frame) {
+    const capture::CapturedFrame& frame, bool wait_for_vblank) {
     if (!UploadFrame(frame)) {
         return false;
     }
 
-    return DrawFrame(frame);
+    return DrawFrame(frame, wait_for_vblank);
 }
 
 }  // namespace fps::graphics

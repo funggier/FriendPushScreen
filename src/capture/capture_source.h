@@ -24,6 +24,7 @@ struct CaptureSourceDescriptor {
     std::uintptr_t native_handle{0};
     std::uint32_t width{0};
     std::uint32_t height{0};
+    bool operator==(const CaptureSourceDescriptor&)const=default;
     bool primary{false};
     CaptureAvailability availability{
         CaptureAvailability::Available};

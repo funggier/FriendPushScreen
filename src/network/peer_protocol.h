@@ -2,7 +2,7 @@
 #include "network/secure_peer_transport.h"
 #include <optional>
 namespace fps::network {
-enum class ControlType:std::uint8_t {Hello=1,ShareStart,VideoFormat,ShareStop,KeyframeRequest,Ping,Pong,Goodbye,Error};
+enum class ControlType:std::uint8_t {Hello=1,ShareStart,VideoFormat,ShareStop,KeyframeRequest,Ping,Pong,Goodbye,Error,VideoReady,VideoConsumed};
 inline constexpr std::uint32_t kCapabilityH264Encode=1,kCapabilityH264Decode=2;
 struct VideoFormat {
     std::uint32_t coded_width{},coded_height{},visible_width{},visible_height{};

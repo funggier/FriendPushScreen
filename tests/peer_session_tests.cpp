@@ -5,15 +5,29 @@ using namespace fps::network;
 namespace {
 bool Has(const std::vector<SessionAction>& a,SessionActionKind k){return std::any_of(a.begin(),a.end(),[&](auto& v){return v.kind==k;});}
 ControlMessage Hello(std::uint64_t token){ControlMessage h;h.session=99;h.value=token;return h;}
-void Handshake(PeerSession& s,std::uint64_t id=1,bool client=true,std::uint64_t nonce=123) {
+void Handshake(PeerSession& s,std::uint64_t id=1,bool client=true,std::uint64_t nonce=123,bool video_ready=true) {
     s.OnConnected(id,client,10,client?nonce:0);s.TakeActions();
     FPS_EXPECT_TRUE(s.OnControl(id,Hello(nonce),11));
     FPS_EXPECT_TRUE(s.State().connected);
     s.TakeActions();
+    if(video_ready&&s.State().outgoing_generation){ControlMessage ready;ready.type=ControlType::VideoReady;ready.session=nonce;ready.generation=s.State().outgoing_generation;s.OnControl(id,ready,12);s.TakeActions();}
 }
 }
 void RunPeerSessionTests() {
     VideoFormat f{640,480,640,480};
+    PeerSession waiting("AA","BB",6);waiting.RequestShare(f);Handshake(waiting,1,true,123,false);
+    FPS_EXPECT_TRUE(!waiting.State().sharing); // no encoded frame before the remote decoder is ready
+    ControlMessage ready;ready.type=ControlType::VideoReady;ready.session=123;ready.generation=waiting.State().outgoing_generation;
+    FPS_EXPECT_TRUE(waiting.OnControl(1,ready,12));FPS_EXPECT_TRUE(waiting.State().sharing);
+    FPS_EXPECT_TRUE(Has(waiting.TakeActions(),SessionActionKind::StartSender));
+    const auto unchanged_generation=waiting.State().outgoing_generation;
+    ControlMessage lost;lost.type=ControlType::KeyframeRequest;lost.session=123;lost.generation=unchanged_generation;
+    FPS_EXPECT_TRUE(waiting.OnControl(1,lost,13));
+    const auto recovery_actions=waiting.TakeActions();
+    FPS_EXPECT_TRUE(!Has(recovery_actions,SessionActionKind::ForceKeyframe));
+    FPS_EXPECT_TRUE(Has(recovery_actions,SessionActionKind::StopSender));
+    FPS_EXPECT_TRUE(waiting.State().outgoing_generation>unchanged_generation);
+    FPS_EXPECT_TRUE(!waiting.State().sharing);
     PeerSession s("AA","BB",7);
     FPS_EXPECT_TRUE(s.RequestShare(f));FPS_EXPECT_TRUE(!s.State().sharing);
     Handshake(s);FPS_EXPECT_TRUE(s.State().sharing);const auto generation=s.State().outgoing_generation;

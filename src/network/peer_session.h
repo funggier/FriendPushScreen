@@ -21,6 +21,7 @@ public:
     void OnDisconnected(std::uint64_t id,std::uint64_t now);
     bool OnControl(std::uint64_t id,const ControlMessage&,std::uint64_t now);
     bool AcceptVideo(std::uint64_t id,const VideoWireFrame&,std::uint64_t now);
+    void ReceiverReady(std::uint64_t generation);
     void OnMediaLost(std::uint64_t id);
     bool RequestShare(VideoFormat);
     void StopShare();
@@ -39,7 +40,7 @@ private:
     bool FailLink(std::uint64_t,const char*);
     std::string own_,peer_;
     std::uint64_t boot_{},generation_{},last_sequence_{},pending_generation_{},stopped_generation_{};
-    bool share_intent_{},connect_intent_{};
+    bool share_intent_{},connect_intent_{},awaiting_ready_{};
     std::uint32_t retry_{};
     std::uint64_t next_retry_{};
     VideoFormat desired_;

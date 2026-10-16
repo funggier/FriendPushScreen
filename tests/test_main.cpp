@@ -7,6 +7,8 @@ void RunPeerIdentityTests();
 void RunDiagnosticsFormatterTests();
 void RunPlatformFilterTests();
 void RunDiagnosticsServiceTests();
+void RunPeerVideoControllerTests();
+void RunPeerUiStateTests();
 void RunUiStateTests();
 void RunSettingsStoreTests();
 void RunCaptureSourceCatalogTests();
@@ -30,6 +32,8 @@ int main() {
     RunPlatformFilterTests();
     RunDiagnosticsServiceTests();
     RunUiStateTests();
+    RunPeerUiStateTests();
+    RunPeerVideoControllerTests();
     RunSettingsStoreTests();
     RunCaptureSourceCatalogTests();
     RunMainWindowLayoutTests();

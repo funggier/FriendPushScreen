@@ -84,6 +84,8 @@ public:
     std::optional<std::filesystem::path>
     PromptDiagnosticsSavePath();
 
+    std::optional<std::filesystem::path> PromptPairingPath(bool save);
+
     void ApplyUiState(
         const UiState& state);
 
