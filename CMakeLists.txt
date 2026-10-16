@@ -10,6 +10,7 @@ add_compile_definitions(UNICODE _UNICODE NOMINMAX)
 
 include(cmake/warnings.cmake)
 include(cmake/msquic.cmake)
+include(cmake/opus.cmake)
 
 add_library(fps_network STATIC src/network/peer_identity.cpp src/network/secure_peer_transport.cpp src/network/peer_protocol.cpp src/network/peer_session.cpp)
 target_include_directories(fps_network PUBLIC src)
@@ -305,3 +306,5 @@ get_target_property(fps_feedback_probe_libraries FriendPushScreenCaptureLoopProb
 target_link_libraries(FriendPushScreenFeedbackProbe PRIVATE ${fps_feedback_probe_libraries})
 fps_apply_warnings(FriendPushScreenFeedbackProbe)
 fps_copy_msquic_runtime(FriendPushScreenFeedbackProbe)
+target_sources(FriendPushScreenTests PRIVATE tests/audio_tests.cpp)
+target_link_libraries(FriendPushScreenTests PRIVATE fps_audio)

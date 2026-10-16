@@ -1,0 +1,20 @@
+# FPS-006A Native audio increment
+Date: 2026-10-17 (Asia/Bangkok)
+Authority: approved 2026-10-15 V1 audio amendment; user's Native/autonomous authorization and 2026-10-17 "ทำต่อได้เลยครับ".
+Baseline: 1f86e54420e5b5a245e7e509bde3902eb5f02bf3, existing isolated fps-006-encode-decode-local-loopback worktree.
+
+Implement optional WASAPI shared system/render loopback and capture endpoints, Opus 1.6.1 stereo 48 kHz / 20 ms / constrained VBR 128 kbit/s (packet <=900 bytes), local mute/volume, bounded playback, and provisional secure localhost audio alongside existing H.264. No voice chat or microphone DSP.
+
+Audio owns a separate logical generation and worker-side device/codec state. Source changes, No Audio, mute, render errors, or source loss must not reset video/session. Share intent enables selected audio only after authenticated session negotiation. No Audio releases capture/encoder and emits disabled state; no audio packets. Stop Share stops outgoing audio only; incoming audio remains.
+
+IAudioSource has descriptors (stable ID, kind, support/reason), format, Start/Stop/Poll timestamped PCM, and lost/error. Enumerate active render/capture endpoints; default system option resolves the default render endpoint on each restart. Process-loopback minimum remains build 20348 per current Microsoft docs; this reference build 19045 must explain unsupported. Per-process implementation on newer machines remains a distinct qualification gate; never advertise an OS-version check alone as working capture.
+
+Normalize through WASAPI's documented shared-engine PCM conversion to 48kHz stereo float, with explicit unsupported-format failure rather than unbounded custom conversion. Opus is a statically built, SHA256-pinned evaluation dependency, retaining BSD notices. Raw PCM stays local.
+
+Extend the existing authenticated MsQuic connection with QUIC DATAGRAM audio (unreliable, no retransmission backlog), reliable versioned audio control, and independent maximum 6 audio datagrams / 1024 bytes each held through consumer lifetime. Existing video 2 /16MiB budgets and security checks remain. Limit codec packet to900 bytes. Bounded jitter <=6 frames (120ms), initial40ms, PLC for short gaps, stop consuming old timestamp/generation, rebase after long stall. Receiver clock follows arrival anchor + sender monotonic PTS; queue correction bounds hardware clock mismatch. Diagnostics distinguish network delay estimates on one host from cross-machine A/V sync qualification.
+
+Control AudioCapabilities / AudioFormat / AudioStreamState advertise the fixed tested profile, generation, source kind, endpoint fingerprint and state. Protocol parsing is strict; control version remains compatible only where additive messages are understood, and audio starts only after both capability exchange and receiver-ready acknowledgment. Every datagram validates session, connection, stream2, generation, length, sequence, duration and bounded timing before decoding. No untrusted peer string becomes a device selection.
+
+Receiver playback can select a render endpoint locally. For this currently localhost-only transport, block playback when the peer loopback source endpoint equals the receiver render endpoint, and when own loopback source equals own playback endpoint. Explain routing in UI/diagnostics, preserving capture/encode/decode/mute controls. This prevents digital recapture feedback on Windows 10 without unsupported process exclusion. No OS default-device change. This is not acoustic echo cancellation.
+
+Qualification: real enumeration, PCM source->codec->decode->WASAPI with owned tone, mute0/50/100, No Audio, switch/source loss, mismatched generations/duplicates/out-of-order/queue pressure, and real dual portable app localhost audio with video. Use distinct endpoints if available; if a physical/input source is unavailable, mark that hardware acceptance unavailable, not pass. Close only owned test apps at end. Leave main, identities, sibling worktrees and historical video evidence intact. LAN/WAN/Tailscale, permanent transport decision, production bandwidth controller, cross-machine A/V sync and newer-OS process capture remain gated.
