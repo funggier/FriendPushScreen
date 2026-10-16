@@ -1,11 +1,14 @@
 #pragma once
 
+#include "ui/ui_state.h"
+
 #include <string>
 
 namespace fps::ui {
 
 enum class UiCommandType {
     ToggleSettings,
+    ApplyVideoSettings,
     ToggleShareRequest,
     SelectCaptureSource,
     ToggleCapturePreview,
@@ -32,6 +35,7 @@ struct UiCommand {
     UiCommandType type{UiCommandType::ToggleSettings};
     int value{0};
     std::string text;
+    VideoPreferences video;
 };
 
 }  // namespace fps::ui

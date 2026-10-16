@@ -72,6 +72,7 @@ public:
         std::wstring_view text);
 
     void SetCollecting(bool collecting);
+    void SetVideoCodecStatus(std::wstring_view text);
 
     void SetCaptureSources(
         const std::vector<capture::CaptureSourceDescriptor>& sources,

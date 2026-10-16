@@ -13,6 +13,21 @@
 namespace fps::ui {
 namespace {
 
+const char* VideoModeText(media::VideoBackendPolicy mode) {
+    switch (mode) {
+    case media::VideoBackendPolicy::RequireHardware: return "gpu";
+    case media::VideoBackendPolicy::ForceSoftware: return "cpu";
+    default: return "prefer_gpu";
+    }
+}
+bool ParseVideoMode(std::string_view value, media::VideoBackendPolicy& mode) {
+    if (value == "gpu") mode = media::VideoBackendPolicy::RequireHardware;
+    else if (value == "cpu") mode = media::VideoBackendPolicy::ForceSoftware;
+    else if (value == "prefer_gpu") mode = media::VideoBackendPolicy::PreferHardware;
+    else return false;
+    return true;
+}
+
 std::string BoolText(bool value) {
     return value ? "true" : "false";
 }
@@ -180,6 +195,15 @@ std::string SerializePreferences(
     std::ostringstream out;
 
     out << "version=1\n";
+    const auto video = IsValidVideoPreferences(preferences.video) ?
+        preferences.video : VideoPreferences{};
+    out << "video_encoder_mode=" << VideoModeText(video.encoder_mode) << "\n";
+    out << "video_decoder_mode=" << VideoModeText(video.decoder_mode) << "\n";
+    out << "video_encoder_id=" << video.encoder_id << "\n";
+    out << "video_decoder_id=" << video.decoder_id << "\n";
+    out << "video_bitrate_mbps=" << video.bitrate_mbps << "\n";
+    out << "video_keyframe_interval=" << video.keyframe_interval << "\n";
+    out << "video_low_latency=" << BoolText(video.low_latency) << "\n";
     out << "settings_visible="
         << BoolText(preferences.settings_visible)
         << "\n";
@@ -249,7 +273,26 @@ UiPreferences ParsePreferences(
                 const std::string_view value =
                     line.substr(separator + 1);
 
-                if (key == "settings_visible") {
+                if (key == "video_encoder_mode") {
+                    ParseVideoMode(value, result.video.encoder_mode);
+                } else if (key == "video_decoder_mode") {
+                    ParseVideoMode(value, result.video.decoder_mode);
+                } else if (key == "video_encoder_id" || key == "video_decoder_id") {
+                    auto video = result.video;
+                    auto& id = key == "video_encoder_id" ? video.encoder_id : video.decoder_id;
+                    id = std::string{value};
+                    if (IsValidVideoPreferences(video)) result.video = std::move(video);
+                } else if (key == "video_bitrate_mbps" || key == "video_keyframe_interval") {
+                    std::uint32_t parsed = 0;
+                    if (ParseUnsigned(value, parsed)) {
+                        auto video = result.video;
+                        if (key == "video_bitrate_mbps") video.bitrate_mbps = parsed;
+                        else video.keyframe_interval = parsed;
+                        if (IsValidVideoPreferences(video)) result.video = std::move(video);
+                    }
+                } else if (key == "video_low_latency") {
+                    ParseBool(value, result.video.low_latency);
+                } else if (key == "settings_visible") {
                     bool parsed = false;
                     if (ParseBool(value, parsed)) {
                         result.settings_visible = parsed;

@@ -5,6 +5,34 @@
 
 namespace fps::ui {
 
+bool IsValidVideoPreferences(const VideoPreferences& preferences) {
+    const auto valid_mode = [](media::VideoBackendPolicy mode) {
+        return mode == media::VideoBackendPolicy::PreferHardware ||
+            mode == media::VideoBackendPolicy::RequireHardware ||
+            mode == media::VideoBackendPolicy::ForceSoftware;
+    };
+    const auto valid_id = [](const std::string& id) {
+        return id.size() <= 16384 &&
+            std::none_of(id.begin(), id.end(), [](unsigned char c) { return c < 32 || c == 127; });
+    };
+    return valid_mode(preferences.encoder_mode) && valid_mode(preferences.decoder_mode) &&
+        valid_id(preferences.encoder_id) && valid_id(preferences.decoder_id) &&
+        preferences.bitrate_mbps >= 1 && preferences.bitrate_mbps <= 200 &&
+        preferences.keyframe_interval >= 1 && preferences.keyframe_interval <= 600;
+}
+
+media::VideoCodecConfig MakeVideoCodecConfig(
+    const VideoPreferences& preferences, std::uint32_t width, std::uint32_t height) {
+    media::VideoCodecConfig config;
+    config.width = width; config.height = height;
+    config.encoder_id = preferences.encoder_id;
+    config.decoder_id = preferences.decoder_id;
+    config.target_bitrate_bps = preferences.bitrate_mbps * 1'000'000U;
+    config.keyframe_interval_frames = preferences.keyframe_interval;
+    config.low_latency = preferences.low_latency;
+    return config;
+}
+
 bool SupportsApplicationAudio(
     std::uint32_t windows_build) {
     return windows_build >= 20348;
@@ -48,6 +76,7 @@ UiState MakeStateFromPreferences(
             AudioSourceKind::None;
     }
 
+    if (!IsValidVideoPreferences(preferences.video)) preferences.video = {};
     state.preferences = std::move(preferences);
 
     state.fullscreen = false;

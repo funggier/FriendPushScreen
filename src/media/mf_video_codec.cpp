@@ -20,10 +20,16 @@ bool CodecValue(IMFTransform* transform,const GUID& key,ULONG value,bool boolean
     if(boolean) v.boolVal=value ? VARIANT_TRUE : VARIANT_FALSE; else v.ulVal=value;
     return SUCCEEDED(api->SetValue(&key,&v));
 }
-bool LowLatency(IMFTransform* transform) {
+bool LowLatency(IMFTransform* transform, bool enabled, bool decoder=false) {
     ComPtr<IMFAttributes> attributes;
-    if(SUCCEEDED(transform->GetAttributes(&attributes))) attributes->SetUINT32(MF_LOW_LATENCY,TRUE);
-    return CodecValue(transform,CODECAPI_AVLowLatencyMode,TRUE,true);
+    const bool attribute_applied = SUCCEEDED(transform->GetAttributes(&attributes)) &&
+        SUCCEEDED(attributes->SetUINT32(MF_LOW_LATENCY,enabled ? TRUE : FALSE));
+    // Standard codecs use VT_BOOL; Microsoft H.264 decoding needs VT_UI4.
+    // https://learn.microsoft.com/windows/win32/medfound/codecapi-avlowlatencymode
+    const bool property_applied = CodecValue(transform,CODECAPI_AVLowLatencyMode,
+        enabled ? TRUE : FALSE,true) ||
+        (decoder && CodecValue(transform,CODECAPI_AVLowLatencyMode,enabled ? TRUE : FALSE));
+    return attribute_applied || property_applied;
 }
 void ColorType(IMFMediaType* type) {
     type->SetUINT32(MF_MT_YUV_MATRIX,MFVideoTransferMatrix_BT709);
@@ -112,16 +118,18 @@ bool MftVideoEncoder::Initialize(ID3D11Device* device,const VideoCodecConfig& co
     for(auto& slot:p.slots) if(!p.converter.CreateNv12Texture(config.width,config.height,slot.texture))
         return p.session.Check(p.converter.LastError(),"NV12 pool");
     auto list=Candidates(VideoCodecDirection::Encode,policy);
-    if(list.empty()) return p.session.Check(MF_E_TOPO_CODEC_NOT_FOUND,"No H264 encoder");
+    if (!config.encoder_id.empty())
+        std::erase_if(list,[&](const auto& d) { return MftVideoCodecIdentity(d) != config.encoder_id; });
+    if(list.empty()) return p.session.Check(MF_E_TOPO_CODEC_NOT_FOUND,"Selected H264 encoder unavailable");
     for(const auto& descriptor:list) {
         bool hardware=descriptor.candidate.classification==VideoBackendClassification::Hardware;
         if(!p.session.Open(descriptor,device,hardware)) continue;
         p.info={}; p.info.candidate=descriptor.candidate;
         p.info.asynchronous=p.session.Async(); p.info.surface_io=p.session.SurfaceIo();
         if(hardware && !p.session.SurfaceIo()) { p.session.Check(E_NOTIMPL,"Hardware surface path unavailable"); continue; }
-        p.info.low_latency_applied=config.low_latency && LowLatency(p.session.Get());
+        p.info.low_latency_applied=LowLatency(p.session.Get(),config.low_latency);
         CodecValue(p.session.Get(),CODECAPI_AVEncCommonMeanBitRate,config.target_bitrate_bps);
-        CodecValue(p.session.Get(),CODECAPI_AVEncMPVGOPSize,config.keyframe_interval_frames);
+        p.info.keyframe_interval_applied=CodecValue(p.session.Get(),CODECAPI_AVEncMPVGOPSize,config.keyframe_interval_frames);
         CodecValue(p.session.Get(),CODECAPI_AVEncMPVDefaultBPictureCount,0);
         ComPtr<IMFMediaType> input,output;
         if(!p.session.Check(CreateMftVideoMediaType(MakeEncoderInputTypeSpec(config),&input),"Encoder input type") ||
@@ -148,6 +156,8 @@ bool MftVideoEncoder::Encode(const capture::CapturedFrame& frame,const Normalize
         timing.duration_100ns<=0 || p.pending.contains(timing.timestamp_100ns))
         return p.session.Check(E_INVALIDARG,"Encoder frame");
     if(!Poll(output)) return false;
+    if (p.pending.size() >= 32)
+        return p.session.Check(HRESULT_FROM_WIN32(ERROR_TIMEOUT),"Encoder pending frame bound");
     auto free=std::find_if(p.slots.begin(),p.slots.end(),[](const auto& slot){return !slot.busy;});
     const ULONGLONG deadline=GetTickCount64()+2000;
     while(free==p.slots.end() && GetTickCount64()<deadline) {
@@ -185,7 +195,11 @@ bool MftVideoEncoder::Encode(const capture::CapturedFrame& frame,const Normalize
     }
     if(!p.session.Check(sample->SetSampleTime(timing.timestamp_100ns),"SetInputTime") ||
        !p.session.Check(sample->SetSampleDuration(timing.duration_100ns),"SetInputDuration")) return false;
-    const size_t slot=static_cast<size_t>(free-p.slots.begin()); free->busy=true;
+    const size_t slot=static_cast<size_t>(free-p.slots.begin());
+    // CPU input is copied into its own IMFMediaBuffer. It does not lease the GPU
+    // conversion texture while multi-frame software encoding buffers its input.
+    // GPU input keeps the original bounded texture lease until encoded output.
+    free->busy=p.session.SurfaceIo();
     p.pending.emplace(timing.timestamp_100ns,Impl::Pending{timing,slot,sample});
     std::vector<ComPtr<IMFSample>> samples;
     return p.session.Submit(sample.Get(),samples) && p.Collect(samples,output);
@@ -215,6 +229,7 @@ struct MftVideoDecoder::Impl {
     ComPtr<ID3D11Texture2D> cpu_nv12;
     std::map<LONGLONG,EncodedAccessUnit> pending;
     bool running{false};
+    bool require_gpu{false};
     bool Collect(std::vector<ComPtr<IMFSample>>& samples,std::vector<capture::CapturedFrame>& frames) {
         for(auto& sample:samples) {
             LONGLONG pts=0;
@@ -236,6 +251,7 @@ struct MftVideoDecoder::Impl {
                    !session.Check(dxgi->GetSubresourceIndex(&subresource),"Decoded slice")) return false;
                 ++info.gpu_frames;
             } else {
+                if (require_gpu) return session.Check(E_NOTIMPL,"GPU decoder returned CPU output; choose CPU or allow fallback");
                 if(!cpu_nv12 && !converter.CreateNv12Texture(width,height,cpu_nv12))
                     return session.Check(converter.LastError(),"CPU decoder upload texture");
                 std::vector<BYTE> compact;
@@ -288,18 +304,30 @@ struct MftVideoDecoder::Impl {
 MftVideoDecoder::MftVideoDecoder():impl_(std::make_unique<Impl>()){}
 MftVideoDecoder::~MftVideoDecoder(){impl_->session.Stop();}
 void MftVideoDecoder::Stop(){impl_->session.Stop();impl_=std::make_unique<Impl>();}
-bool MftVideoDecoder::Initialize(ID3D11Device* device,const VideoCodecConfig& config,bool force_software) {
+bool MftVideoDecoder::Initialize(ID3D11Device* device,const VideoCodecConfig& config,VideoBackendPolicy policy) {
+    const bool force_software = policy == VideoBackendPolicy::ForceSoftware;
     Stop(); auto& p=*impl_; p.config=config; p.device=device;
     if(!device || !IsValidVideoCodecConfig(config) || config.codec!=VideoCodecKind::H264 ||
         config.width%2 || config.height%2) return p.session.Check(E_INVALIDARG,"Decoder config");
     device->GetImmediateContext(&p.context);
     if(!p.converter.Initialize(device)) return p.session.Check(p.converter.LastError(),"Decoder converter");
-    for(const auto& descriptor:Candidates(VideoCodecDirection::Decode,force_software ?
-        VideoBackendPolicy::ForceSoftware:VideoBackendPolicy::PreferHardware)) {
+    p.require_gpu = policy == VideoBackendPolicy::RequireHardware;
+    auto list = Candidates(VideoCodecDirection::Decode,force_software ?
+        VideoBackendPolicy::ForceSoftware:VideoBackendPolicy::PreferHardware);
+    if (!config.decoder_id.empty())
+        std::erase_if(list,[&](const auto& d) { return MftVideoCodecIdentity(d) != config.decoder_id; });
+    if (list.empty()) return p.session.Check(MF_E_TOPO_CODEC_NOT_FOUND,"Selected H264 decoder unavailable");
+    for(const auto& descriptor:list) {
         if(!p.session.Open(descriptor,device,!force_software)) continue;
+        if (p.require_gpu && !p.session.SurfaceIo()) {
+            p.session.Check(E_NOTIMPL,"Selected decoder has no D3D11 accelerated output"); continue;
+        }
         p.info={}; p.info.candidate=descriptor.candidate;
         p.info.asynchronous=p.session.Async(); p.info.surface_io=p.session.SurfaceIo();
-        p.info.low_latency_applied=config.low_latency && LowLatency(p.session.Get());
+        // Keep the synchronous receive loop in its qualified real-time mode.
+        // Buffered Microsoft decoding can block waiting for work on this same thread.
+        // The UI latency option controls encoding; changing decoder scheduling is separate.
+        p.info.low_latency_applied=LowLatency(p.session.Get(),true,true);
         if(force_software) CodecValue(p.session.Get(),CODECAPI_AVDecVideoAcceleration_H264,0,true);
         ComPtr<IMFMediaType> input,output;
         if(!p.session.Check(CreateMftVideoMediaType(MakeDecoderInputTypeSpec(config),&input),"Decoder input type") ||

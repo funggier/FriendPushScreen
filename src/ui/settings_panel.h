@@ -46,6 +46,8 @@ public:
 
     void SetCollecting(bool collecting);
 
+    void SetVideoCodecStatus(std::wstring_view text);
+
     void SetCaptureSources(
         const std::vector<capture::CaptureSourceDescriptor>& sources,
         std::string_view selected_source_id,
@@ -80,6 +82,10 @@ private:
         HINSTANCE instance,
         int id,
         DWORD style = ES_AUTOHSCROLL);
+
+    void InitializeVideoControls(HINSTANCE instance, HWND root_owner);
+    void UpdateVideoChoices();
+    void ApplyVideoDraft();
 
     void InitializeControls(
         HINSTANCE instance);
@@ -126,6 +132,21 @@ private:
     HWND share_port_edit_{nullptr};
     HWND share_button_{nullptr};
     HWND share_status_{nullptr};
+
+    struct VideoChoice {
+        media::VideoBackendPolicy policy;
+        std::string id;
+        std::wstring text;
+    };
+    std::vector<VideoChoice> encoder_choices_, decoder_choices_;
+    VideoPreferences video_draft_;
+    bool video_initialized_{false}, video_dirty_{false}, video_validation_error_{false};
+    bool video_apply_pending_{false};
+    HWND video_heading_{nullptr}, encoder_label_{nullptr}, decoder_label_{nullptr};
+    HWND encoder_button_{nullptr}, decoder_button_{nullptr};
+    HWND encoder_popup_{nullptr}, decoder_popup_{nullptr}, encoder_list_{nullptr}, decoder_list_{nullptr};
+    HWND bitrate_label_{nullptr}, bitrate_edit_{nullptr}, keyframe_label_{nullptr}, keyframe_edit_{nullptr};
+    HWND low_latency_checkbox_{nullptr}, video_apply_button_{nullptr}, video_status_{nullptr};
 
     HWND connection_heading_{nullptr};
     HWND connection_mode_label_{nullptr};

@@ -12,10 +12,12 @@
 using Microsoft::WRL::ComPtr;
 using namespace fps;
 int main(int argc,char** argv) {
+    bool low_latency=true;
     bool software_encode=false,software_decode=false; unsigned frames=120,width=1920,height=1080;
     for(int i=1;i<argc;++i) {
         std::string arg=argv[i];
         if(arg=="--software") software_encode=software_decode=true;
+        else if(arg=="--no-low-latency") low_latency=false;
         else if(arg=="--software-encode") software_encode=true;
         else if(arg=="--software-decode") software_decode=true;
         else if(arg=="--frames" && i+1<argc) frames=static_cast<unsigned>(std::stoul(argv[++i]));
@@ -30,6 +32,7 @@ int main(int argc,char** argv) {
     media::MftVideoEncoder encoder; media::MftVideoDecoder decoder;
     media::VideoCodecConfig config; config.width=width; config.height=height;
     config.keyframe_interval_frames=60;
+    config.low_latency=low_latency;
     if(!encoder.Initialize(device.Get(),config,software_encode ? media::VideoBackendPolicy::ForceSoftware :
         media::VideoBackendPolicy::RequireHardware)) { std::cerr<<"ENCODER "<<encoder.Error()<<"\n"; return 1; }
     if(!decoder.Initialize(device.Get(),config,software_decode)) { std::cerr<<"DECODER "<<decoder.Error()<<"\n"; return 1; }

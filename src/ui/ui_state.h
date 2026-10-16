@@ -1,5 +1,7 @@
 #pragma once
 
+#include "media/video_codec_model.h"
+
 #include <cstdint>
 #include <string>
 
@@ -30,7 +32,23 @@ enum class AudioSourceKind {
     Application
 };
 
+struct VideoPreferences {
+    media::VideoBackendPolicy encoder_mode{media::VideoBackendPolicy::PreferHardware};
+    media::VideoBackendPolicy decoder_mode{media::VideoBackendPolicy::PreferHardware};
+    std::string encoder_id;
+    std::string decoder_id;
+    std::uint32_t bitrate_mbps{20};
+    std::uint32_t keyframe_interval{120};
+    bool low_latency{true};
+    bool operator==(const VideoPreferences&) const = default;
+};
+
+bool IsValidVideoPreferences(const VideoPreferences& preferences);
+media::VideoCodecConfig MakeVideoCodecConfig(
+    const VideoPreferences& preferences, std::uint32_t width, std::uint32_t height);
+
 struct UiPreferences {
+    VideoPreferences video;
     bool settings_visible{true};
     bool borderless{false};
     bool always_on_top{false};

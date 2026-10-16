@@ -1,6 +1,9 @@
 #include "ui/settings_panel.h"
 
 #include "ui/theme.h"
+#include "media/mft_video_codec_catalog.h"
+#include <mfapi.h>
+#include <charconv>
 
 #include <CommCtrl.h>
 #include <windowsx.h>
@@ -39,6 +42,13 @@ constexpr int kSourceId = 2117;
 constexpr int kRefreshSourcesId = 2118;
 constexpr int kPreviewSourceId = 2119;
 constexpr int kShowCursorId = 2120;
+constexpr int kEncoderId = 2121;
+constexpr int kDecoderId = 2122;
+constexpr int kBitrateId = 2123;
+constexpr int kKeyframeId = 2124;
+constexpr int kLowLatencyId = 2125;
+constexpr int kApplyVideoId = 2126;
+constexpr int kVideoSectionHeight = 384;
 
 constexpr int kPadding = 16;
 constexpr int kGap = 8;
@@ -75,6 +85,8 @@ constexpr UINT kDropSelectionMessage =
 constexpr WPARAM kDropKindConnection = 1;
 constexpr WPARAM kDropKindAudio = 2;
 constexpr WPARAM kDropKindSource = 3;
+constexpr WPARAM kDropKindEncoder = 4;
+constexpr WPARAM kDropKindDecoder = 5;
 
 struct DropPopupInit {
     HWND notify{nullptr};
@@ -1442,6 +1454,93 @@ HWND SettingsPanel::CreateEdit(
         nullptr);
 }
 
+void SettingsPanel::InitializeVideoControls(HINSTANCE instance, HWND root_owner) {
+    video_heading_ = CreateLabel(instance,L"VIDEO / H.264");
+    encoder_label_ = CreateLabel(instance,L"Encoder (send)");
+    decoder_label_ = CreateLabel(instance,L"Decoder (receive)");
+    encoder_button_ = CreateButton(instance,kEncoderId,L"Choose encoder");
+    decoder_button_ = CreateButton(instance,kDecoderId,L"Choose decoder");
+    bitrate_label_ = CreateLabel(instance,L"Bitrate (Mbps)");
+    keyframe_label_ = CreateLabel(instance,L"Keyframe (frames)");
+    bitrate_edit_ = CreateEdit(instance,kBitrateId,ES_AUTOHSCROLL | ES_NUMBER);
+    keyframe_edit_ = CreateEdit(instance,kKeyframeId,ES_AUTOHSCROLL | ES_NUMBER);
+    SendMessageW(bitrate_edit_,EM_SETLIMITTEXT,3,0);
+    SendMessageW(keyframe_edit_,EM_SETLIMITTEXT,3,0);
+    low_latency_checkbox_ = CreateButton(instance,kLowLatencyId,L"Low latency encoding",BS_AUTOCHECKBOX);
+    video_apply_button_ = CreateButton(instance,kApplyVideoId,L"Apply Video");
+    video_status_ = CreateLabel(instance,L"Video controls apply to the local decoded preview.");
+    encoder_popup_ = CreateDropPopup(instance,root_owner,hwnd_,kDropKindEncoder,&encoder_list_);
+    decoder_popup_ = CreateDropPopup(instance,root_owner,hwnd_,kDropKindDecoder,&decoder_list_);
+    ShowWindow(encoder_popup_,SW_HIDE); ShowWindow(decoder_popup_,SW_HIDE);
+    encoder_choices_.push_back({media::VideoBackendPolicy::PreferHardware,{},L"Prefer GPU (allow CPU fallback)"});
+    decoder_choices_.push_back({media::VideoBackendPolicy::PreferHardware,{},L"Prefer GPU (allow CPU fallback)"});
+    if (SUCCEEDED(MFStartup(MF_VERSION,MFSTARTUP_FULL))) {
+        for (const auto direction : {media::VideoCodecDirection::Encode,media::VideoCodecDirection::Decode}) {
+            auto& choices = direction == media::VideoCodecDirection::Encode ? encoder_choices_ : decoder_choices_;
+            for (const auto& descriptor : media::EnumerateMftVideoCodecDescriptors(media::VideoCodecKind::H264,direction)) {
+                const auto id = media::MftVideoCodecIdentity(descriptor);
+                const auto name = Utf8ToWide(descriptor.candidate.name);
+                const bool hardware = descriptor.candidate.classification == media::VideoBackendClassification::Hardware;
+                if (hardware || (direction == media::VideoCodecDirection::Decode && descriptor.candidate.d3d11_aware))
+                    choices.push_back({media::VideoBackendPolicy::RequireHardware,id,L"[GPU] " + name});
+                if (!hardware && descriptor.candidate.classification == media::VideoBackendClassification::Software)
+                    choices.push_back({media::VideoBackendPolicy::ForceSoftware,id,L"[CPU] " + name});
+            }
+        }
+        MFShutdown();
+    }
+}
+
+void SettingsPanel::UpdateVideoChoices() {
+    const auto update = [](auto& choices, HWND list, HWND button, media::VideoBackendPolicy policy, const std::string& id) {
+        auto found = std::find_if(choices.begin(),choices.end(),[&](const auto& choice) {
+            return choice.policy == policy && choice.id == id;
+        });
+        if (found == choices.end()) {
+            const auto mode = policy == media::VideoBackendPolicy::ForceSoftware ? L"CPU" : L"GPU";
+            choices.push_back({policy,id,std::wstring{mode} + (id.empty() ? L" only" : L" - saved codec unavailable")});
+        }
+        SendMessageW(list,LB_RESETCONTENT,0,0);
+        int selection = 0;
+        for (std::size_t i = 0; i < choices.size(); ++i) {
+            SendMessageW(list,LB_ADDSTRING,0,reinterpret_cast<LPARAM>(choices[i].text.c_str()));
+            if (choices[i].policy == policy && choices[i].id == id) selection = static_cast<int>(i);
+        }
+        SendMessageW(list,LB_SETCURSEL,static_cast<WPARAM>(selection),0);
+        const auto label = choices[static_cast<std::size_t>(selection)].text + L"  \u25BE";
+        SetWindowTextW(button,label.c_str());
+    };
+    update(encoder_choices_,encoder_list_,encoder_button_,video_draft_.encoder_mode,video_draft_.encoder_id);
+    update(decoder_choices_,decoder_list_,decoder_button_,video_draft_.decoder_mode,video_draft_.decoder_id);
+}
+
+void SettingsPanel::ApplyVideoDraft() {
+    VideoPreferences requested = video_draft_;
+    const auto read = [this](HWND edit, std::uint32_t& value) {
+        const auto text = ReadEditUtf8(edit);
+        const auto result = std::from_chars(text.data(),text.data() + text.size(),value);
+        return !text.empty() && result.ec == std::errc{} && result.ptr == text.data() + text.size();
+    };
+    const bool parsed = read(bitrate_edit_,requested.bitrate_mbps) &&
+        read(keyframe_edit_,requested.keyframe_interval);
+    requested.low_latency = SendMessageW(low_latency_checkbox_,BM_GETCHECK,0,0) == BST_CHECKED;
+    if (!parsed || !IsValidVideoPreferences(requested)) {
+        video_validation_error_ = true;
+        SetWindowTextW(video_status_,L"Not applied. Bitrate must be 1-200 Mbps; keyframe interval must be 1-600 frames.");
+        return;
+    }
+    video_validation_error_ = false;
+    video_draft_ = requested;
+    video_apply_pending_ = true;
+    UiCommand command{UiCommandType::ApplyVideoSettings};
+    command.video = std::move(requested);
+    Emit(std::move(command));
+}
+
+void SettingsPanel::SetVideoCodecStatus(std::wstring_view text) {
+    if (!video_validation_error_) SetTextIfDifferent(video_status_,std::wstring{text});
+}
+
 void SettingsPanel::InitializeControls(
     HINSTANCE instance) {
     title_label_ =
@@ -1527,6 +1626,8 @@ void SettingsPanel::InitializeControls(
     ShowWindow(
         source_popup_,
         SW_HIDE);
+
+    InitializeVideoControls(instance,root_owner);
 
     connection_mode_popup_ =
         CreateDropPopup(
@@ -1751,6 +1852,10 @@ void SettingsPanel::ApplyDefaultFont() {
         share_port_edit_,
         share_button_,
         share_status_,
+        video_heading_, encoder_label_, encoder_button_, encoder_list_,
+        decoder_label_, decoder_button_, decoder_list_,
+        bitrate_label_, bitrate_edit_, keyframe_label_, keyframe_edit_,
+        low_latency_checkbox_, video_apply_button_, video_status_,
         connection_heading_,
         connection_mode_label_,
         connection_mode_button_,
@@ -1827,7 +1932,7 @@ void SettingsPanel::LayoutControls() {
                 kPadding -
                 kGap);
 
-    const auto move =
+    const auto place =
         [this](
             HWND control,
             int x,
@@ -1848,6 +1953,23 @@ void SettingsPanel::LayoutControls() {
                 SWP_NOZORDER |
                     SWP_NOACTIVATE);
         };
+
+    const auto move = [&](HWND control,int x,int y,int w,int h) {
+        place(control,x,y + (y >= 316 ? kVideoSectionHeight : 0),w,h);
+    };
+    place(video_heading_,kPadding,316,field_width,20);
+    place(encoder_label_,kPadding,342,field_width,18);
+    place(encoder_button_,kPadding,362,field_width,kFieldHeight);
+    place(decoder_label_,kPadding,402,field_width,18);
+    place(decoder_button_,kPadding,422,field_width,kFieldHeight);
+    const int half = (field_width - kGap) / 2;
+    place(bitrate_label_,kPadding,462,half,18);
+    place(keyframe_label_,kPadding + half + kGap,462,half,18);
+    place(bitrate_edit_,kPadding,482,half,kFieldHeight);
+    place(keyframe_edit_,kPadding + half + kGap,482,half,kFieldHeight);
+    place(low_latency_checkbox_,kPadding,520,half,26);
+    place(video_apply_button_,kPadding,554,field_width,kButtonHeight);
+    place(video_status_,kPadding,596,field_width,92);
 
     move(
         title_label_,
@@ -2139,9 +2261,9 @@ void SettingsPanel::LayoutControls() {
             button_width,
             kButtonHeight);
 
-        content_height_ = 1342;
+        content_height_ = 1342 + kVideoSectionHeight;
     } else {
-        content_height_ = 1012;
+        content_height_ = 1012 + kVideoSectionHeight;
     }
 
     SetWindowPos(
@@ -2443,6 +2565,8 @@ std::uint32_t SettingsPanel::ReadPort(HWND edit) const {
 }
 
 void SettingsPanel::HideDropLists() {
+    if (encoder_popup_) ShowWindow(encoder_popup_,SW_HIDE);
+    if (decoder_popup_) ShowWindow(decoder_popup_,SW_HIDE);
     if (source_popup_ != nullptr) {
         ShowWindow(
             source_popup_,
@@ -2479,6 +2603,10 @@ void SettingsPanel::ToggleDropList(HWND list) {
     } else if (list == audio_source_list_) {
         button = audio_source_button_;
         popup = audio_source_popup_;
+    } else if (list == encoder_list_) {
+        button = encoder_button_; popup = encoder_popup_;
+    } else if (list == decoder_list_) {
+        button = decoder_button_; popup = decoder_popup_;
     }
 
     if (button == nullptr ||
@@ -2672,6 +2800,17 @@ void SettingsPanel::ApplyState(
     applying_state_ = true;
 
     UpdateDropDownText(state);
+    if (video_apply_pending_ && video_draft_ == state.preferences.video) {
+        video_dirty_ = false; video_apply_pending_ = false;
+    }
+    if (!video_initialized_ || !video_dirty_) {
+        video_draft_ = state.preferences.video;
+        video_initialized_ = true;
+        UpdateVideoChoices();
+        SetTextIfDifferent(bitrate_edit_,std::to_wstring(video_draft_.bitrate_mbps));
+        SetTextIfDifferent(keyframe_edit_,std::to_wstring(video_draft_.keyframe_interval));
+        SendMessageW(low_latency_checkbox_,BM_SETCHECK,video_draft_.low_latency ? BST_CHECKED : BST_UNCHECKED,0);
+    }
 
 std::wstring host;
     if (!state.preferences.host.empty()) {
@@ -3204,6 +3343,20 @@ LRESULT SettingsPanel::HandleMessage(
             return 0;
         }
 
+        if (wparam == kDropKindEncoder || wparam == kDropKindDecoder) {
+            const auto& choices = wparam == kDropKindEncoder ? encoder_choices_ : decoder_choices_;
+            if (selection >= static_cast<int>(choices.size())) return 0;
+            const auto& choice = choices[static_cast<std::size_t>(selection)];
+            if (wparam == kDropKindEncoder) {
+                video_draft_.encoder_mode = choice.policy; video_draft_.encoder_id = choice.id;
+            } else {
+                video_draft_.decoder_mode = choice.policy; video_draft_.decoder_id = choice.id;
+            }
+            video_dirty_ = true;
+            UpdateVideoChoices();
+            return 0;
+        }
+
         if (wparam ==
             kDropKindSource) {
             if (selection >=
@@ -3258,7 +3411,17 @@ LRESULT SettingsPanel::HandleMessage(
         const int notification =
             HIWORD(wparam);
 
+        if (!applying_state_ && notification == EN_CHANGE && (id == kBitrateId || id == kKeyframeId)) {
+            video_dirty_ = true; video_validation_error_ = false;
+            return 0;
+        }
         if (notification == BN_CLICKED) {
+            if (id == kEncoderId || id == kDecoderId) {
+                ToggleDropList(id == kEncoderId ? encoder_list_ : decoder_list_);
+                return 0;
+            }
+            if (id == kApplyVideoId) { HideDropLists(); ApplyVideoDraft(); return 0; }
+            if (id == kLowLatencyId) { video_dirty_ = true; return 0; }
             if (id == kSourceId) {
                 ToggleDropList(
                     source_list_);

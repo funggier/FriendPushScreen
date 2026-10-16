@@ -150,6 +150,7 @@ std::string WideStatusToUtf8(
 bool IsPreferenceCommand(
     ui::UiCommandType type) {
     switch (type) {
+    case ui::UiCommandType::ApplyVideoSettings:
     case ui::UiCommandType::ToggleSettings:
     case ui::UiCommandType::ToggleShowCursor:
     case ui::UiCommandType::SetConnectionMode:
@@ -327,6 +328,30 @@ void Application::UpdateCaptureUi() {
         preview_active,
         ui_state_.preferences.show_cursor,
         capture_status_);
+    std::ostringstream video;
+    if (raw_preview_) {
+        video << "Raw preview diagnostic override: video codecs are bypassed.";
+    } else if (codec_loop_ && !codec_loop_->EncoderInfo().candidate.name.empty()) {
+        const auto& encoder = codec_loop_->EncoderInfo();
+        const auto& decoder = codec_loop_->DecoderInfo();
+        video << "Encoder: " << (encoder.gpu_frames ? "[GPU] " :
+            encoder.cpu_frames ? "[CPU] " : "[waiting] ") << encoder.candidate.name
+            << "\nDecoder: " << (decoder.gpu_frames ? "[GPU] " :
+                decoder.cpu_frames ? "[CPU] " : "[waiting] ") << decoder.candidate.name;
+        video << "\nTarget " << ui_state_.preferences.video.bitrate_mbps << " Mbps"
+            << " | Keyframe " << ui_state_.preferences.video.keyframe_interval
+            << (encoder.keyframe_interval_applied ? " frames" : " (not accepted)");
+        video << " | Encoder low latency " << (ui_state_.preferences.video.low_latency ? "on" : "off");
+        if (!encoder.low_latency_applied) video << " (not accepted)";
+        video << "\nDecoder low latency on" << (decoder.low_latency_applied ? "" : " (not accepted)");
+        if (codec_failed_) video << "\n" << codec_loop_->Error();
+    } else if (codec_failed_ && codec_loop_) {
+        video << "Codec error: " << codec_loop_->Error();
+    } else {
+        video << "H.264 local preview. Choose send/receive codecs independently, then Apply Video.";
+    }
+    if (force_software_codec_) video << "\nDiagnostic override: CPU encoder + CPU decoder forced.";
+    main_window_.SetVideoCodecStatus(Utf8ToWide(video.str()));
 }
 
 void Application::RefreshCaptureSources() {
@@ -596,11 +621,14 @@ bool Application::TickCapturePreview() {
                 RecordCodecMetrics("resize");
                 codec_start_tick_ = GetTickCount64();
                 codec_loop_ = std::make_unique<media::VideoLocalLoop>();
-                media::VideoCodecConfig config;
-                config.width = width; config.height = height;
-                ok = codec_loop_->Initialize(renderer_.Device(), config,
-                    force_software_codec_ ? media::VideoBackendPolicy::ForceSoftware :
-                        media::VideoBackendPolicy::PreferHardware);
+                auto config = ui::MakeVideoCodecConfig(ui_state_.preferences.video,width,height);
+                auto encoder_policy = ui_state_.preferences.video.encoder_mode;
+                auto decoder_policy = ui_state_.preferences.video.decoder_mode;
+                if (force_software_codec_) {
+                    encoder_policy = decoder_policy = media::VideoBackendPolicy::ForceSoftware;
+                    config.encoder_id.clear(); config.decoder_id.clear();
+                }
+                ok = codec_loop_->Initialize(renderer_.Device(),config,encoder_policy,decoder_policy);
             }
             if (ok) ok = codec_loop_->Push(frame, sink);
         }
@@ -669,6 +697,16 @@ void Application::HandleUiCommand(
                     ? "share requested; "
                       "media pipeline not active"
                     : "share request cancelled");
+        break;
+
+    case ui::UiCommandType::ApplyVideoSettings:
+        if (!ui::IsValidVideoPreferences(command.video)) return;
+        RecordCodecMetrics("settings-change");
+        ui_state_.preferences.video = command.video;
+        codec_loop_.reset();
+        codec_failed_ = false;
+        codec_start_tick_ = 0;
+        state_changed = true;
         break;
 
     case ui::UiCommandType::SelectCaptureSource:

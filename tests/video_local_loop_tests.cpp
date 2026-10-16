@@ -5,9 +5,11 @@ namespace {
 class Encoder final:public media::IVideoEncoder {
 public:
     media::VideoCodecRuntimeInfo info; bool key=false; unsigned requests=0;
+    media::VideoBackendPolicy policy{};
+    media::VideoCodecConfig config;
     std::vector<media::EncodedAccessUnit> delayed;
     void Stop()override{}
-    bool Initialize(ID3D11Device*,const media::VideoCodecConfig&,media::VideoBackendPolicy) override {return true;}
+    bool Initialize(ID3D11Device*,const media::VideoCodecConfig& c,media::VideoBackendPolicy p) override {config=c;policy=p;return true;}
     bool Encode(const capture::CapturedFrame&,const media::NormalizedVideoTiming& t,std::vector<media::EncodedAccessUnit>& out) override {
         media::EncodedAccessUnit unit;unit.sequence=t.codec_sequence;unit.source_sequence=t.source_sequence;
         unit.timestamp_100ns=t.timestamp_100ns;unit.duration_100ns=t.duration_100ns;
@@ -24,8 +26,10 @@ public:
 class Decoder final:public media::IVideoDecoder {
 public:
     media::VideoCodecRuntimeInfo info;unsigned flushes=0;bool fail=false;
+    media::VideoBackendPolicy policy{};
+    media::VideoCodecConfig config;
     void Stop()override{}
-    bool Initialize(ID3D11Device*,const media::VideoCodecConfig&,bool)override{return true;}
+    bool Initialize(ID3D11Device*,const media::VideoCodecConfig& c,media::VideoBackendPolicy p)override{config=c;policy=p;return true;}
     bool Decode(const media::EncodedAccessUnit& unit,std::vector<capture::CapturedFrame>& out)override {
         if(fail)return false;
         capture::CapturedFrame f;f.sequence=unit.sequence;f.timestamp_100ns=unit.timestamp_100ns;
@@ -69,4 +73,17 @@ void RunVideoLocalLoopTests() {
     FPS_EXPECT_TRUE(!loop.Poll(sink));
     loop.Stop();FPS_EXPECT_EQ(loop.State(),media::VideoLoopState::Stopped);
     FPS_EXPECT_TRUE(!loop.Push(source,sink));
+    config.target_bitrate_bps = 12'000'000;
+    config.keyframe_interval_frames = 90;
+    config.low_latency = false;
+    for (const auto encode : {media::VideoBackendPolicy::RequireHardware, media::VideoBackendPolicy::ForceSoftware}) {
+        for (const auto decode : {media::VideoBackendPolicy::RequireHardware, media::VideoBackendPolicy::ForceSoftware}) {
+            FPS_EXPECT_TRUE(loop.Initialize(nullptr,config,encode,decode));
+            FPS_EXPECT_EQ(e->policy,encode);
+            FPS_EXPECT_EQ(d->policy,decode);
+            FPS_EXPECT_EQ(e->config.target_bitrate_bps,12'000'000U);
+            FPS_EXPECT_EQ(d->config.keyframe_interval_frames,90U);
+            FPS_EXPECT_TRUE(!e->config.low_latency);
+        }
+    }
 }

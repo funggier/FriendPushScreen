@@ -21,14 +21,20 @@ VideoLocalLoop::VideoLocalLoop(std::unique_ptr<IVideoEncoder> encoder,std::uniqu
     encoder_(std::move(encoder)),decoder_(std::move(decoder)) {}
 bool VideoLocalLoop::Fail(std::string error) { error_=std::move(error);state_=VideoLoopState::Error;return false; }
 bool VideoLocalLoop::Initialize(ID3D11Device* device,VideoCodecConfig config,VideoBackendPolicy policy) {
+    return Initialize(device, std::move(config), policy,
+        policy == VideoBackendPolicy::ForceSoftware ?
+            VideoBackendPolicy::ForceSoftware : VideoBackendPolicy::PreferHardware);
+}
+bool VideoLocalLoop::Initialize(ID3D11Device* device,VideoCodecConfig config,
+    VideoBackendPolicy encoder_policy,VideoBackendPolicy decoder_policy) {
     Stop();
     config_=config;clock_=VideoFrameClock(config.fps_numerator,config.fps_denominator);
     queue_=BoundedEncodedQueue(2);tracking_.clear();metrics_.Reset();
     encode_tail_.clear();decode_tail_.clear();e2e_tail_.clear();error_.clear();
     device_=device;context_.Reset();pad_.Reset();if(device)device->GetImmediateContext(&context_);
     cpu_input_frames_=0;padded_frames_=0;encoded_bytes_=0;state_=VideoLoopState::Starting;
-    if(!encoder_->Initialize(device,config,policy))return Fail("Encoder: "+encoder_->Error());
-    if(!decoder_->Initialize(device,config,policy==VideoBackendPolicy::ForceSoftware))return Fail("Decoder: "+decoder_->Error());
+    if(!encoder_->Initialize(device,config,encoder_policy))return Fail("Encoder: "+encoder_->Error());
+    if(!decoder_->Initialize(device,config,decoder_policy))return Fail("Decoder: "+decoder_->Error());
     return true;
 }
 void VideoLocalLoop::Stop() {

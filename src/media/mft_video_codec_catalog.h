@@ -16,6 +16,9 @@ struct MftVideoCodecDescriptor {
     std::wstring hardware_url;
 };
 
+// Stable, lossless registration identity; friendly names are display text only.
+std::string MftVideoCodecIdentity(const MftVideoCodecDescriptor& descriptor);
+
 std::vector<MftVideoCodecDescriptor>
 EnumerateMftVideoCodecDescriptors(
     VideoCodecKind codec,

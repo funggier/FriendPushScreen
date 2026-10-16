@@ -229,6 +229,45 @@ void RunSettingsStoreTests() {
             std::string::npos);
     }
 
+
+    // Codec choices must persist independently, including mixed CPU/GPU paths.
+    for (const auto* encoder_mode : {"gpu", "cpu"}) {
+        for (const auto* decoder_mode : {"gpu", "cpu"}) {
+            const std::string requested =
+                std::string{"video_encoder_mode="} + encoder_mode + "\n" +
+                "video_decoder_mode=" + decoder_mode + "\n" +
+                "video_encoder_id=encoder-registration\n"
+                "video_decoder_id=decoder-registration\n"
+                "video_bitrate_mbps=12\n"
+                "video_keyframe_interval=90\n"
+                "video_low_latency=false\n";
+            const auto saved = SerializePreferences(ParsePreferences(requested));
+            for (const auto& line : {
+                    std::string{"video_encoder_mode="} + encoder_mode + "\n",
+                    std::string{"video_decoder_mode="} + decoder_mode + "\n",
+                    std::string{"video_encoder_id=encoder-registration\n"},
+                    std::string{"video_decoder_id=decoder-registration\n"},
+                    std::string{"video_bitrate_mbps=12\n"},
+                    std::string{"video_keyframe_interval=90\n"},
+                    std::string{"video_low_latency=false\n"}}) {
+                FPS_EXPECT_TRUE(saved.find(line) != std::string::npos);
+            }
+        }
+    }
+    {
+        const auto saved = SerializePreferences(ParsePreferences(
+            "video_encoder_mode=not-a-backend\n"
+            "video_decoder_mode=not-a-backend\n"
+            "video_bitrate_mbps=0\n"
+            "video_keyframe_interval=999999\n"
+            "video_low_latency=maybe\n"));
+        FPS_EXPECT_TRUE(saved.find("video_encoder_mode=prefer_gpu\n") != std::string::npos);
+        FPS_EXPECT_TRUE(saved.find("video_decoder_mode=prefer_gpu\n") != std::string::npos);
+        FPS_EXPECT_TRUE(saved.find("video_bitrate_mbps=20\n") != std::string::npos);
+        FPS_EXPECT_TRUE(saved.find("video_keyframe_interval=120\n") != std::string::npos);
+        FPS_EXPECT_TRUE(saved.find("video_low_latency=true\n") != std::string::npos);
+    }
+
     FPS_EXPECT_TRUE(
         !DefaultSettingsPath().empty());
 }

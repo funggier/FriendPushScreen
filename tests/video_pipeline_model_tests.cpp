@@ -1,5 +1,6 @@
 #include "media/encoded_access_unit_queue.h"
 #include "media/video_codec_model.h"
+#include "media/mft_video_codec_catalog.h"
 #include "media/video_frame_clock.h"
 
 #include "test_support.h"
@@ -43,6 +44,18 @@ EncodedAccessUnit MakeUnit(
 }  // namespace
 
 void RunVideoPipelineModelTests() {
+    {
+        fps::media::MftVideoCodecDescriptor first;
+        first.hardware_url = L"device-a";
+        const auto id = fps::media::MftVideoCodecIdentity(first);
+        first.candidate.name = "renamed by driver";
+        FPS_EXPECT_EQ(id,fps::media::MftVideoCodecIdentity(first));
+        auto second = first; second.hardware_url = L"device-b";
+        FPS_EXPECT_TRUE(id != fps::media::MftVideoCodecIdentity(second));
+        second = first; second.candidate.direction = VideoCodecDirection::Decode;
+        FPS_EXPECT_TRUE(id != fps::media::MftVideoCodecIdentity(second));
+    }
+
     {
         VideoCodecConfig config{};
         FPS_EXPECT_TRUE(

@@ -30,6 +30,30 @@ void RunUiStateTests() {
     FPS_EXPECT_TRUE(!state.preferences.receiver_muted);
     FPS_EXPECT_EQ(state.preferences.receiver_volume, 100);
 
+    {
+        VideoPreferences video;
+        FPS_EXPECT_TRUE(IsValidVideoPreferences(video));
+        video.encoder_mode = fps::media::VideoBackendPolicy::ForceSoftware;
+        video.decoder_mode = fps::media::VideoBackendPolicy::RequireHardware;
+        video.bitrate_mbps = 12; video.keyframe_interval = 90; video.low_latency = false;
+        video.encoder_id = "encoder"; video.decoder_id = "decoder";
+        const auto config = MakeVideoCodecConfig(video,1366,768);
+        FPS_EXPECT_EQ(config.width,1366U);
+        FPS_EXPECT_EQ(config.height,768U);
+        FPS_EXPECT_EQ(config.target_bitrate_bps,12'000'000U);
+        FPS_EXPECT_EQ(config.keyframe_interval_frames,90U);
+        FPS_EXPECT_TRUE(!config.low_latency);
+        FPS_EXPECT_EQ(config.encoder_id,std::string{"encoder"});
+        FPS_EXPECT_EQ(config.decoder_id,std::string{"decoder"});
+        video.bitrate_mbps = 0;
+        FPS_EXPECT_TRUE(!IsValidVideoPreferences(video));
+        video.bitrate_mbps = 201;
+        FPS_EXPECT_TRUE(!IsValidVideoPreferences(video));
+        video.bitrate_mbps = 20; video.keyframe_interval = 601;
+        FPS_EXPECT_TRUE(!IsValidVideoPreferences(video));
+        video.keyframe_interval = 120; video.encoder_id = "bad\nkey=true";
+        FPS_EXPECT_TRUE(!IsValidVideoPreferences(video));
+    }
     ToggleSettingsVisible(state);
     FPS_EXPECT_TRUE(!state.preferences.settings_visible);
     ToggleSettingsVisible(state);

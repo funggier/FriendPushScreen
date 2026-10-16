@@ -153,6 +153,19 @@ void ReadTransformAttributes(
 
 }  // namespace
 
+std::string MftVideoCodecIdentity(const MftVideoCodecDescriptor& descriptor) {
+    wchar_t guid[40]{};
+    if (StringFromGUID2(descriptor.clsid, guid, 40) == 0) return {};
+    std::string id = std::string{VideoCodecKindName(descriptor.candidate.codec)} + ":" +
+        (descriptor.candidate.direction == VideoCodecDirection::Encode ? "encode:" : "decode:") +
+        std::to_string(static_cast<int>(descriptor.candidate.classification)) + ":" + WideToUtf8(guid) + ":";
+    constexpr char hex[] = "0123456789abcdef";
+    for (const unsigned char c : WideToUtf8(descriptor.hardware_url.c_str())) {
+        id.push_back(hex[c >> 4]); id.push_back(hex[c & 15]);
+    }
+    return id;
+}
+
 std::vector<MftVideoCodecDescriptor>
 EnumerateMftVideoCodecDescriptors(
     VideoCodecKind codec,

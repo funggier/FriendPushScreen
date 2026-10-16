@@ -12,6 +12,7 @@ struct VideoCodecRuntimeInfo {
     bool asynchronous{false};
     bool surface_io{false};
     bool low_latency_applied{false};
+    bool keyframe_interval_applied{false};
     std::uint64_t gpu_frames{0};
     std::uint64_t cpu_frames{0};
 };
@@ -31,7 +32,7 @@ public:
 class IVideoDecoder {
 public:
     virtual ~IVideoDecoder() = default;
-    virtual bool Initialize(ID3D11Device*, const VideoCodecConfig&, bool force_software)=0;
+    virtual bool Initialize(ID3D11Device*, const VideoCodecConfig&, VideoBackendPolicy policy)=0;
     virtual bool Decode(const EncodedAccessUnit&, std::vector<capture::CapturedFrame>&)=0;
     virtual bool Poll(std::vector<capture::CapturedFrame>&)=0;
     virtual bool Drain(std::vector<capture::CapturedFrame>&)=0;
@@ -57,7 +58,12 @@ private:
 class MftVideoDecoder final : public IVideoDecoder {
 public:
     MftVideoDecoder(); ~MftVideoDecoder() override;
-    bool Initialize(ID3D11Device*, const VideoCodecConfig&, bool force_software) override;
+    bool Initialize(ID3D11Device*, const VideoCodecConfig&, VideoBackendPolicy policy) override;
+    // Compatibility for physical probes; policy-based callers can require GPU output.
+    bool Initialize(ID3D11Device* device, const VideoCodecConfig& config, bool software) {
+        return Initialize(device, config, software ?
+            VideoBackendPolicy::ForceSoftware : VideoBackendPolicy::PreferHardware);
+    }
     bool Decode(const EncodedAccessUnit&, std::vector<capture::CapturedFrame>&) override;
     bool Poll(std::vector<capture::CapturedFrame>&) override;
     bool Drain(std::vector<capture::CapturedFrame>&) override;

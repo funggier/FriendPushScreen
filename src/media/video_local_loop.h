@@ -13,6 +13,7 @@ public:
     VideoLocalLoop(std::unique_ptr<IVideoEncoder> encoder=std::make_unique<MftVideoEncoder>(),
         std::unique_ptr<IVideoDecoder> decoder=std::make_unique<MftVideoDecoder>());
     bool Initialize(ID3D11Device*,VideoCodecConfig,VideoBackendPolicy);
+    bool Initialize(ID3D11Device*,VideoCodecConfig,VideoBackendPolicy encoder_policy,VideoBackendPolicy decoder_policy);
     bool Push(const capture::CapturedFrame&,const FrameSink&);
     bool Poll(const FrameSink&);
     bool Drain(const FrameSink&);

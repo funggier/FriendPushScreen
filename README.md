@@ -2,7 +2,7 @@
 
 FriendPushScreen is a Windows real-time screen-sharing project for two peers who want higher-quality, lower-latency video plus optional shared machine audio while continuing to use an external service such as Discord for voice and chat.
 
-> **Current state:** native Windows application baseline qualified through FPS-003. The repository now builds a launchable Win32/D3D11 diagnostics application. Screen sharing itself is not implemented yet; capture, audio/video codec execution, and secure network-media milestones remain ahead.
+> **Current state on this branch:** FPS-006 video capture → H.264 encode/decode → local preview is qualified. Settings now provide independent CPU/GPU encoder and decoder choices and encoding controls. Audio execution and network screen sharing remain later milestones.
 
 ## V1 product boundary
 
@@ -111,6 +111,19 @@ FriendPushScreen is licensed under the MIT License. See `LICENSE`.
 
 Third-party components, if introduced later, remain subject to their own licenses and must pass the project's licensing/compliance gate before integration.
 
+## Video codec settings
+
+In **Settings → VIDEO / H.264**, choose the encoder and decoder independently:
+
+- **Prefer GPU (allow CPU fallback)** keeps the existing default behavior.
+- A named **[GPU]** or **[CPU]** entry selects that exact native Windows codec registration. GPU decoding can use the Microsoft H.264 decoder with D3D11 acceleration even though its MFT catalog class is software.
+- Set target bitrate (1–200 Mbps), keyframe interval (1–600 frames), and **Low latency encoding**, then click **Apply Video**. Values persist after restart; active preview restarts its codec loop while preserving the capture source.
+- Live status names the codecs and reports the CPU/GPU paths actually producing frames. An unavailable saved codec reports an error until another choice is applied.
+- The decoder keeps its qualified real-time low-latency mode. CPU codec selection still uses D3D11 for color conversion and display.
+- H.264 is the implemented native local-loop codec. HEVC/AV1 capability evidence does not make those codecs selectable here yet.
+
+`FPS_FORCE_SOFTWARE_CODEC=1` remains a diagnostic override forcing both codecs to CPU; `FPS_RAW_PREVIEW=1` bypasses codecs. Both overrides are shown in video status.
+
 ## Current task
 
 See:
@@ -120,4 +133,4 @@ See:
 - `docs/development/QUALIFICATION-MATRIX.md`
 - `docs/architecture/DECISION-GATES.md`
 
-Build instructions are available in `docs/BUILDING.md`. The current executable provides the native Win32/D3D11 application shell and hardware diagnostics foundation; real screen-sharing/audio/network-media work starts in the later capture/codec/network tasks.
+Build instructions are available in `docs/BUILDING.md`. The current executable includes native diagnostics, unified capture, and decoded H.264 local preview. Audio capture/playback and secure peer/network streaming remain later tasks.

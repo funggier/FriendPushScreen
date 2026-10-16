@@ -41,6 +41,8 @@ struct VideoCodecCandidate {
 };
 
 struct VideoCodecConfig {
+    std::string encoder_id;
+    std::string decoder_id;
     VideoCodecKind codec{VideoCodecKind::H264};
     std::uint32_t width{1920};
     std::uint32_t height{1080};
@@ -50,6 +52,7 @@ struct VideoCodecConfig {
         20'000'000};
     std::uint32_t keyframe_interval_frames{
         120};
+    // Encoder latency option; the synchronous decoder always uses real-time mode.
     bool low_latency{true};
 };
 

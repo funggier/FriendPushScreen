@@ -115,6 +115,7 @@ ViewerViewport CalculateViewerViewport(
 bool ShouldDeferUiCommand(
     UiCommandType type) {
     switch (type) {
+    case UiCommandType::ApplyVideoSettings:
     case UiCommandType::SelectCaptureSource:
     case UiCommandType::ToggleCapturePreview:
     case UiCommandType::RefreshCaptureSources:
@@ -236,6 +237,10 @@ void MainWindow::SetCollecting(
     bool collecting) {
     settings_panel_.
         SetCollecting(collecting);
+}
+
+void MainWindow::SetVideoCodecStatus(std::wstring_view text) {
+    settings_panel_.SetVideoCodecStatus(text);
 }
 
 void MainWindow::SetCaptureSources(
