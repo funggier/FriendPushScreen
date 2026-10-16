@@ -1,6 +1,8 @@
 #include "test_support.h"
 
 void RunFeedbackProtectionTests();
+void RunPeerSessionTests();
+void RunPeerProtocolTests();
 void RunPeerIdentityTests();
 void RunDiagnosticsFormatterTests();
 void RunPlatformFilterTests();
@@ -20,6 +22,8 @@ int main() {
     FPS_EXPECT_TRUE(true);
     FPS_EXPECT_EQ(2 + 2, 4);
     RunPeerIdentityTests();
+    RunPeerProtocolTests();
+    RunPeerSessionTests();
     RunFeedbackProtectionTests();
     RunDiagnosticsFormatterTests();
     RunPlatformFilterTests();

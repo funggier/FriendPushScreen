@@ -49,8 +49,18 @@ std::uint32_t ReadSize(const std::uint8_t* b) {
         (static_cast<std::uint32_t>(b[2])<<8)|b[3];
 }
 }
-struct SecurePeerTransport::Impl {
+struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
     struct Connection;
+    struct ReceiveCredit {
+        std::weak_ptr<Impl> owner;
+        std::size_t size{};
+        ~ReceiveCredit() {
+            if(auto self=owner.lock()) {
+                std::lock_guard lock(self->mutex);
+                if(!self->stopping){--self->metrics.receive_media_count;self->metrics.receive_media_bytes-=size;}
+            }
+        }
+    };
     struct SendBuffer {
         std::vector<std::uint8_t> bytes;
         QUIC_BUFFER buffer{};
@@ -102,7 +112,11 @@ struct SecurePeerTransport::Impl {
             if(c&&!c->closing){c->closing=true;api->ConnectionShutdown(c->handle,QUIC_CONNECTION_SHUTDOWN_FLAG_NONE,kProtocolError);}
             return;
         }
-        events.push_back({kind,c?c->id:0,std::move(bytes),std::move(detail)});
+        std::shared_ptr<void> credit;
+        if(kind==TransportEventKind::Video) {
+            auto lease=std::make_shared<ReceiveCredit>();lease->owner=weak_from_this();lease->size=bytes.size();credit=std::move(lease);
+        }
+        events.push_back({kind,c?c->id:0,std::move(bytes),std::move(detail),std::move(credit)});
     }
     void Error(Connection* c,const char* action,QUIC_STATUS status){Event(TransportEventKind::Error,c,{},StatusText(action,status));}
     void CloseProtocol(Connection& c,const char* reason) {
@@ -118,7 +132,7 @@ struct SecurePeerTransport::Impl {
     }
     void Announce(Connection& c) {
         if(c.tlsConnected&&c.certificateValid&&c.control&&!c.announced&&!c.closing) {
-            c.announced=true;Event(TransportEventKind::Connected,&c);
+            c.announced=true;Event(TransportEventKind::Connected,&c,{},c.client?"client":"server");
         }
     }
     Connection* Find(std::uint64_t id) {
@@ -171,10 +185,13 @@ struct SecurePeerTransport::Impl {
             self.Announce(c);break;
         case QUIC_CONNECTION_EVENT_PEER_STREAM_STARTED: {
             const bool media=(event->PEER_STREAM_STARTED.Flags&QUIC_STREAM_OPEN_FLAG_UNIDIRECTIONAL)!=0;
-            if(!media&&(c.client||c.control)){self.CloseProtocol(c,"Unexpected duplicate control stream");break;}
             auto stream=std::make_unique<Stream>();stream->connection=&c;stream->handle=event->PEER_STREAM_STARTED.Stream;stream->media=media;
             auto* raw=stream.get();c.streams.push_back(std::move(stream));
             self.api->SetCallbackHandler(raw->handle,reinterpret_cast<void*>(StreamCallback),raw);
+            if(!media&&(c.client||c.control)) {
+                self.api->StreamShutdown(raw->handle,QUIC_STREAM_SHUTDOWN_FLAG_ABORT,kProtocolError);
+                self.CloseProtocol(c,"Unexpected duplicate control stream");break;
+            }
             if(media) {
                 if(self.metrics.receive_media_count>=kMaxMediaInFlight) {
                     raw->lost=true;++self.metrics.dropped_video;self.Event(TransportEventKind::MediaLost,&c);
@@ -239,7 +256,7 @@ struct SecurePeerTransport::Impl {
         case QUIC_STREAM_EVENT_PEER_SEND_SHUTDOWN:
             s.fin=true;
             if(s.media&&!s.outgoing&&!s.lost&&s.receiveAccounted) {
-                if(s.received.empty()||GetTickCount64()-s.created>self.config.media_deadline_ms){self.Lost(s);self.ReleaseReceive(s);}
+                if(s.received.empty()||self.events.size()>=kMaxEvents||GetTickCount64()-s.created>self.config.media_deadline_ms){self.Lost(s);self.ReleaseReceive(s);}
                 else {
                     ++self.metrics.received_video;self.metrics.received_bytes+=s.received.size();
                     // Transfer receive accounting to the queued event until PollEvents consumes it.
@@ -329,10 +346,10 @@ struct SecurePeerTransport::Impl {
         }
     }
 };
-SecurePeerTransport::SecurePeerTransport():impl_(std::make_unique<Impl>()){}
+SecurePeerTransport::SecurePeerTransport():impl_(std::make_shared<Impl>()){}
 SecurePeerTransport::~SecurePeerTransport(){Stop();}
 bool SecurePeerTransport::Start(const PeerIdentity& identity,const PublicPeerIdentity& peer,TransportConfig config,std::string& error) {
-    Stop();impl_=std::make_unique<Impl>();auto& self=*impl_;self.peer=peer;self.config=std::move(config);
+    Stop();impl_=std::make_shared<Impl>();auto& self=*impl_;self.peer=peer;self.config=std::move(config);
     if(!ValidateTrustedPeer(identity.Public(),peer,error))return false;
     WSADATA data{};if(WSAStartup(MAKEWORD(2,2),&data)!=0){error="Windows sockets startup failed";return false;}self.winsock=true;
     if(!self.Load(error)){Stop();return false;}
@@ -413,7 +430,6 @@ std::vector<TransportEvent> SecurePeerTransport::PollEvents() {
     std::vector<TransportEvent> result;result.reserve(self.events.size());
     while(!self.events.empty()) {
         auto& event=self.events.front();
-        if(event.kind==TransportEventKind::Video){--self.metrics.receive_media_count;self.metrics.receive_media_bytes-=event.bytes.size();}
         result.push_back(std::move(event));self.events.pop_front();
     }
     return result;

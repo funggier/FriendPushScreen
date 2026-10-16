@@ -16,6 +16,7 @@ struct TransportEvent {
     std::uint64_t connection_id{0};
     std::vector<std::uint8_t> bytes;
     std::string detail;
+    std::shared_ptr<void> receive_credit; // Keeps partial + queued + consumer-held media in one budget.
 };
 struct TransportMetrics {
     std::uint64_t sent_control{0},received_control{0},sent_video{0},received_video{0};
@@ -48,6 +49,6 @@ public:
     void Stop();
 private:
     struct Impl;
-    std::unique_ptr<Impl> impl_;
+    std::shared_ptr<Impl> impl_;
 };
 }

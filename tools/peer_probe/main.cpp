@@ -106,7 +106,9 @@ bool NegativeTests(const std::filesystem::path& root) {
         ok=Check(m.receive_media_count<=2&&m.max_receive_media_count<=2&&m.max_receive_media_bytes<=2*kMaxMediaBytes&&
             s.max_send_media_count<=2&&s.max_send_media_bytes<=2*kMaxMediaBytes,"all partial/in-flight queues bounded")&&ok;
         ok=Check(m.dropped_video>0&&m.receive_media_count==2,"stalled receiver drops excess media")&&ok;
-        receiver.PollEvents();sender.PollEvents();
+        auto held=receiver.PollEvents();
+        ok=Check(receiver.Metrics().receive_media_count==2,"consumer-held media remains in receive budget")&&ok;
+        held.clear();sender.PollEvents();
         bool recovered=false;
         for(unsigned i=0;i<100&&!recovered;++i) {
             sender.SendVideo({0x12,0x34,0x56});sender.PollEvents();Sleep(5);
