@@ -14,6 +14,7 @@
 #include "ui/main_window.h"
 #include "ui/ui_command.h"
 #include "ui/ui_state.h"
+#include "ui/settings_store.h"
 
 #include <memory>
 #include <optional>
@@ -75,6 +76,7 @@ private:
         diagnostics_service_;
 
     ui::UiState ui_state_{};
+    ui::AsyncPreferencesWriter preferences_writer_;
     std::unique_ptr<PeerVideoController> peer_;
     capture::FeedbackProtection feedback_;
     bool local_preview_intent_{false},displaying_peer_{false};

@@ -307,18 +307,8 @@ void Application::SaveDiagnostics() {
 }
 
 void Application::PersistUiPreferences() {
-    if (!ui::SavePreferencesUtf8(
-            ui::PersistentPreferencesFromState(
-                ui_state_),
-            ui::DefaultSettingsPath())) {
-        diagnostics::Logger::Instance().
-            Log(
-                diagnostics::LogLevel::Warning,
-                "ui",
-                "could not persist UI preferences");
-    }
+    preferences_writer_.Submit(ui::PersistentPreferencesFromState(ui_state_),ui::DefaultSettingsPath());
 }
-
 void Application::ConfigurePeerAudio() {
     if(!peer_)return;audio::AudioPreferences preferences;
     preferences.source_id=ui_state_.preferences.audio_source_id.empty()?(ui_state_.preferences.audio_source==ui::AudioSourceKind::System?"system":"none"):ui_state_.preferences.audio_source_id;
@@ -1114,6 +1104,7 @@ int Application::Run(
 
     StopCaptureSession();
     peer_.reset();
+    if(!preferences_writer_.Flush())diagnostics::Logger::Instance().Log(diagnostics::LogLevel::Warning,"ui","could not persist final UI preferences");
 
     diagnostics_service_.WaitForIdle(
         std::chrono::seconds{5});

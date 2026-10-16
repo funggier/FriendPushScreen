@@ -55,7 +55,7 @@ void AudioPeerSession::SetOutgoingState(AudioState state) {
     if(state==AudioState::Disabled||state==AudioState::SourceLost||state==AudioState::Error)state_.outgoing_ready=false;
     std::erase_if(pending_,[&](const auto& m){return m.kind==AudioControlKind::StreamState&&m.generation==state_.outgoing_generation;});
     AudioControl m;m.kind=AudioControlKind::StreamState;m.session=state_.session;m.generation=state_.outgoing_generation;m.state=state;
-    if(pending_.size()<16)pending_.push_back(m);
+    pending_.push_back(m); // At most capability, ready, source, format and current state.
 }
 bool AudioPeerSession::OnControl(const AudioControl& m) {
     if(!Valid(m)||!state_.session||m.session!=state_.session)return false;
@@ -91,7 +91,12 @@ void AudioPeerSession::ReceiverReady() {
     if(!state_.format_pending||!state_.incoming_generation)return;
     state_.format_pending=false;state_.incoming_ready=true;
     AudioControl ready;ready.kind=AudioControlKind::Ready;ready.session=state_.session;ready.generation=state_.incoming_generation;
-    if(pending_.size()<16)pending_.push_back(ready);
+    std::erase_if(pending_,[](const auto& m){return m.kind==AudioControlKind::Ready;});
+    pending_.push_back(ready); // Only the newest incoming generation can be ready.
 }
-std::vector<AudioControl> AudioPeerSession::TakeControls(){std::vector<AudioControl> result;result.swap(pending_);return result;}
+std::vector<AudioControl> AudioPeerSession::TakeControls(std::size_t limit) {
+    const auto count=std::min(limit,pending_.size());std::vector<AudioControl> result;
+    result.reserve(count);for(std::size_t n=0;n<count;++n)result.push_back(std::move(pending_[n]));
+    pending_.erase(pending_.begin(),pending_.begin()+static_cast<std::ptrdiff_t>(count));return result;
+}
 }

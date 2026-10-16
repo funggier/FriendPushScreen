@@ -2,6 +2,8 @@
 
 #include "ui/settings_store.h"
 
+#include <Windows.h>
+#include <atomic>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -10,6 +12,18 @@
 void RunSettingsStoreTests() {
     using namespace fps::ui;
 
+    {
+        std::cout<<"SettingsSaveDoesNotBlockUiAndFlushesLatest\n";
+        std::atomic<DWORD> writerThread{};std::atomic<int> finalVolume{-1};
+        AsyncPreferencesWriter writer([&](const UiPreferences& p,const std::filesystem::path&){writerThread=GetCurrentThreadId();Sleep(100);finalVolume=p.receiver_volume;return true;});
+        UiPreferences p;p.receiver_volume=100;const auto start=GetTickCount64();
+        writer.Submit(p,"unused-test-path");
+        FPS_EXPECT_TRUE(GetTickCount64()-start<50);
+        p.receiver_volume=50;writer.Submit(p,"unused-test-path");
+        p.receiver_volume=0;writer.Submit(p,"unused-test-path");
+        FPS_EXPECT_TRUE(writer.Flush());FPS_EXPECT_EQ(finalVolume.load(),0);
+        FPS_EXPECT_TRUE(writerThread.load()!=GetCurrentThreadId());
+    }
     UiPreferences preferences{};
     preferences.settings_visible = false;
     preferences.borderless = true;

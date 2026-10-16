@@ -44,15 +44,22 @@ bool AudioJitter::Push(AudioPacket p,std::uint64_t now) {
     if(!next_){next_=p.sequence;due_=now+40;}
     else if(p.sequence<next_&&now<due_&&misses_==0)next_=p.sequence;
     last_arrival_=now;packets_.emplace(p.sequence,std::move(p));
-    while(packets_.size()>kAudioQueueLimit){packets_.erase(packets_.begin());++dropped_;next_=std::max(next_,packets_.begin()->first);}
+    if(packets_.size()>kAudioQueueLimit) {
+        // Restore the arrival lead after a consumer backlog. Advancing only the
+        // sequence makes every small late arrival race an already-played PLC.
+        auto newest=std::move(packets_.rbegin()->second);
+        dropped_+=packets_.size()-1;played_=std::max(played_,newest.sequence-1);
+        packets_.clear();next_=newest.sequence;due_=now+40;misses_=0;
+        packets_.emplace(newest.sequence,std::move(newest));
+    }
     return true;
 }
 std::optional<PlayoutFrame> AudioJitter::Pop(std::uint64_t now) {
     if(!next_||now<due_)return {};
     if(now-due_>120) {
-        if(packets_.empty()){next_=due_=0;return {};}
-        auto newest=std::move(packets_.rbegin()->second);dropped_+=packets_.size()-1;packets_.clear();
-        next_=newest.sequence;packets_.emplace(newest.sequence,std::move(newest));due_=now+40;return {};
+        if(!packets_.empty())played_=std::max(played_,packets_.rbegin()->first);
+        dropped_+=packets_.size();packets_.clear();next_=due_=0;misses_=0;
+        return {}; // Only a fresh arrival may restart after a stalled consumer.
     }
     PlayoutFrame result;
     if(auto found=packets_.find(next_);found!=packets_.end()){result.packet=std::move(found->second);packets_.erase(found);misses_=0;}

@@ -95,16 +95,18 @@ void PeerAudio::OnAudio(std::uint64_t id,std::span<const std::uint8_t> wire) {
     p.snapshot.max_jitter_depth=std::max(p.snapshot.max_jitter_depth,p.jitter.Depth());
 }
 void PeerAudio::Tick(const ControlSender& sendControl,const AudioSender& sendAudio) {
-    auto& p=*impl_;const auto now=GetTickCount64();
+    auto& p=*impl_;auto now=GetTickCount64();
     if(!p.lastCatalog||now-p.lastCatalog>=5000) {p.lastCatalog=now;p.snapshot.catalog=EnumerateAudioDevices(p.preferences.windows_build);}
     if(p.session.State().session&&p.session.State().peer_capable&&(p.restart||(p.retrySource&&now>=p.retrySource))) {p.restart=false;p.StartSource();}
     p.Incoming();
-    for(auto& control:p.session.TakeControls()) {
-        auto wire=EncodeAudioControl(control);
-        if(!wire.empty()&&p.controls.size()<16)p.controls.push_back(std::move(wire));
+    // Retain all unsent controls. Leave a coalesced latest-generation transaction
+    // in the session until the finite retry queue has room for it.
+    while(!p.controls.empty()) {if(!sendControl(p.controls.front()))break;p.controls.pop_front();}
+    for(auto& control:p.session.TakeControls(16-p.controls.size())) {
+        auto wire=EncodeAudioControl(control);if(!wire.empty())p.controls.push_back(std::move(wire));
     }
     while(!p.controls.empty()) {if(!sendControl(p.controls.front()))break;p.controls.pop_front();}
-    p.Output(now);
+    p.Output(now);now=GetTickCount64();
     if(p.source.State()==AudioState::Active) {
         std::vector<AudioPcmChunk> chunks;std::string error;
         if(!p.source.Poll(chunks,error))p.FailSource(error,AudioState::SourceLost);
@@ -136,6 +138,10 @@ void PeerAudio::Tick(const ControlSender& sendControl,const AudioSender& sendAud
         for(unsigned n=0;n<6;++n) {
             auto frame=p.jitter.Pop(now);if(!frame)break;
             const auto packet=frame->packet?std::span<const std::uint8_t>(frame->packet->bytes):std::span<const std::uint8_t>{};
+            if(frame->packet) {
+                const auto age=AudioNow100ns()-frame->packet->pts_100ns;
+                if(age< -2500000||age>2500000){++p.snapshot.dropped;continue;}
+            }
             if(!frame->packet)++p.snapshot.plc;
             auto pcm=p.decoder.Decode(packet,error);
             if(pcm.empty()){++p.snapshot.dropped;p.receiveError=error;continue;}

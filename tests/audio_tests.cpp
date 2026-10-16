@@ -52,6 +52,33 @@ void AudioJitterBoundsReordersAndRebases() {
     j.Reset(7,3);FPS_EXPECT_EQ(j.Depth(),std::size_t{0});
     FPS_EXPECT_TRUE(!j.Push(Packet(201,41000000),2260));
 }
+void AudioJitterRestoresLeadAfterOverflow() {
+    std::cout<<"AudioJitterRestoresLeadAfterOverflow\n";
+    AudioJitter j;j.Reset(7,2);
+    for(std::uint64_t n=1;n<=8;++n)FPS_EXPECT_TRUE(j.Push(Packet(n),100+(n-1)*20));
+    // A blocked receiver must resume with a playout lead, not permanently race arrivals.
+    for(unsigned n=0;n<6;++n)(void)j.Pop(240);
+    unsigned decoded=0,plc=0;
+    for(std::uint64_t now=241;now<=2300;++now) {
+        for(std::uint64_t n=9;n<=120;++n) {
+            const auto arrival=100+(n-1)*20+(n%2?1:-1);
+            if(now==arrival)j.Push(Packet(n),now);
+        }
+        if(auto f=j.Pop(now);f&&now>=500){if(f->packet)++decoded;else ++plc;}
+    }
+    FPS_EXPECT_TRUE(decoded>=88);
+    FPS_EXPECT_EQ(plc,0U);
+    FPS_EXPECT_TRUE(j.Depth()<=6);
+}
+void AudioJitterDiscardsPreStallAudio() {
+    std::cout<<"AudioJitterDiscardsPreStallAudio\n";
+    AudioJitter j;j.Reset(7,2);j.Push(Packet(1),100);j.Push(Packet(2),120);
+    FPS_EXPECT_TRUE(!j.Pop(2200));
+    FPS_EXPECT_TRUE(!j.Pop(2240)); // Never replay an old buffered packet after a stall.
+    FPS_EXPECT_TRUE(!j.Push(Packet(2),2241));
+    FPS_EXPECT_TRUE(j.Push(Packet(3),2242));
+    auto f=j.Pop(2282);FPS_EXPECT_TRUE(f&&f->packet&&f->packet->sequence==3);
+}
 void AudioRoutingGuardAndGain() {
     std::cout<<"AudioRoutingGuardAndGain\n";
     FPS_EXPECT_TRUE(FeedbackRisk(true,"endpoint-a","endpoint-a",""));
@@ -86,4 +113,4 @@ void OpusRoundTripAndPlc() {
     c.Stop();FPS_EXPECT_TRUE(c.Encode(std::vector<float>(1920),error).empty());
 }
 }
-void RunAudioTests(){AudioWireRejectsInvalidAndStale();AudioJitterBoundsReordersAndRebases();AudioRoutingGuardAndGain();OpusRoundTripAndPlc();}
+void RunAudioTests(){AudioWireRejectsInvalidAndStale();AudioJitterBoundsReordersAndRebases();AudioJitterRestoresLeadAfterOverflow();AudioJitterDiscardsPreStallAudio();AudioRoutingGuardAndGain();OpusRoundTripAndPlc();}

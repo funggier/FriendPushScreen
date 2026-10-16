@@ -11,7 +11,6 @@ public:
     void OnControl(std::uint64_t,std::vector<std::uint8_t>);
     void OnAudio(network::TransportEvent);
     std::vector<AudioOutbound> TakeOutgoing();
-    void RetryControl(AudioOutbound);
     void Dispatch(const std::function<bool(const AudioOutbound&)>&);
     void SendDropped();
     PeerAudioSnapshot Snapshot()const;

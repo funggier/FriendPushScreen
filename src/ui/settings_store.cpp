@@ -464,3 +464,45 @@ std::filesystem::path DefaultSettingsPath() {
 }
 
 }  // namespace fps::ui
+
+#include <condition_variable>
+#include <mutex>
+#include <optional>
+#include <thread>
+namespace fps::ui {
+struct AsyncPreferencesWriter::Impl {
+    struct Request {UiPreferences preferences;std::filesystem::path path;std::uint64_t revision;};
+    Save save;std::mutex mutex;std::condition_variable changed;
+    std::optional<Request> pending;
+    std::uint64_t submitted{},completed{};bool stop{},ok{true};std::thread thread;
+    explicit Impl(Save fn):save(std::move(fn)),thread([this]{Run();}){}
+    ~Impl() {
+        {std::lock_guard lock(mutex);stop=true;}
+        changed.notify_all();thread.join();
+    }
+    void Run() {
+        for(;;) {
+            Request request;
+            {
+                std::unique_lock lock(mutex);changed.wait(lock,[&]{return stop||pending.has_value();});
+                if(!pending)return;
+                request=std::move(*pending);pending.reset();
+            }
+            bool result=false;
+            try{result=save(request.preferences,request.path);}catch(...){result=false;}
+            {std::lock_guard lock(mutex);ok=result;completed=request.revision;}
+            changed.notify_all();
+        }
+    }
+};
+AsyncPreferencesWriter::AsyncPreferencesWriter(Save save):impl_(std::make_unique<Impl>(std::move(save))){}
+AsyncPreferencesWriter::~AsyncPreferencesWriter()=default;
+void AsyncPreferencesWriter::Submit(UiPreferences p,std::filesystem::path path) {
+    {std::lock_guard lock(impl_->mutex);impl_->pending=Impl::Request{std::move(p),std::move(path),++impl_->submitted};}
+    impl_->changed.notify_all();
+}
+bool AsyncPreferencesWriter::Flush() {
+    std::unique_lock lock(impl_->mutex);const auto target=impl_->submitted;
+    impl_->changed.wait(lock,[&]{return impl_->completed>=target;});return impl_->ok;
+}
+}

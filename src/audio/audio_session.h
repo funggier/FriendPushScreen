@@ -26,7 +26,7 @@ public:
     void SetOutgoingState(AudioState);
     bool OnControl(const AudioControl&);
     void ReceiverReady();
-    std::vector<AudioControl> TakeControls();
+    std::vector<AudioControl> TakeControls(std::size_t limit=16);
     const AudioPeerState& State()const{return state_;}
 private:
     AudioPeerState state_;std::uint64_t generation_{};

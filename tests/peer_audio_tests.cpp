@@ -1,5 +1,6 @@
 #include "test_support.h"
 #include "audio/audio_session.h"
+#include "audio/peer_audio.h"
 #include "network/secure_peer_transport.h"
 #include <iostream>
 using namespace fps::audio;
@@ -33,9 +34,27 @@ void AudioControlIsStrictAndReadyIsGenerationBound() {
     AudioControl invalid;invalid.kind=AudioControlKind::Format;invalid.session=10;invalid.generation=42;
     FPS_EXPECT_TRUE(!a.OnControl(invalid)); // No source/capabilities first.
 }
+void AudioLatestStateSurvivesControlBackpressure() {
+    std::cout<<"AudioLatestStateSurvivesControlBackpressure\n";
+    PeerAudio peer;peer.Bind(3,9);AudioControl cap;cap.session=9;
+    peer.OnControl(3,EncodeAudioControl(cap));AudioPreferences pref;
+    for(unsigned n=0;n<40;++n){peer.Configure(pref,n%2==0);peer.Tick([](auto){return false;},[](auto){return true;});}
+    const auto latest=peer.Snapshot().outgoing_generation;
+    bool disabled=false;std::string error;
+    peer.Tick([&](auto wire){auto c=DecodeAudioControl(wire,error);if(c&&c->kind==AudioControlKind::StreamState&&c->generation==latest&&c->state==AudioState::Disabled)disabled=true;return true;},[](auto){return true;});
+    FPS_EXPECT_TRUE(disabled);
+}
+void AudioReadyTracksLatestGenerationUnderBackpressure() {
+    std::cout<<"AudioReadyTracksLatestGenerationUnderBackpressure\n";
+    AudioPeerSession a,b;a.Bind(9);b.Bind(9);Transfer(a,b);Transfer(b,a);
+    for(unsigned n=0;n<40;++n){a.SelectSource(AudioSourceKind::CaptureEndpoint,{});Transfer(a,b);b.ReceiverReady();}
+    bool latest=false;const auto controls=b.TakeControls();
+    for(const auto& c:controls)if(c.kind==AudioControlKind::Ready&&c.generation==a.State().outgoing_generation)latest=true;
+    FPS_EXPECT_TRUE(latest);FPS_EXPECT_TRUE(controls.size()<=16);
+}
 }
 void RunPeerAudioTests() {
-    AudioControlIsStrictAndReadyIsGenerationBound();
+    AudioControlIsStrictAndReadyIsGenerationBound();AudioLatestStateSurvivesControlBackpressure();AudioReadyTracksLatestGenerationUnderBackpressure();
     fps::network::SecurePeerTransport t;
     FPS_EXPECT_EQ(t.SendAudio(std::vector<std::uint8_t>(1025)),fps::network::TransportSendResult::Invalid);
 }

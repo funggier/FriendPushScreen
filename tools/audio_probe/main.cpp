@@ -28,7 +28,7 @@ int main(int argc,char** argv) {
             WasapiAudioSource source;
             if(!source.Start(sourceId,error)){std::cerr<<error;result=3;}
             else {
-                std::uint64_t frames=0,samples=0;double energy=0,peak=0,cs=0,sn=0;
+                std::uint64_t frames=0,samples=0,blockFrames=0,blocks=0,silentBlocks=0,silentRun=0,maxSilentRun=0;double energy=0,peak=0,cs=0,sn=0,blockEnergy=0,minBlockRms=1,maxBlockRms=0;
                 const auto start=GetTickCount64();
                 while(GetTickCount64()-start<seconds*1000ULL) {
                     std::vector<AudioPcmChunk> chunks;if(!source.Poll(chunks,error)){result=4;break;}
@@ -37,11 +37,20 @@ int main(int argc,char** argv) {
                         energy+=left*left+right*right;peak=std::max({peak,std::abs(left),std::abs(right)});samples+=2;
                         const double phase=6.283185307179586*440*static_cast<double>(frames++)/48000;
                         cs+=left*std::cos(phase);sn+=left*std::sin(phase);
+                        blockEnergy+=left*left+right*right;
+                        if(++blockFrames==480) {
+                            const auto rms=std::sqrt(blockEnergy/960);
+                            if(frames>24000) {
+                                ++blocks;minBlockRms=std::min(minBlockRms,rms);maxBlockRms=std::max(maxBlockRms,rms);
+                                if(rms<0.001){++silentBlocks;maxSilentRun=std::max(maxSilentRun,++silentRun);}else silentRun=0;
+                            }
+                            blockFrames=0;blockEnergy=0;
+                        }
                     }
                     Sleep(1);
                 }
                 if(mode=="--capture-test"&&frames<10000)result=6;
-                std::cout<<"{\"mode\":\""<<mode<<"\",\"result\":"<<result<<",\"frames\":"<<frames<<",\"rms\":"<<std::sqrt(energy/std::max<std::uint64_t>(1,samples))<<",\"peak\":"<<peak<<",\"tone440_amplitude\":"<<2*std::sqrt(cs*cs+sn*sn)/std::max<std::uint64_t>(1,frames)<<",\"error\":\""<<Json(error)<<"\"}\n";
+                std::cout<<"{\"mode\":\""<<mode<<"\",\"result\":"<<result<<",\"frames\":"<<frames<<",\"rms\":"<<std::sqrt(energy/std::max<std::uint64_t>(1,samples))<<",\"peak\":"<<peak<<",\"tone440_amplitude\":"<<2*std::sqrt(cs*cs+sn*sn)/std::max<std::uint64_t>(1,frames)<<",\"measured_10ms_blocks\":"<<blocks<<",\"silent_10ms_blocks\":"<<silentBlocks<<",\"longest_silent_ms\":"<<maxSilentRun*10<<",\"min_block_rms\":"<<minBlockRms<<",\"max_block_rms\":"<<maxBlockRms<<",\"error\":\""<<Json(error)<<"\"}\n";
             }
         }else if(mode=="--tone") {
             WasapiAudioRenderer tone;
