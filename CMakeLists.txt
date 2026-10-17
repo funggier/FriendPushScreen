@@ -152,6 +152,7 @@ add_executable(FriendPushScreenTests
     tests/platform_filter_tests.cpp
     tests/diagnostics_service_tests.cpp
     tests/ui_state_tests.cpp
+    tests/peer_status_metrics_tests.cpp
     tests/peer_ui_state_tests.cpp
     tests/peer_video_controller_tests.cpp
     tests/settings_store_tests.cpp

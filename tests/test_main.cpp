@@ -16,6 +16,7 @@ void RunDiagnosticsServiceTests();
 void RunPeerVideoControllerTests();
 void RunPeerUiStateTests();
 void RunUiStateTests();
+void RunPeerStatusMetricsTests();
 void RunSettingsStoreTests();
 void RunCaptureSourceCatalogTests();
 void RunMainWindowLayoutTests();
@@ -44,6 +45,7 @@ int main() {
     RunPlatformFilterTests();
     RunDiagnosticsServiceTests();
     RunUiStateTests();
+    RunPeerStatusMetricsTests();
     RunPeerUiStateTests();
     RunPeerVideoControllerTests();
     RunSettingsStoreTests();

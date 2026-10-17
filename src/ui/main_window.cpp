@@ -426,6 +426,7 @@ bool MainWindow::Create(
         instance,
         nullptr);
 
+    last_status_summary_.clear();
     status_bar_ = CreateWindowExW(
         0,
         L"STATIC",
@@ -437,7 +438,7 @@ bool MainWindow::Create(
             WS_BORDER |
             WS_CLIPSIBLINGS |
             SS_LEFT |
-            SS_CENTERIMAGE,
+            SS_CENTERIMAGE | SS_ENDELLIPSIS,
         0,
         0,
         1,
@@ -680,8 +681,9 @@ void MainWindow::LayoutChildren() {
 std::wstring MainWindow::BuildStatusSummary(
     const UiState& state) const {
     std::wstring text =
-        state.connection_state==ConnectionUiState::Connected?L"  Peer: Online  |  Connection: ":
-        (state.peer_fingerprint.empty()?L"  Peer: Not paired  |  Connection: ":L"  Peer: Paired  |  Connection: ");
+        state.connection_state==ConnectionUiState::Connected?L"  Peer: Online":
+        (state.peer_fingerprint.empty()?L"  Peer: Not paired":L"  Peer: Paired");
+    text+=L"  |  "+BuildPeerMetricsText(state)+L"  |  Connection: ";
 
     switch (state.connection_state) {
     case ConnectionUiState::Error:
@@ -750,9 +752,10 @@ void MainWindow::ApplyUiState(
         const std::wstring status =
             BuildStatusSummary(state);
 
-        SetWindowTextW(
-            status_bar_,
-            status.c_str());
+        if(status!=last_status_summary_) {
+            SetWindowTextW(status_bar_,status.c_str());
+            last_status_summary_=status;
+        }
     }
 
     ApplyWindowState(state);

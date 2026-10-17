@@ -1,6 +1,8 @@
 #pragma once
 #include "network/peer_protocol.h"
 #include <map>
+#include <optional>
+#include <deque>
 namespace fps::network {
 enum class SessionActionKind {SendControl,CloseConnection,StartSender,StopSender,StartReceiver,StopReceiver,ForceKeyframe,RecoverReceiver,Reconnect,Error};
 struct SessionAction {
@@ -13,6 +15,7 @@ struct PeerSessionState {
     bool connected{},sharing{},receiving{},recovering{};
     std::uint64_t connection{},token{},outgoing_generation{},incoming_generation{};
     VideoFormat outgoing_format,incoming_format;
+    std::optional<std::uint64_t> round_trip_ms;
 };
 class PeerSession {
 public:
@@ -33,7 +36,7 @@ public:
     std::vector<SessionAction> TakeActions();
     const PeerSessionState& State()const{return state_;}
 private:
-    struct Link {bool initiator{},ready{},closing{};std::uint64_t nonce{},peer_boot{},started{},last_seen{},last_ping{};};
+    struct Link {bool initiator{},ready{},closing{};std::uint64_t nonce{},peer_boot{},started{},last_seen{},last_ping{},last_rtt_at{},last_rtt_ping{};std::deque<std::uint64_t> pending_pings;};
     void Emit(SessionActionKind,std::uint64_t,const ControlMessage& = {},std::string={});
     void Send(std::uint64_t,ControlType,std::uint64_t generation=0,std::uint64_t value=0);
     void Activate(std::uint64_t);

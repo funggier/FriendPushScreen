@@ -110,7 +110,16 @@ bool PeerSession::OnControl(std::uint64_t id,const ControlMessage& message,std::
         if(state_.sharing&&message.generation==state_.outgoing_generation)BeginShare(true);
         break;
     case ControlType::Ping:Send(id,ControlType::Pong,0,message.value);break;
-    case ControlType::Pong:break;
+    case ControlType::Pong: {
+        const auto pending=std::find(link.pending_pings.begin(),link.pending_pings.end(),message.value);
+        if(!message.generation&&pending!=link.pending_pings.end()&&now>=message.value) {
+            const auto sent=*pending;link.pending_pings.erase(pending);
+            if(now-sent<=3500&&sent>link.last_rtt_ping) {
+                state_.round_trip_ms=now-sent;link.last_rtt_ping=sent;link.last_rtt_at=now;
+            }
+        }
+        break;
+    }
     case ControlType::Goodbye:Emit(SessionActionKind::CloseConnection,id);link.closing=true;ClearActive();break;
     case ControlType::Error:Emit(SessionActionKind::Error,id,message,message.text);break;
     default:return FailLink(id,"Unsupported control message");
@@ -169,8 +178,13 @@ void PeerSession::Tick(std::uint64_t now) {
         if(link.closing)continue;
         if(!link.ready&&now-link.started>3000){FailLink(id,"Capability handshake timed out");continue;}
         if(id==state_.connection&&link.ready) {
+            if(state_.round_trip_ms&&now>=link.last_rtt_at&&now-link.last_rtt_at>3000)state_.round_trip_ms.reset();
             if(now-link.last_seen>3500){link.closing=true;Emit(SessionActionKind::CloseConnection,id);ClearActive();next_retry_=now+250;}
-            else if(now-link.last_ping>=1000){Send(id,ControlType::Ping,0,now);link.last_ping=now;}
+            else if(now-link.last_ping>=1000) {
+                Send(id,ControlType::Ping,0,now);link.last_ping=now;
+                link.pending_pings.push_back(now);
+                while(link.pending_pings.size()>4)link.pending_pings.pop_front();
+            }
         }
     }
     const bool pending=std::any_of(links_.begin(),links_.end(),[](auto& v){return !v.second.closing;});

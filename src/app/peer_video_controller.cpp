@@ -446,7 +446,7 @@ PeerVideoSnapshot PeerVideoController::Snapshot()const {
     result.active=result.listen_port||p.startPending;result.connecting=p.connecting;result.wants_share=p.wantsShare;
     if(p.identity)result.own_fingerprint=p.identity->Public().fingerprint;if(p.peer)result.peer_fingerprint=p.peer->fingerprint;
     if(p.session) {
-        const auto& state=p.session->State();result.connected=state.connected;
+        const auto& state=p.session->State();result.connected=state.connected;result.round_trip_ms=state.round_trip_ms;
         result.connection=state.connection;result.session=state.token;result.outgoing_generation=state.outgoing_generation;result.incoming_generation=state.incoming_generation;
         result.sharing=state.sharing&&p.senderRunning;result.receiving=(state.receiving&&p.receiverRunning)||state.recovering;
     }

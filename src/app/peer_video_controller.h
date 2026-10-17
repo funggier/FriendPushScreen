@@ -8,6 +8,7 @@ struct PeerVideoSnapshot {
     std::uint16_t listen_port{};
     std::uint64_t connection{},session{},outgoing_generation{},incoming_generation{};
     std::string status,error,own_fingerprint,peer_fingerprint,encoder,decoder,runtime;
+    std::optional<std::uint64_t> round_trip_ms;
     network::TransportMetrics transport;
     audio::PeerAudioSnapshot audio;
     media::PeerStreamMetrics outgoing,incoming;

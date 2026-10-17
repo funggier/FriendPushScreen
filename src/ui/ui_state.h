@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <string>
+#include <optional>
 
 namespace fps::ui {
 
@@ -68,6 +69,18 @@ struct UiPreferences {
     int receiver_volume{100};
 };
 
+struct PeerFrameCounters {
+    std::uint64_t session{},send_generation{},view_generation{},sent{},viewed{};
+    bool sending{},viewing{};
+};
+struct PeerFrameRates {std::optional<double> send_fps,view_fps;};
+class PeerFrameRateMeter {
+public:
+    PeerFrameRates Update(std::uint64_t now_ms,const PeerFrameCounters&);
+private:
+    struct Direction {std::uint64_t generation{},at{},count{};bool active{};std::optional<double> fps;};
+    std::uint64_t session_{};Direction send_,view_;
+};
 struct UiState {
     UiPreferences preferences;
 
@@ -80,6 +93,8 @@ struct UiState {
 
     bool receiving_video{false},transport_active{false};
     std::string peer_status,share_status,own_fingerprint,peer_fingerprint;
+    std::optional<std::uint64_t> peer_round_trip_ms;
+    PeerFrameRates peer_frame_rates;
     std::uint32_t windows_build{0};
     bool application_audio_supported{false};
     std::vector<audio::AudioSourceDescriptor> audio_sources;
@@ -94,6 +109,7 @@ struct PeerUiSnapshot {
 };
 void ApplyPeerUiSnapshot(UiState&,const PeerUiSnapshot&);
 
+std::wstring BuildPeerMetricsText(const UiState&);
 bool SupportsApplicationAudio(std::uint32_t windows_build);
 
 UiState MakeDefaultUiState(std::uint32_t windows_build);

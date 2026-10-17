@@ -912,6 +912,9 @@ void Application::UpdatePeerUi(bool force) {
     ui_state_.audio_sending=p.audio.send_state==audio::AudioState::Active;
     ui_state_.audio_receiving=p.audio.receiving;ui_state_.audio_feedback_blocked=p.audio.feedback_blocked;
     ui::ApplyPeerUiSnapshot(ui_state_,state);
+    ui_state_.peer_round_trip_ms=p.connected?p.round_trip_ms:std::nullopt;
+    ui_state_.peer_frame_rates=peer_frame_rates_.Update(now,{p.session,p.outgoing_generation,p.incoming_generation,
+        p.outgoing.delivered,p.incoming.delivered,p.sharing,p.receiving});
     main_window_.ApplyUiState(ui_state_);
     if(p.active||p.connected) {
         std::ostringstream video;
@@ -925,6 +928,9 @@ void Application::UpdatePeerUi(bool force) {
         if(codec_metrics_) {
             std::ostringstream log;
             log<<"connected="<<p.connected<<" sharing="<<p.sharing<<" receiving="<<p.receiving
+                <<" ping_valid="<<p.round_trip_ms.has_value()<<" ping_ms="<<p.round_trip_ms.value_or(0)
+                <<" send_fps_valid="<<ui_state_.peer_frame_rates.send_fps.has_value()<<" send_fps="<<ui_state_.peer_frame_rates.send_fps.value_or(0)
+                <<" view_fps_valid="<<ui_state_.peer_frame_rates.view_fps.has_value()<<" view_fps="<<ui_state_.peer_frame_rates.view_fps.value_or(0)
                 <<" session="<<p.session<<" out_generation="<<p.outgoing_generation<<" in_generation="<<p.incoming_generation
                 <<" encoded="<<p.outgoing.encoded<<" sent="<<p.outgoing.delivered<<" decoded="<<p.incoming.decoded<<" rendered="<<p.incoming.delivered
                 <<" sent_bytes="<<p.transport.sent_bytes<<" received_bytes="<<p.transport.received_bytes

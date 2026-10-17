@@ -2,6 +2,9 @@
 
 #include <algorithm>
 #include <utility>
+#include <sstream>
+#include <iomanip>
+#include <cmath>
 
 namespace fps::ui {
 
@@ -202,3 +205,34 @@ bool SelectAudioSource(
 }
 
 }  // namespace fps::ui
+
+namespace fps::ui {
+PeerFrameRates PeerFrameRateMeter::Update(std::uint64_t now,const PeerFrameCounters& c) {
+    if(!c.session){session_=0;send_={};view_={};return {};}
+    if(session_!=c.session){session_=c.session;send_={};view_={};}
+    const auto update=[&](Direction& d,bool active,std::uint64_t generation,std::uint64_t count) {
+        if(!active||!generation){d={};return;}
+        if(!d.active||d.generation!=generation||now<d.at||count<d.count||now-d.at>5000) {
+            d={generation,now,count,true,{}};return;
+        }
+        if(now-d.at<1000)return; // Forced UI updates must not change the sampling window.
+        d.fps=static_cast<double>(count-d.count)*1000.0/static_cast<double>(now-d.at);
+        d.at=now;d.count=count;
+    };
+    update(send_,c.sending,c.send_generation,c.sent);update(view_,c.viewing,c.view_generation,c.viewed);
+    return {send_.fps,view_.fps};
+}
+std::wstring BuildPeerMetricsText(const UiState& state) {
+    const bool connected=state.connection_state==ConnectionUiState::Connected;
+    std::wostringstream text;text.imbue(std::locale::classic());text<<L"Ping: ";
+    if(connected&&state.peer_round_trip_ms) {
+        if(*state.peer_round_trip_ms==0)text<<L"<1 ms";else text<<*state.peer_round_trip_ms<<L" ms";
+    }else text<<L"\u2014";
+    const auto rate=[&](const std::optional<double>& fps) {
+        if(connected&&fps&&std::isfinite(*fps)&&*fps>=0)text<<std::fixed<<std::setprecision(1)<<*fps;
+        else text<<L"\u2014";
+    };
+    text<<L"  |  FPS Send: ";rate(state.peer_frame_rates.send_fps);
+    text<<L" / View: ";rate(state.peer_frame_rates.view_fps);return text.str();
+}
+}

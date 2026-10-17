@@ -76,6 +76,7 @@ private:
         diagnostics_service_;
 
     ui::UiState ui_state_{};
+    ui::PeerFrameRateMeter peer_frame_rates_;
     ui::AsyncPreferencesWriter preferences_writer_;
     std::unique_ptr<PeerVideoController> peer_;
     capture::FeedbackProtection feedback_;
