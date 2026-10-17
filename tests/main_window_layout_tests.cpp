@@ -81,6 +81,17 @@ void RunMainWindowLayoutTests() {
             state.connection_state=fps::ui::ConnectionUiState::Connected;
             state.peer_round_trip_ms=25;state.peer_frame_rates={59.8,60.0};
             window.ApplyUiState(state);
+            std::cout<<"ConnectionUsesOneHostAndPortWithoutModePicker\n";
+            const auto panel=FindWindowExW(window.Handle(),nullptr,L"FriendPushScreenSettingsPanel",nullptr);
+            FPS_EXPECT_TRUE(GetDlgItem(panel,2102)==nullptr);
+            FPS_EXPECT_TRUE(GetDlgItem(panel,2103)&&GetDlgItem(panel,2104));
+            const auto hostLabel=FindWindowExW(panel,nullptr,L"Static",L"Host / IP");
+            const auto heading=FindWindowExW(panel,nullptr,L"Static",L"CONNECTION");
+            FPS_EXPECT_TRUE(hostLabel&&heading);
+            if(hostLabel&&heading) {
+                RECT h{},label{};GetWindowRect(heading,&h);GetWindowRect(hostLabel,&label);
+                FPS_EXPECT_TRUE(label.top>=h.bottom&&label.top<=h.bottom+10);
+            }
             for(int width:{640,1280}) {
                 SetWindowPos(window.Handle(),nullptr,0,0,width,720,SWP_NOZORDER|SWP_NOACTIVATE);
                 const auto status=FindWindowExW(window.Handle(),nullptr,L"Static",nullptr);

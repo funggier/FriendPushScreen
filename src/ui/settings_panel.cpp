@@ -24,7 +24,7 @@ constexpr wchar_t kSettingsPanelClassName[] =
 
 constexpr int kShareButtonId = 2101;
 constexpr int kSharePortEditId = 2115;
-constexpr int kConnectionModeId = 2102;
+constexpr int kConnectionRowHeight = 60;
 constexpr int kHostEditId = 2103;
 constexpr int kRemotePortEditId = 2104;
 constexpr int kConnectButtonId = 2105;
@@ -87,7 +87,6 @@ constexpr wchar_t kDropPopupClassName[] =
     L"FriendPushScreenDropPopup";
 constexpr UINT kDropSelectionMessage =
     WM_APP + 0x41;
-constexpr WPARAM kDropKindConnection = 1;
 constexpr WPARAM kDropKindAudio = 2;
 constexpr WPARAM kDropKindSource = 3;
 constexpr WPARAM kDropKindEncoder = 4;
@@ -1618,16 +1617,6 @@ void SettingsPanel::InitializeControls(
         CreateLabel(
             instance,
             L"CONNECTION");
-    connection_mode_label_ =
-        CreateLabel(
-            instance,
-            L"Connection Mode");
-    connection_mode_button_ =
-        CreateButton(
-            instance,
-            kConnectionModeId,
-            L"Direct IP / DDNS  \u25BE");
-
     const HWND root_owner =
         GetAncestor(hwnd_, GA_ROOT);
 
@@ -1645,38 +1634,8 @@ void SettingsPanel::InitializeControls(
 
     InitializeVideoControls(instance,root_owner);
 
-    connection_mode_popup_ =
-        CreateDropPopup(
-            instance,
-            root_owner,
-            hwnd_,
-            kDropKindConnection,
-            &connection_mode_list_);
-
-    SendMessageW(
-        connection_mode_list_,
-        LB_ADDSTRING,
-        0,
-        reinterpret_cast<LPARAM>(L"LAN"));
-    SendMessageW(
-        connection_mode_list_,
-        LB_ADDSTRING,
-        0,
-        reinterpret_cast<LPARAM>(
-            L"Direct IP / DDNS"));
-    SendMessageW(
-        connection_mode_list_,
-        LB_ADDSTRING,
-        0,
-        reinterpret_cast<LPARAM>(
-            L"Tailscale"));
-
-    ShowWindow(
-        connection_mode_popup_,
-        SW_HIDE);
-
     host_label_ =
-        CreateLabel(instance, L"Host");
+        CreateLabel(instance, L"Host / IP");
     host_edit_ =
         CreateEdit(
             instance,
@@ -1860,9 +1819,6 @@ void SettingsPanel::ApplyDefaultFont() {
         bitrate_label_, bitrate_edit_, keyframe_label_, keyframe_edit_,
         low_latency_checkbox_, video_apply_button_, video_status_,
         connection_heading_,
-        connection_mode_label_,
-        connection_mode_button_,
-        connection_mode_list_,
         host_label_,
         host_edit_,
         remote_port_label_,
@@ -1953,7 +1909,7 @@ void SettingsPanel::LayoutControls() {
                 control,
                 nullptr,
                 x,
-                y - scroll_offset_,
+                y - (y>=402+kVideoSectionHeight?kConnectionRowHeight:0) - scroll_offset_,
                 std::max(1, control_width),
                 std::max(1, control_height),
                 SWP_NOZORDER |
@@ -2084,19 +2040,6 @@ void SettingsPanel::LayoutControls() {
         316,
         field_width,
         20);
-    move(
-        connection_mode_label_,
-        kPadding,
-        342,
-        field_width,
-        18);
-    move(
-        connection_mode_button_,
-        kPadding,
-        362,
-        field_width,
-        kFieldHeight);
-
     const int host_width =
         std::max(
             160,
@@ -2276,9 +2219,9 @@ void SettingsPanel::LayoutControls() {
             button_width,
             kButtonHeight);
 
-        content_height_ = 1342 + kVideoSectionHeight + kPairSectionHeight + kAudioSectionHeight + kViewerStatusSectionHeight;
+        content_height_ = 1342 + kVideoSectionHeight + kPairSectionHeight + kAudioSectionHeight + kViewerStatusSectionHeight - kConnectionRowHeight;
     } else {
-        content_height_ = 1012 + kVideoSectionHeight + kPairSectionHeight + kAudioSectionHeight + kViewerStatusSectionHeight;
+        content_height_ = 1012 + kVideoSectionHeight + kPairSectionHeight + kAudioSectionHeight + kViewerStatusSectionHeight - kConnectionRowHeight;
     }
 
     SetWindowPos(
@@ -2589,12 +2532,6 @@ void SettingsPanel::HideDropLists() {
             SW_HIDE);
     }
 
-    if (connection_mode_popup_ != nullptr) {
-        ShowWindow(
-            connection_mode_popup_,
-            SW_HIDE);
-    }
-
     if (audio_source_popup_ != nullptr) {
         ShowWindow(
             audio_source_popup_,
@@ -2613,9 +2550,6 @@ void SettingsPanel::ToggleDropList(HWND list) {
     if (list == source_list_) {
         button = source_button_;
         popup = source_popup_;
-    } else if (list == connection_mode_list_) {
-        button = connection_mode_button_;
-        popup = connection_mode_popup_;
     } else if (list == audio_source_list_) {
         button = audio_source_button_;
         popup = audio_source_popup_;
@@ -2729,18 +2663,6 @@ void SettingsPanel::ToggleDropList(HWND list) {
             RDW_UPDATENOW);
 }
 
-void SettingsPanel::UpdateDropDownText(const UiState& state) {
-    if(!dropdown_initialized_||applied_connection_mode_!=state.preferences.connection_mode) {
-        const wchar_t* connection=L"Direct IP / DDNS";
-        if(state.preferences.connection_mode==ConnectionMode::Lan)connection=L"LAN";
-        else if(state.preferences.connection_mode==ConnectionMode::Tailscale)connection=L"Tailscale";
-        SetTextIfDifferent(connection_mode_button_,std::wstring{connection}+L"  \u25BE");
-        SendMessageW(connection_mode_list_,LB_SETCURSEL,static_cast<WPARAM>(state.preferences.connection_mode),0);
-        applied_connection_mode_=state.preferences.connection_mode;
-    }
-    UpdateAudioChoices(state);
-    dropdown_initialized_=true;
-}
 void SettingsPanel::UpdateAudioChoices(const UiState& state) {
     auto sources=state.audio_sources;
     if(sources.empty())sources={{"none","No Audio",{},audio::AudioSourceKind::None,true},{"system","Desktop / System Audio",{},audio::AudioSourceKind::SystemLoopback,true}};
@@ -2798,7 +2720,7 @@ void SettingsPanel::ApplyState(
     const UiState& state) {
     applying_state_ = true;
 
-    UpdateDropDownText(state);
+    UpdateAudioChoices(state);
     if (video_apply_pending_ && video_draft_ == state.preferences.video) {
         video_dirty_ = false; video_apply_pending_ = false;
     }
@@ -3320,20 +3242,6 @@ LRESULT SettingsPanel::HandleMessage(
             return 0;
         }
 
-        if (wparam ==
-            kDropKindConnection) {
-            if (selection > 2) {
-                return 0;
-            }
-
-            Emit(UiCommand{
-                UiCommandType::SetConnectionMode,
-                selection,
-                {}
-            });
-            return 0;
-        }
-
         if(wparam==kDropKindAudio) {
             if(selection<0||selection>=static_cast<int>(audio_source_choices_.size()))return 0;
             const auto& source=audio_source_choices_[static_cast<std::size_t>(selection)];if(!source.supported)return 0;
@@ -3367,12 +3275,6 @@ LRESULT SettingsPanel::HandleMessage(
             if (id == kSourceId) {
                 ToggleDropList(
                     source_list_);
-                return 0;
-            }
-
-            if (id == kConnectionModeId) {
-                ToggleDropList(
-                    connection_mode_list_);
                 return 0;
             }
 

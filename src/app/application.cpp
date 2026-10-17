@@ -155,7 +155,6 @@ bool IsPreferenceCommand(
     case ui::UiCommandType::ToggleSettings:
     case ui::UiCommandType::ToggleStatusBar:
     case ui::UiCommandType::ToggleShowCursor:
-    case ui::UiCommandType::SetConnectionMode:
     case ui::UiCommandType::SetHost:
     case ui::UiCommandType::SetSharePort:
     case ui::UiCommandType::SetRemotePort:
@@ -712,18 +711,6 @@ void Application::HandleUiCommand(
         break;
 
     case ui::UiCommandType::ToggleConnectionRequest:ConnectPeer();return;
-
-    case ui::UiCommandType::SetConnectionMode:
-        if (command.value >= 0 &&
-            command.value <= 2) {
-            ui_state_.preferences.
-                connection_mode =
-                static_cast<
-                    ui::ConnectionMode>(
-                    command.value);
-            state_changed = true;
-        }
-        break;
 
     case ui::UiCommandType::SetHost:
         ui_state_.preferences.host =

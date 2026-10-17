@@ -58,6 +58,7 @@ struct UiPreferences {
     bool borderless{false};
     bool always_on_top{false};
 
+    // Retained for legacy INI compatibility; Host/IP selects the route.
     ConnectionMode connection_mode{ConnectionMode::DirectIpDdNs};
     std::string host;
     std::uint32_t share_port{42800};

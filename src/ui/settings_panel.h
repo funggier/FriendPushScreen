@@ -113,7 +113,6 @@ private:
 
     void HideDropLists();
     void ToggleDropList(HWND list);
-    void UpdateDropDownText(const UiState& state);
     void UpdateAudioChoices(const UiState&);
 
     HWND hwnd_{nullptr};
@@ -150,10 +149,6 @@ private:
     HWND low_latency_checkbox_{nullptr}, video_apply_button_{nullptr}, video_status_{nullptr};
 
     HWND connection_heading_{nullptr};
-    HWND connection_mode_label_{nullptr};
-    HWND connection_mode_button_{nullptr};
-    HWND connection_mode_popup_{nullptr};
-    HWND connection_mode_list_{nullptr};
     HWND host_label_{nullptr};
     HWND host_edit_{nullptr};
     HWND remote_port_label_{nullptr};
@@ -194,8 +189,6 @@ private:
 
     CommandCallback command_callback_;
 
-    bool dropdown_initialized_{false};
-    ConnectionMode applied_connection_mode_{ConnectionMode::DirectIpDdNs};
     AudioSourceKind applied_audio_source_{AudioSourceKind::None};
     bool applying_state_{false};
     bool diagnostics_visible_{false};

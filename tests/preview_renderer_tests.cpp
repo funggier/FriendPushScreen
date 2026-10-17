@@ -138,7 +138,7 @@ void RunPreviewRendererTests() {
                 HWND panel=FindWindowExW(window.Handle(),nullptr,L"FriendPushScreenSettingsPanel",nullptr);
                 FPS_EXPECT_TRUE(panel!=nullptr);
                 fps::ui::UiState stable;window.ApplyUiState(stable);
-                const std::array<HWND,3> buttons{GetDlgItem(panel,2102),GetDlgItem(panel,2121),GetDlgItem(panel,2122)};
+                const std::array<HWND,2> buttons{GetDlgItem(panel,2121),GetDlgItem(panel,2122)};
                 unsigned captions=0,reloads=0;std::vector<HWND> lists;
                 EnumThreadWindows(GetCurrentThreadId(),FindThreadLists,reinterpret_cast<LPARAM>(&lists));
                 for(const auto button:buttons){ValidateRect(button,nullptr);SetWindowSubclass(button,CountSettingsText,992,reinterpret_cast<DWORD_PTR>(&captions));}
