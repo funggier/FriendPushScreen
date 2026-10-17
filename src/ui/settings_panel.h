@@ -155,7 +155,7 @@ private:
     HWND remote_port_edit_{nullptr};
     HWND connect_button_{nullptr},disconnect_button_{nullptr};
     HWND connection_status_{nullptr};
-    HWND export_identity_button_{nullptr},pair_friend_button_{nullptr},own_identity_label_{nullptr},peer_identity_label_{nullptr};
+    HWND export_identity_button_{nullptr},pair_friend_button_{nullptr},remove_peer_button_{nullptr},own_identity_label_{nullptr},peer_identity_label_{nullptr};
 
     HWND audio_heading_{nullptr};
     HWND audio_source_label_{nullptr};

@@ -13,7 +13,7 @@ void ApplyPeerUiSnapshot(UiState& s,const PeerUiSnapshot& p) {
     s.connection_state=p.connected?ConnectionUiState::Connected:(p.connecting?ConnectionUiState::ConnectRequested:
         (p.active?ConnectionUiState::Listening:ConnectionUiState::Disconnected));
     s.share_state=p.sharing?ShareUiState::Sharing:(p.share_intent?ShareUiState::ShareRequested:ShareUiState::NotSharing);
-    s.peer_status=p.status;s.share_status=p.share_status;s.own_fingerprint=p.own_fingerprint;s.peer_fingerprint=p.peer_fingerprint;
+    s.peer_status=p.status;s.share_status=p.share_status;s.own_fingerprint=p.own_fingerprint;s.peer_fingerprint=p.peer_fingerprint;s.peer_name=p.peer_name;
 }
 
 bool IsValidVideoPreferences(const VideoPreferences& preferences) {

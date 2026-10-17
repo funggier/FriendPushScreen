@@ -29,7 +29,8 @@ constexpr int kHostEditId = 2103;
 constexpr int kRemotePortEditId = 2104;
 constexpr int kConnectButtonId = 2105;
 constexpr int kExportIdentityId=2127,kPairFriendId=2128,kDisconnectPeerId=2129;
-constexpr int kPairSectionHeight=220;
+constexpr int kPairSectionHeight=280;
+constexpr int kRemovePairedDeviceId=2132;
 constexpr int kAudioSourceId = 2106;
 constexpr int kAudioOutputId=2130,kAudioSectionHeight=106;
 constexpr int kMuteButtonId = 2107;
@@ -1662,7 +1663,8 @@ void SettingsPanel::InitializeControls(
     export_identity_button_=CreateButton(instance,kExportIdentityId,L"Export Identity...");
     pair_friend_button_=CreateButton(instance,kPairFriendId,L"Pair with Friend...");
     own_identity_label_=CreateLabel(instance,L"Your SHA-256: initializing...");
-    peer_identity_label_=CreateLabel(instance,L"Friend SHA-256: not paired");
+    peer_identity_label_=CreateLabel(instance,L"Paired device: none");
+    remove_peer_button_=CreateButton(instance,kRemovePairedDeviceId,L"Remove Paired Device");
 
     audio_heading_ =
         CreateLabel(
@@ -1825,7 +1827,7 @@ void SettingsPanel::ApplyDefaultFont() {
         remote_port_edit_,
         connect_button_,disconnect_button_,
         connection_status_,
-        export_identity_button_,pair_friend_button_,own_identity_label_,peer_identity_label_,
+        export_identity_button_,pair_friend_button_,remove_peer_button_,own_identity_label_,peer_identity_label_,
         audio_heading_,
         audio_source_label_,
         audio_source_button_,
@@ -2097,7 +2099,8 @@ void SettingsPanel::LayoutControls() {
     place(export_identity_button_,kPadding,552+kVideoSectionHeight,half,kButtonHeight);
     place(pair_friend_button_,kPadding+half+kGap,552+kVideoSectionHeight,half,kButtonHeight);
     place(own_identity_label_,kPadding,592+kVideoSectionHeight,field_width,72);
-    place(peer_identity_label_,kPadding,668+kVideoSectionHeight,field_width,72);
+    place(peer_identity_label_,kPadding,668+kVideoSectionHeight,field_width,104);
+    place(remove_peer_button_,kPadding,780+kVideoSectionHeight,field_width,kButtonHeight);
     move(
         audio_heading_,
         kPadding,
@@ -2788,7 +2791,10 @@ std::wstring host;
         return Utf8ToWide(text);
     };
     SetTextIfDifferent(own_identity_label_,fingerprint("Your SHA-256:\n",state.own_fingerprint));
-    SetTextIfDifferent(peer_identity_label_,fingerprint("Friend SHA-256:\n",state.peer_fingerprint));
+    const auto savedPeer=state.peer_fingerprint.empty()?L"Paired device: none\nPair with Friend to authorize a device.":
+        L"Paired device (1):\n"+Utf8ToWide(state.peer_name)+L"\n"+fingerprint("SHA-256:\n",state.peer_fingerprint);
+    SetTextIfDifferent(peer_identity_label_,savedPeer);
+    EnableWindow(remove_peer_button_,state.peer_fingerprint.empty()?FALSE:TRUE);
     EnableWindow(share_port_edit_,state.transport_active?FALSE:TRUE);
     EnableWindow(host_edit_,state.connection_state==ConnectionUiState::Connected?FALSE:TRUE);
     EnableWindow(remote_port_edit_,state.connection_state==ConnectionUiState::Connected?FALSE:TRUE);
@@ -3319,6 +3325,7 @@ LRESULT SettingsPanel::HandleMessage(
             case kExportIdentityId:Emit(UiCommand{UiCommandType::ExportPeerIdentity});return 0;
             case kDisconnectPeerId:Emit(UiCommand{UiCommandType::DisconnectPeer});return 0;
             case kPairFriendId:Emit(UiCommand{UiCommandType::PairWithFriend});return 0;
+            case kRemovePairedDeviceId:Emit(UiCommand{UiCommandType::RemovePairedDevice});return 0;
             case kConnectButtonId:
                 Emit(UiCommand{
                     UiCommandType::

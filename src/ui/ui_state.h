@@ -94,7 +94,7 @@ struct UiState {
         ConnectionUiState::Disconnected};
 
     bool receiving_video{false},transport_active{false};
-    std::string peer_status,share_status,own_fingerprint,peer_fingerprint;
+    std::string peer_status,share_status,own_fingerprint,peer_fingerprint,peer_name;
     std::optional<std::uint64_t> peer_round_trip_ms;
     PeerFrameRates peer_frame_rates;
     std::uint32_t windows_build{0};
@@ -107,7 +107,7 @@ struct UiState {
 
 struct PeerUiSnapshot {
     bool active{},connecting{},connected{},share_intent{},sharing{},receiving{};
-    std::string status,share_status,own_fingerprint,peer_fingerprint;
+    std::string status,share_status,own_fingerprint,peer_fingerprint,peer_name;
 };
 void ApplyPeerUiSnapshot(UiState&,const PeerUiSnapshot&);
 

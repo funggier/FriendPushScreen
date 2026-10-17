@@ -285,6 +285,14 @@ bool PeerVideoController::AuthorizePeer(const PublicPeerIdentity& peer,std::stri
     Disconnect();p.peer=peer;p.session=std::make_unique<PeerSession>(p.identity->Public().fingerprint,peer.fingerprint,RandomNonce());
     p.error.clear();return true;
 }
+bool PeerVideoController::RemoveTrustedPeer(std::string& error) {
+    auto& p=*impl_;
+    Disconnect(); // invalidate queued DNS, media and connection notices before revoking trust
+    std::error_code ec;
+    std::filesystem::remove(p.directory/"trusted.friendpair",ec);
+    if(ec){error="Could not remove saved peer authorization: "+ec.message();p.error=error;return false;}
+    p.peer.reset();p.session.reset();p.error.clear();error.clear();return true;
+}
 void PeerVideoController::ConfigureCodecs(media::VideoCodecConfig config,media::VideoBackendPolicy encoder,media::VideoBackendPolicy decoder) {
     auto& p=*impl_;
     p.restartSender=p.senderRunning&&(encoder!=p.encodePolicy||config.encoder_id!=p.codec.encoder_id||
@@ -337,7 +345,9 @@ bool PeerVideoController::PushCapture(const capture::CapturedFrame& frame) {
     return true;
 }
 bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
-    auto& p=*impl_;if(!p.session)return false;
+    auto& p=*impl_;
+    if(p.clearPending){p.clearPending=false;clear();}
+    if(!p.session)return false;
     const auto before=p.receiver.Metrics().delivered;
     const auto polled=GetTickCount64();
     if(p.lastPoll&&polled-p.lastPoll>100)p.Trace("flow UI gap ms="+std::to_string(polled-p.lastPoll));
@@ -346,7 +356,6 @@ bool PeerVideoController::Poll(const FrameSink& sink,const ClearSink& clear) {
         if(!sink(frame))return false;
         p.session->ReceiverRecovered(p.session->State().incoming_generation);return true;
     };
-    if(p.clearPending){p.clearPending=false;clear();}
     std::deque<Impl::Notice> pending;{std::lock_guard lock(p.mutex);pending.swap(p.notices);}
     for(auto& notice:pending) {
         if(notice.epoch!=p.epoch)continue;
@@ -448,7 +457,7 @@ PeerVideoSnapshot PeerVideoController::Snapshot()const {
     const auto& p=*impl_;PeerVideoSnapshot result;
     {std::lock_guard lock(p.mutex);result.listen_port=p.actualPort;result.transport=p.transportMetrics;result.runtime=p.runtime;result.audio=p.audioSnapshot;}
     result.active=result.listen_port||p.startPending;result.connecting=p.connecting;result.wants_share=p.wantsShare;
-    if(p.identity)result.own_fingerprint=p.identity->Public().fingerprint;if(p.peer)result.peer_fingerprint=p.peer->fingerprint;
+    if(p.identity)result.own_fingerprint=p.identity->Public().fingerprint;if(p.peer){result.peer_fingerprint=p.peer->fingerprint;result.peer_name=p.peer->stable_name;}
     if(p.session) {
         const auto& state=p.session->State();result.connected=state.connected;result.round_trip_ms=state.round_trip_ms;
         result.connection=state.connection;result.session=state.token;result.outgoing_generation=state.outgoing_generation;result.incoming_generation=state.incoming_generation;

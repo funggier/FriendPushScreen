@@ -134,5 +134,72 @@ void RunPeerVideoControllerTests() {
             a.Disconnect();b.Disconnect();
         }
     }
+    {
+        std::cout<<"RemovePairedDeviceStopsMediaAndPersistsWithoutChangingOwnIdentity\n";
+        std::string ownFingerprint;
+        {
+            PeerVideoController a(std::make_unique<peer_controller_test::Encoder>(),std::make_unique<peer_controller_test::Decoder>()),
+                b(std::make_unique<peer_controller_test::Encoder>(),std::make_unique<peer_controller_test::Decoder>());
+            std::string error;FPS_EXPECT_TRUE(a.Initialize(nullptr,root/"revoke-a",error)&&b.Initialize(nullptr,root/"revoke-b",error));
+            if(a.Identity()&&b.Identity()) {
+                ownFingerprint=a.Identity()->fingerprint;
+                FPS_EXPECT_TRUE(a.AuthorizePeer(*b.Identity(),error)&&b.AuthorizePeer(*a.Identity(),error));
+                FPS_EXPECT_TRUE(b.Listen(0,error));
+                unsigned rendered=0,cleared=0;
+                const auto sink=[&](const fps::capture::CapturedFrame&){++rendered;return true;};const auto clear=[&]{++cleared;};
+                auto until=GetTickCount64()+3000;
+                while(GetTickCount64()<until&&!b.Snapshot().listen_port){a.Poll(sink,clear);b.Poll(sink,clear);Sleep(2);}
+                FPS_EXPECT_TRUE(a.Connect("localhost",b.Snapshot().listen_port,0,error));
+                FPS_EXPECT_TRUE(a.StartShare(error)&&b.StartShare(error));
+                fps::capture::CapturedFrame frame;frame.width=frame.height=2;frame.bgra.resize(16);
+                until=GetTickCount64()+3000;
+                while(GetTickCount64()<until&&(a.Snapshot().incoming.delivered<2||b.Snapshot().incoming.delivered<2)){
+                    a.Poll(sink,clear);b.Poll(sink,clear);++frame.sequence;frame.timestamp_100ns=static_cast<std::int64_t>(frame.sequence)*166667;
+                    a.PushCapture(frame);b.PushCapture(frame);Sleep(2);
+                }
+                FPS_EXPECT_TRUE(a.Snapshot().incoming.delivered>=2&&b.Snapshot().incoming.delivered>=2);
+                FPS_EXPECT_TRUE(a.RemoveTrustedPeer(error));
+                const auto removed=a.Snapshot();
+                FPS_EXPECT_TRUE(!a.TrustedPeer()&&removed.peer_fingerprint.empty());
+                FPS_EXPECT_TRUE(!removed.active&&!removed.connected&&!removed.wants_share&&!removed.sharing&&!removed.receiving&&!removed.round_trip_ms);
+                FPS_EXPECT_TRUE(!std::filesystem::exists(root/"revoke-a"/"trusted.friendpair"));
+                FPS_EXPECT_EQ(a.Identity()->fingerprint,ownFingerprint);
+                unsigned afterRemoval=0;const auto noFrame=[&](const fps::capture::CapturedFrame&){++afterRemoval;return true;};
+                cleared=0;
+                until=GetTickCount64()+1000;
+                while(GetTickCount64()<until){a.Poll(noFrame,clear);b.Poll(sink,[]{});Sleep(2);}
+                FPS_EXPECT_EQ(cleared,1U);FPS_EXPECT_EQ(afterRemoval,0U);
+                FPS_EXPECT_TRUE(!b.Snapshot().connected);
+                FPS_EXPECT_TRUE(!a.Listen(0,error)&&!a.Connect("localhost",8997,0,error));
+                b.Disconnect();
+            }
+        }
+        {
+            PeerVideoController restored;std::string error;
+            FPS_EXPECT_TRUE(restored.Initialize(nullptr,root/"revoke-a",error));
+            FPS_EXPECT_TRUE(restored.Identity()&&!restored.TrustedPeer()&&!restored.Snapshot().active);
+            if(restored.Identity())FPS_EXPECT_EQ(restored.Identity()->fingerprint,ownFingerprint);
+            FPS_EXPECT_TRUE(!restored.Listen(0,error));
+            FPS_EXPECT_TRUE(restored.RemoveTrustedPeer(error)); // already removed is harmless
+        }
+    }
+    {
+        std::cout<<"FailedTrustFileRemovalReportsFailureAndKeepsSavedPeer\n";
+        PeerVideoController a,b;std::string error;
+        FPS_EXPECT_TRUE(a.Initialize(nullptr,root/"locked-a",error)&&b.Initialize(nullptr,root/"locked-b",error));
+        if(a.Identity()&&b.Identity()) {
+            FPS_EXPECT_TRUE(a.AuthorizePeer(*b.Identity(),error));
+            const auto file=root/"locked-a"/"trusted.friendpair";
+            const auto locked=CreateFileW(file.c_str(),GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);
+            FPS_EXPECT_TRUE(locked!=INVALID_HANDLE_VALUE);
+            if(locked!=INVALID_HANDLE_VALUE){
+                FPS_EXPECT_TRUE(!a.RemoveTrustedPeer(error)&&!error.empty());
+                FPS_EXPECT_TRUE(a.TrustedPeer()&&std::filesystem::exists(file)&&!a.Snapshot().active);
+                CloseHandle(locked);
+            }
+            FPS_EXPECT_TRUE(a.RemoveTrustedPeer(error));
+            FPS_EXPECT_TRUE(!a.TrustedPeer()&&!std::filesystem::exists(file));
+        }
+    }
     std::filesystem::remove_all(root);
 }

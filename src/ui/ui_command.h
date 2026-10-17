@@ -18,6 +18,7 @@ enum class UiCommandType {
     ToggleConnectionRequest,
     ExportPeerIdentity,
     PairWithFriend,
+    RemovePairedDevice,
     DisconnectPeer,
     SetHost,
     SetSharePort,

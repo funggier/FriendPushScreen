@@ -39,6 +39,7 @@ private:
     void ConnectPeer();
     void DisconnectPeer();
     void PairWithFriend();
+    void RemovePairedDevice();
     void ExportPeerIdentity();
     bool TickPeer();
     void PeerError(const std::string& message);

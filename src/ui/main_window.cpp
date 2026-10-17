@@ -118,6 +118,7 @@ bool ShouldDeferUiCommand(
     switch (type) {
     case UiCommandType::ExportPeerIdentity:
     case UiCommandType::PairWithFriend:
+    case UiCommandType::RemovePairedDevice:
     case UiCommandType::DisconnectPeer:
     case UiCommandType::ToggleShareRequest:
     case UiCommandType::ToggleConnectionRequest:

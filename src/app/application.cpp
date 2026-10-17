@@ -674,6 +674,7 @@ void Application::HandleUiCommand(
     case ui::UiCommandType::ToggleShareRequest:ToggleShare();return;
     case ui::UiCommandType::ExportPeerIdentity:ExportPeerIdentity();return;
     case ui::UiCommandType::PairWithFriend:PairWithFriend();return;
+    case ui::UiCommandType::RemovePairedDevice:RemovePairedDevice();return;
     case ui::UiCommandType::DisconnectPeer:DisconnectPeer();return;
 
     case ui::UiCommandType::ApplyVideoSettings:
@@ -852,6 +853,14 @@ void Application::PairWithFriend() {
     if(!local_preview_intent_)StopCaptureSession();
     peer_error_.clear();ConfigurePeerCodecs();UpdatePeerUi(true);
 }
+void Application::RemovePairedDevice() {
+    if(!peer_){PeerError("Local peer identity is unavailable");return;}
+    std::string error;const bool removed=peer_->RemoveTrustedPeer(error);
+    if(!local_preview_intent_)StopCaptureSession();
+    displaying_peer_=false;last_preview_frame_={};if(renderer_initialized_)renderer_.RenderPlaceholder();
+    if(!removed){PeerError(error);return;}
+    peer_error_.clear();UpdatePeerUi(true);
+}
 void Application::ToggleShare() {
     if(!peer_){PeerError("Local peer identity is unavailable");return;}
     if(peer_->WantsShare()) {
@@ -895,7 +904,7 @@ void Application::UpdatePeerUi(bool force) {
     const auto p=peer_->Snapshot();
     ui::PeerUiSnapshot state{p.active,p.connecting,p.connected,p.wants_share,p.sharing,p.receiving,
         p.status,p.sharing?"Sharing H.264 | sent "+std::to_string(p.outgoing.delivered)+" frames":
-        (p.wants_share?"Waiting for paired friend / source frame":"Not sharing"),p.own_fingerprint,p.peer_fingerprint};
+        (p.wants_share?"Waiting for paired friend / source frame":"Not sharing"),p.own_fingerprint,p.peer_fingerprint,p.peer_name};
     if(!peer_error_.empty())state.status+=" | "+peer_error_;
     if(!p.audio.catalog.sources.empty()) {
         ui_state_.audio_sources=p.audio.catalog.sources;ui_state_.audio_outputs=p.audio.catalog.outputs;

@@ -92,6 +92,13 @@ void RunMainWindowLayoutTests() {
                 RECT h{},label{};GetWindowRect(heading,&h);GetWindowRect(hostLabel,&label);
                 FPS_EXPECT_TRUE(label.top>=h.bottom&&label.top<=h.bottom+10);
             }
+            std::cout<<"OneSavedDeviceHasEnabledRemovalOnlyWhenPaired\n";
+            const auto remove=GetDlgItem(panel,2132);
+            FPS_EXPECT_TRUE(remove&&!IsWindowEnabled(remove));
+            state.peer_fingerprint=std::string(64,'a');window.ApplyUiState(state);
+            FPS_EXPECT_TRUE(remove&&IsWindowEnabled(remove));
+            state.peer_fingerprint.clear();window.ApplyUiState(state);
+            FPS_EXPECT_TRUE(remove&&!IsWindowEnabled(remove));
             for(int width:{640,1280}) {
                 SetWindowPos(window.Handle(),nullptr,0,0,width,720,SWP_NOZORDER|SWP_NOACTIVATE);
                 const auto status=FindWindowExW(window.Handle(),nullptr,L"Static",nullptr);

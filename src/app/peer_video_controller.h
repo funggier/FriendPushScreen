@@ -7,7 +7,7 @@ struct PeerVideoSnapshot {
     bool active{},connecting{},connected{},wants_share{},sharing{},receiving{},awaiting_keyframe{};
     std::uint16_t listen_port{};
     std::uint64_t connection{},session{},outgoing_generation{},incoming_generation{};
-    std::string status,error,own_fingerprint,peer_fingerprint,encoder,decoder,runtime;
+    std::string status,error,own_fingerprint,peer_fingerprint,encoder,decoder,runtime,peer_name;
     std::optional<std::uint64_t> round_trip_ms;
     network::TransportMetrics transport;
     audio::PeerAudioSnapshot audio;
@@ -30,6 +30,8 @@ public:
     bool ExportIdentity(const std::filesystem::path&,std::string&);
     // Caller presents and explicitly authorizes the exact full fingerprint first.
     bool AuthorizePeer(const network::PublicPeerIdentity&,std::string&);
+    // Stops the session and removes only the saved friend's authorization.
+    bool RemoveTrustedPeer(std::string&);
     void ConfigureCodecs(media::VideoCodecConfig,media::VideoBackendPolicy encoder,media::VideoBackendPolicy decoder);
     void ConfigureAudio(audio::AudioPreferences);
     bool Listen(std::uint16_t port,std::string&);
