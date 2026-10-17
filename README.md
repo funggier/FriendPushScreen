@@ -2,7 +2,7 @@
 
 FriendPushScreen is a Windows real-time screen-sharing project for two peers who want higher-quality, lower-latency video plus optional shared machine audio while continuing to use an external service such as Discord for voice and chat.
 
-> **Current state on this branch:** FPS-006 local H.264 preview and independent CPU/GPU controls are qualified. Native mutually authenticated No Audio peer video has actual two-instance localhost evidence, including independent codec controls and corrected viewer/Diagnostics painting. The transport decision and wider V1 qualification remain open; see the dated native peer-video report for measured limits.
+> **Current state on this branch:** Native H.264 video has independent CPU/GPU controls, with optional WASAPI/Opus audio and selectable receiver output, mute and volume. Actual two-folder localhost qualification is recorded in the dated [audio report](docs/development/reports/FPS-20261017-native-audio-qualification.md) and [video report](docs/development/reports/FPS-20261016-native-peer-video-qualification.md). Wider V1 connectivity, recovery and release gates remain open.
 
 ## V1 product boundary
 

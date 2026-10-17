@@ -27,19 +27,21 @@ Modify app application.*, ui ui_state/settings_store/settings_panel/ui_command: 
 Create tests/audio_tests.cpp, tests/peer_audio_tests.cpp, tools/audio_probe/main.cpp and registered CMake targets. Expand native peer probe to cover datagrams if suitable.
 
 ## Task 1 - Audio model and real codec
-- [ ] Record BASE/brief and failing AudioWireRejectsInvalidAndStale, AudioJitterBoundsReordersAndRebases, AudioRoutingGuardAndGain, OpusRoundTripAndPlc. Test source removal/generation and malformed packet boundaries, actual low-level codec roundtrip/correlation.
-- [ ] Minimal implementation, pin dependency/retain notices; no UI types. Build all Release, full CTest; record and commit.
+- [x] Record BASE/brief and failing AudioWireRejectsInvalidAndStale, AudioJitterBoundsReordersAndRebases, AudioRoutingGuardAndGain, OpusRoundTripAndPlc. Test source removal/generation and malformed packet boundaries, actual low-level codec roundtrip/correlation.
+- [x] Minimal implementation, pin dependency/retain notices; no UI types. Build all Release, full CTest; record and commit.
 
 ## Task 2 - Native WASAPI and local probe
-- [ ] Record BASE/brief. Test invalid IDs, No Audio lifecycle, safe output gain, format bounds before implementation. Runtime probe --inventory, --self-test owned tones with explicit endpoints, PCM/Opus roundtrip stats.
-- [ ] Event-driven shared48k stereo float capture/render on worker, device loss/default detection, no OS mutation. Run full CTest and actual endpoint probe; commit evidence.
+- [x] Record BASE/brief. Test invalid IDs, No Audio lifecycle, safe output gain, format bounds before implementation. Runtime probe --inventory, --self-test owned tones with explicit endpoints, PCM/Opus roundtrip stats.
+- [x] Event-driven shared48k stereo float capture/render on worker, device loss/default detection, no OS mutation. Run full CTest and actual endpoint probe; commit evidence.
 
 ## Task 3 - Secure audio and application controls
-- [ ] Record BASE/brief. RED peer tests for AudioDatagramBudgetIndependent and AudioSourceSwitchLeavesVideoRunning plus late-ready, no capability, session restart, source loss and receiver guard.
-- [ ] Add datagrams with consumer-held6-count credits, versioned strict audio controls+receiver-ready barrier, independent source restart. Queue control before audio before video. Integrate real source/output lists, gain settings and diagnostics without periodic list rebuild/flicker.
-- [ ] Full Release build/CTest plus native secure peer audio tests. Commit.
+- [x] Record BASE/brief. RED peer tests for AudioDatagramBudgetIndependent and AudioSourceSwitchLeavesVideoRunning plus late-ready, no capability, session restart, source loss and receiver guard.
+- [x] Add datagrams with consumer-held6-count credits, versioned strict audio controls+receiver-ready barrier, independent source restart. Queue control before audio before video. Integrate real source/output lists, gain settings and diagnostics without periodic list rebuild/flicker.
+- [x] Full Release build/CTest plus native secure peer audio tests. Commit.
 
 ## Task 4 - Real dual application qualification and review
-- [ ] Deploy built app to two owned portable folders (distinct identities/ports); exercise real video+audio tone routing, both directions, mute/volume/source/No Audio/disconnect/source loss. Capture counters, bounded queues/latency/drift/CPU; distinguish unavailable hardware.
-- [ ] Full Debug+Release all targets/CTest; one fresh review against spec/plan/BASE..HEAD and Review Focus above. TDD one consequential fix pass, rerun affected checks/full suite.
-- [ ] Update CURRENT/ROADMAP/qualification matrix/report and ledger including exhaustive rulings/costs/deferrals. Preserve prior strict video FAILs. Push current branch and verify exact-head Debug/Release CI. Close owned test applications and verify. No main merge.
+- [x] Deploy built app to two owned portable folders (distinct identities/ports); exercise real video+audio tone routing, both directions, mute/volume/source/No Audio/disconnect/source loss. Capture counters, bounded queues/latency/drift/CPU; distinguish unavailable hardware.
+- [x] Full Debug+Release all targets/CTest; one fresh review against spec/plan/BASE..HEAD and Review Focus above. TDD one consequential fix pass, rerun affected checks/full suite.
+- [x] Update CURRENT/ROADMAP/qualification matrix/report and ledger including exhaustive rulings/costs/deferrals. Preserve prior strict video FAILs. Push current branch and verify exact-head Debug/Release CI. Close owned test applications and verify. No main merge.
+
+Completion scope: local/native and authenticated two-instance localhost audio/output subgate passed; see dated report and curated JSON. Physical unplug/default changes, external signal fidelity, process backend on newerOS and remote/WAN/V1 acceptance stay open. One review and one consequential fix pass completed; no second review. Source9d24 finalDebug/Release3/3 and exact sourceCI successful; documentation-head CI is verified after push. Worktree preserved and owned runtime closed.

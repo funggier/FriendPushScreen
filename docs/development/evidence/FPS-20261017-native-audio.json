@@ -1,0 +1,197 @@
+﻿{
+    "schema":  1,
+    "date_bangkok":  "2026-10-17",
+    "source_commit":  "9d24f9ed61470ad2ab4fd7a8b5beef8fecffb381",
+    "app_sha256":  "B1CC600361EAAF1783E9DE4AC66CEC09951544C5DB2E71CBF92F1B7D4A57E7BC",
+    "environment":  "Windows10 build19045; CoreUltra5 245K iGPU;14logicalCPU;32GB; two portable instances localhost42801/42802, distinct identities",
+    "native_build_and_ctest":  {
+                                   "debug":  {
+                                                 "tests_total":  3,
+                                                 "all_targets":  true,
+                                                 "session":  378,
+                                                 "tests_passed":  3
+                                             },
+                                   "release":  {
+                                                   "tests_total":  3,
+                                                   "all_targets":  true,
+                                                   "session":  377,
+                                                   "tests_passed":  3
+                                               }
+                               },
+    "source_ci":  {
+                      "debug":  "success",
+                      "run":  38981368361,
+                      "url":  "https://github.com/funggier/FriendPushScreen/actions/runs/38981368361",
+                      "commit":  "9d24f9ed61470ad2ab4fd7a8b5beef8fecffb381",
+                      "release":  "success"
+                  },
+    "physical_cases":  [
+                           {
+                               "check":  "real receiver USB output100",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "real output volume50 ratio",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "real output volume0 silence",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "real receiver mute silence",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "selected speaker output contains peer tone",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "previous USB endpoint is silent",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "same-PC output recapture guard active",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "guarded route stays silent",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "No Audio stops outgoing packets only",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "source resumes independent audio generation",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "active Line In endpoint captures and encodes",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "video session and generation preserved across audio changes",
+                               "pass":  true
+                           },
+                           {
+                               "check":  "duplex audio encoded decoded and rendered",
+                               "pass":  true
+                           }
+                       ],
+    "steady_300s":  {
+                        "value":  [
+                                      {
+                                          "role":  "A",
+                                          "pid":  27552,
+                                          "seconds":  299,
+                                          "audio_seconds":  299,
+                                          "video_send_fps":  59.83946488294314,
+                                          "video_render_fps":  59.832775919732441,
+                                          "audio_send_fps":  50,
+                                          "audio_decode_fps":  50,
+                                          "audio_played_frames":  14352000,
+                                          "video_recoveries":  0,
+                                          "video_transport_drops":  0,
+                                          "audio_drops":  0,
+                                          "audio_plc":  0,
+                                          "audio_underflows":  0,
+                                          "audio_overruns":  0,
+                                          "jitter_peak":  1,
+                                          "render_queue_peak_frames":  1920,
+                                          "playout_age_p50_ms":  41.9021,
+                                          "playout_age_p95_ms":  43.6207,
+                                          "playout_age_max_ms":  49.1014,
+                                          "playout_age_start_mean_ms":  42.137450000000008,
+                                          "playout_age_end_mean_ms":  42.170495,
+                                          "cpu_mean_percent":  1.2749963658873733,
+                                          "working_peak_mb":  243.25390625,
+                                          "connected_all":  true,
+                                          "audio_active_all":  true,
+                                          "strict_video_generation_unchanged":  true,
+                                          "audio_generations_unchanged":  true
+                                      },
+                                      {
+                                          "role":  "B",
+                                          "pid":  23248,
+                                          "seconds":  299,
+                                          "audio_seconds":  299,
+                                          "video_send_fps":  59.832775919732441,
+                                          "video_render_fps":  59.83946488294314,
+                                          "audio_send_fps":  50,
+                                          "audio_decode_fps":  50,
+                                          "audio_played_frames":  14352000,
+                                          "video_recoveries":  0,
+                                          "video_transport_drops":  0,
+                                          "audio_drops":  0,
+                                          "audio_plc":  0,
+                                          "audio_underflows":  0,
+                                          "audio_overruns":  0,
+                                          "jitter_peak":  2,
+                                          "render_queue_peak_frames":  1920,
+                                          "playout_age_p50_ms":  51.7896,
+                                          "playout_age_p95_ms":  57.7093,
+                                          "playout_age_max_ms":  59.4463,
+                                          "playout_age_start_mean_ms":  52.229115,
+                                          "playout_age_end_mean_ms":  52.479409999999994,
+                                          "cpu_mean_percent":  1.3279812894917065,
+                                          "working_peak_mb":  242.671875,
+                                          "connected_all":  true,
+                                          "audio_active_all":  true,
+                                          "strict_video_generation_unchanged":  true,
+                                          "audio_generations_unchanged":  true
+                                      }
+                                  ],
+                        "Count":  2
+                    },
+    "output_meter":  {
+                         "mode":  "--meter",
+                         "result":  0,
+                         "frames":  14399009,
+                         "rms":  0.00261786,
+                         "peak":  0.00436244,
+                         "tone440_amplitude":  0.00369696,
+                         "measured_10ms_blocks":  29947,
+                         "silent_10ms_blocks":  0,
+                         "longest_silent_ms":  0,
+                         "min_block_rms":  0.0025402,
+                         "max_block_rms":  0.00275775,
+                         "error":  ""
+                     },
+    "persistence":  [
+                        {
+                            "role":  "A",
+                            "output":  "Speakers (Realtek(R) Audio)  ?",
+                            "mute":  "Unmute Remote Audio",
+                            "share":  [
+                                          "Start Share"
+                                      ]
+                        },
+                        {
+                            "role":  "B",
+                            "output":  "Headphones (Realtek USB2.0 Audio)  ?",
+                            "mute":  "Unmute Remote Audio",
+                            "share":  [
+                                          "Start Share"
+                                      ]
+                        }
+                    ],
+    "default_output_empty_id_verified":  true,
+    "diagnostics_visible_scroll":  {
+                                       "phase":  "native-audio-final-mask-visible",
+                                       "capture_exclusion_diagnostic_fallback":  true,
+                                       "stale_pixels_each":  0,
+                                       "rounds":  4
+                                   },
+    "cleanup":  {
+                    "utc":  "2026-10-17T03:19:16.2549801Z",
+                    "owned_runtime_remaining":  0,
+                    "owned_processes":  [
+
+                                        ],
+                    "portable_test_preferences_restored":  true,
+                    "identities_preserved":  true,
+                    "worktree_preserved":  true
+                },
+    "scope":  "Localhost audio/output subgate only; physical endpoint loss, external input fidelity, newer-OS process capture, remote connectivity, WAN adaptation, fullV1 acceptance open"
+}

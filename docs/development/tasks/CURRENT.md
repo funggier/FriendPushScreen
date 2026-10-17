@@ -1,16 +1,17 @@
-# Current Development Task
+﻿# Current Development Task
 
-## FPS-006A — Native shared audio and selectable playback
+## FPS-006A — Native audio and selectable playback: scoped qualification complete
 
-**Status:** ACTIVE — parent implements and qualifies the approved audio increment.
-**Branch/worktree:** fps-006-encode-decode-local-loopback. Main/sibling worktrees preserved.
-Authority: approved V1 audio amendment, autonomous Native execution, latest continue and explicit Settings output-device request on2026-10-17.
-[Design](../../superpowers/specs/2026-10-17-native-audio-design.md) · [Plan](../../superpowers/plans/2026-10-17-native-audio.md).
+**Status:** SCOPED PASS on the reference Windows10 machine and two real localhost portable instances.
+**Branch/worktree:** fps-006-encode-decode-local-loopback, preserved. Main and sibling worktrees untouched.
+Authority: approved V1 audio amendment, autonomous Native execution, explicit Settings output selector and steady-audio requirement.
 
-Implemented: pinned static Opus1.6.1, WASAPI shared48k stereo with native device conversion, System/render/input sources, independent audio session/generation and six-datagram QUIC budget, bounded jitter/PLC/render, local mute/volume and stable source/output selectors with persisted IDs. Reference19045 correctly reports process-loopback unsupported. Same-host endpoint guard prevents digital recapture loops.
+[Qualification report](../reports/FPS-20261017-native-audio-qualification.md) · [Curated evidence](../evidence/FPS-20261017-native-audio.json) · [Completed plan](../../superpowers/plans/2026-10-17-native-audio.md).
 
-Local physical PCM/Opus probes passed:192kUSB->48k conversion; ASUS48k source->USB playback499frames/10s,0render overruns. Native Release all targets/CTest3/3 pass including real independent-process transport/shutdown regression. Actual two portable apps audio/video, gains/routing/source changes, soak, whole-change review and finalDebug/Release+exactCI are in progress.
+Implemented: actual WASAPI System/output-loopback/input capture, pinned Opus1.6.1, authenticated QUIC audio with independent generations and finite queues; local output selection, mute and volume with persisted stable IDs. NoAudio releases capture/send. Same-host endpoint guard prevents recapture loops. Windows19045 correctly marks process capture unsupported.
 
-Previous FPS-009 NoAudio video evaluation is preserved in [its report](../reports/FPS-20261016-native-peer-video-qualification.md), baseline1f86e54420e5b5a245e7e509bde3902eb5f02bf3. Earlier strict unchanged-generation video FAILs remain historical evidence.
+Verified source9d24f9ed61470ad2ab4fd7a8b5beef8fecffb381, appSHA256B1CC600361EAAF1783E9DE4AC66CEC09951544C5DB2E71CBF92F1B7D4A57E7BC: all native Debug/Release targets and CTest3/3, exact-source CI both configurations,13/13 physical audio/routing cases,5min duplex50audio frames/s with0drops/PLC/underflows,0silent10msblocks at measured output,59.8fps video with0recoveries and unchanged generations in the final run. Actual close/relaunch preserved both endpoint/mute/volume choices. Visible Diagnostics scroll repaint4/4. Single whole-change review and one consequential TDD fix pass completed.
 
-FPS-009 permanent transport decision is provisional/awaiting remaining comparison and remote qualification. DG001/006/008 and LAN/DDNS/Internet/Tailscale, physical second peer and fullV1 audio acceptance remain open. No release or main merge.
+Owned apps/fixtures/helpers are closed; original portable test preferences restored, identities retained. No main merge or release.
+
+Next gated scope: FPS-009 transport comparison/permanent decision and FPS-010 remote connectivity; DG001/006/008 remain open. Physical endpoint removal/default switching, external capture-card signal fidelity, newer-OS process backend, LAN/DDNS/Internet/Tailscale, physical second peer and fullV1 acceptance remain unqualified. Earlier strict video-continuity FAILs are retained in the reports; a single final scoped PASS does not erase them.
