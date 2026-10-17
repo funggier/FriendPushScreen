@@ -98,5 +98,41 @@ void RunPeerVideoControllerTests() {
         FPS_EXPECT_EQ(a.Snapshot().outgoing_generation,originalVideo);
         a.Disconnect();b.Disconnect();
     }
+    {
+        std::cout<<"InvalidHostRejectedBeforeOpeningListener\n";
+        PeerVideoController a,b;std::string error;
+        FPS_EXPECT_TRUE(a.Initialize(nullptr,root/"invalid-a",error)&&b.Initialize(nullptr,root/"invalid-b",error));
+        if(a.Identity()&&b.Identity()){
+            FPS_EXPECT_TRUE(a.AuthorizePeer(*b.Identity(),error));
+            FPS_EXPECT_TRUE(!a.Connect("http://cdloot.thddns.net:8997",8997,0,error));
+            FPS_EXPECT_TRUE(!a.Snapshot().active);
+            a.Disconnect();
+        }
+    }
+    {
+        std::cout<<"ManualPeerListenerAcceptsLocalMachineDnsRoute\n";
+        PeerVideoController a,b;std::string error;
+        FPS_EXPECT_TRUE(a.Initialize(nullptr,root/"route-a",error)&&b.Initialize(nullptr,root/"route-b",error));
+        if(a.Identity()&&b.Identity()){
+            FPS_EXPECT_TRUE(a.AuthorizePeer(*b.Identity(),error)&&b.AuthorizePeer(*a.Identity(),error));
+            FPS_EXPECT_TRUE(b.Listen(0,error));
+            const auto sink=[](const fps::capture::CapturedFrame&){return true;};const auto clear=[]{};
+            auto until=GetTickCount64()+3000;
+            while(GetTickCount64()<until&&!b.Snapshot().listen_port){a.Poll(sink,clear);b.Poll(sink,clear);Sleep(2);}
+            char localHost[MAX_COMPUTERNAME_LENGTH+1]{};DWORD nameLength=sizeof(localHost);
+            FPS_EXPECT_TRUE(GetComputerNameA(localHost,&nameLength));
+            FPS_EXPECT_TRUE(a.Connect(localHost,b.Snapshot().listen_port,0,error));
+            until=GetTickCount64()+5000;
+            while(GetTickCount64()<until&&(!a.Snapshot().connected||!b.Snapshot().connected)){a.Poll(sink,clear);b.Poll(sink,clear);Sleep(2);}
+            if(!a.Snapshot().connected||!b.Snapshot().connected){
+                const auto sa=a.Snapshot(),sb=b.Snapshot();
+                std::cerr<<"route "<<localHost<<" Aport="<<sa.listen_port<<" Bport="<<sb.listen_port
+                    <<" Astatus="<<sa.status<<" Aerror="<<sa.error<<" Bstatus="<<sb.status<<" Berror="<<sb.error
+                    <<" Arejected="<<sa.transport.rejected_certificates<<" Brejected="<<sb.transport.rejected_certificates<<"\n";
+            }
+            FPS_EXPECT_TRUE(a.Snapshot().connected&&b.Snapshot().connected);
+            a.Disconnect();b.Disconnect();
+        }
+    }
     std::filesystem::remove_all(root);
 }

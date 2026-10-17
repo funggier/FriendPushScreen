@@ -12,7 +12,7 @@ include(cmake/warnings.cmake)
 include(cmake/msquic.cmake)
 include(cmake/opus.cmake)
 
-add_library(fps_network STATIC src/network/peer_identity.cpp src/network/secure_peer_transport.cpp src/network/peer_protocol.cpp src/network/peer_session.cpp)
+add_library(fps_network STATIC src/network/peer_endpoint.cpp src/network/peer_identity.cpp src/network/secure_peer_transport.cpp src/network/peer_protocol.cpp src/network/peer_session.cpp)
 target_include_directories(fps_network PUBLIC src)
 target_link_libraries(fps_network PUBLIC fps_msquic_headers Crypt32 Ncrypt Bcrypt Ws2_32 Advapi32)
 fps_apply_warnings(fps_network)
@@ -145,6 +145,7 @@ enable_testing()
 add_executable(FriendPushScreenTests
     tests/test_main.cpp
     tests/peer_identity_tests.cpp
+    tests/peer_endpoint_tests.cpp
     tests/peer_protocol_tests.cpp
     tests/peer_session_tests.cpp
     tests/feedback_protection_tests.cpp

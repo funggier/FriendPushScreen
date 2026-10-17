@@ -5,6 +5,8 @@
 #include <wincrypt.h>
 #include <msquic.h>
 #include "network/secure_peer_transport.h"
+#include "network/peer_endpoint.h"
+#include <optional>
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -85,6 +87,23 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
         std::vector<SendBuffer*> audioSends;
         std::deque<std::unique_ptr<Stream>> streams;
     };
+    struct DnsQuery:OVERLAPPED {
+        std::shared_ptr<Impl> owner;
+        // The operation keeps its context and an extra Winsock reference alive
+        // until the completion callback, including after nonblocking cancellation.
+        std::shared_ptr<DnsQuery> operation;
+        std::wstring name,service;
+        ADDRINFOEXW hints{};
+        PADDRINFOEXW results{};
+        HANDLE cancel{};
+        timeval timeout{2,0};
+        std::uint64_t deadline{};
+        std::uint16_t port{};
+        bool winsock{};
+        DnsQuery():OVERLAPPED{}{}
+        ~DnsQuery(){if(results)FreeAddrInfoExW(results);if(winsock)WSACleanup();}
+    };
+    struct DnsCompletion {QUIC_ADDR address{};std::string error;};
     struct CallbackScope {
         Impl& owner;
         explicit CallbackScope(Impl& value):owner(value){++owner.callbacks;}
@@ -108,6 +127,9 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
     std::string runtime;
     std::deque<std::unique_ptr<Connection>> connections;
     std::deque<TransportEvent> events;
+    std::shared_ptr<DnsQuery> pending_dns;
+    std::optional<DnsCompletion> dns_completion;
+    unsigned dns_queries{};
 
     void Event(TransportEventKind kind,Connection* c,std::vector<std::uint8_t> bytes={},std::string detail={}) {
         if(events.size()>=kMaxEvents) {
@@ -360,6 +382,86 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
         if(QUIC_FAILED(status)){error=StatusText("Mutual TLS credential load failed",status);return false;}
         return true;
     }
+    bool ConnectAddress(const QUIC_ADDR& address,std::string& error) {
+        if(!registration||stopping){error="Peer transport is inactive";return false;}
+        if(connections.size()>=kMaxConnections){error="Peer connection limit reached";return false;}
+        const auto destination_port=QuicAddrGetPort(&address);
+        if(destination_port==port&&(ntohl(address.Ipv4.sin_addr.s_addr)>>24)==127){
+            error="Cannot connect to this instance's own share port";return false;
+        }
+        auto c=std::make_unique<Connection>();c->owner=this;c->id=nextId++;c->client=true;
+        auto status=api->ConnectionOpen(registration,Impl::ConnectionCallback,c.get(),&c->handle);
+        if(QUIC_FAILED(status)){error=StatusText("QUIC connection open failed",status);return false;}
+        auto* raw=c.get();connections.push_back(std::move(c));
+        status=api->SetParam(raw->handle,QUIC_PARAM_CONN_REMOTE_ADDRESS,sizeof(address),&address);
+        // Route and expected certificate identity remain separate.
+        if(QUIC_SUCCEEDED(status))status=api->ConnectionStart(raw->handle,clientConfiguration,
+            QUIC_ADDRESS_FAMILY_INET,peer.stable_name.c_str(),destination_port);
+        if(QUIC_FAILED(status)){
+            raw->closed=true;api->ConnectionClose(raw->handle);raw->handle=nullptr;
+            error=StatusText("QUIC connection start failed",status);return false;
+        }
+        return true;
+    }
+    void CancelDns() {
+        auto query=std::move(pending_dns);dns_completion.reset();
+        // Keep a local reference through Cancel: completion is allowed to race it.
+        if(query&&query->cancel)GetAddrInfoExCancel(&query->cancel);
+    }
+    static void CALLBACK DnsResolved(DWORD status,DWORD,LPOVERLAPPED overlapped) {
+        auto query=static_cast<DnsQuery*>(overlapped)->operation;
+        auto owner=query->owner;
+        {
+            std::lock_guard lock(owner->mutex);
+            --owner->dns_queries;
+            if(!owner->stopping&&owner->pending_dns==query) {
+                owner->pending_dns.reset();DnsCompletion completion;
+                if(GetTickCount64()>=query->deadline)completion.error="DNS lookup timed out";
+                else if(status)completion.error="DNS lookup failed (Windows "+std::to_string(status)+")";
+                else {
+                    completion.error="The peer hostname has no usable IPv4 address";
+                    for(auto* entry=query->results;entry;entry=entry->ai_next) {
+                        if(entry->ai_family!=AF_INET||!entry->ai_addr||entry->ai_addrlen<sizeof(sockaddr_in))continue;
+                        const auto address=*reinterpret_cast<const sockaddr_in*>(entry->ai_addr);
+                        const auto first=ntohl(address.sin_addr.s_addr)>>24;
+                        if(!first||first>=224)continue;
+                        completion.address.Ipv4=address;QuicAddrSetPort(&completion.address,query->port);
+                        completion.error.clear();break;
+                    }
+                }
+                owner->dns_completion=std::move(completion);
+            }
+        }
+        query->operation.reset();
+    }
+    bool BeginDns(const std::string& name,std::uint16_t destination_port,std::string& error) {
+        if(pending_dns&&pending_dns->name==std::wstring(name.begin(),name.end())&&pending_dns->port==destination_port)return true;
+        CancelDns();
+        if(dns_queries>=4){error="Peer DNS lookup limit reached; wait for cancellation to complete";return false;}
+        auto query=std::make_shared<DnsQuery>();query->owner=shared_from_this();
+        WSADATA data{};
+        if(WSAStartup(MAKEWORD(2,2),&data)){error="DNS sockets startup failed";return false;}
+        query->winsock=true;query->name.assign(name.begin(),name.end());query->service=std::to_wstring(destination_port);
+        query->port=destination_port;query->deadline=GetTickCount64()+2000;
+        query->hints.ai_family=AF_INET;query->hints.ai_socktype=SOCK_DGRAM;
+        query->hints.ai_protocol=IPPROTO_UDP;query->hints.ai_flags=AI_NUMERICSERV;
+        query->operation=query;pending_dns=query;++dns_queries;
+        const auto status=GetAddrInfoExW(query->name.c_str(),query->service.c_str(),NS_DNS,nullptr,
+            &query->hints,&query->results,&query->timeout,query.get(),Impl::DnsResolved,&query->cancel);
+        if(status!=WSA_IO_PENDING)DnsResolved(static_cast<DWORD>(status),0,query.get());
+        return true;
+    }
+    void ProcessDns(std::uint64_t now) {
+        if(stopping)return;
+        if(pending_dns&&now>=pending_dns->deadline){
+            CancelDns();Event(TransportEventKind::Error,nullptr,{},"DNS lookup timed out");
+        }
+        if(dns_completion) {
+            auto completed=std::move(*dns_completion);dns_completion.reset();
+            if(completed.error.empty())ConnectAddress(completed.address,completed.error);
+            if(!completed.error.empty())Event(TransportEventKind::Error,nullptr,{},std::move(completed.error));
+        }
+    }
     void Maintenance() {
         const auto now=GetTickCount64();
         for(auto& c:connections)for(auto& s:c->streams)
@@ -371,6 +473,7 @@ struct SecurePeerTransport::Impl:std::enable_shared_from_this<Impl> {
             for(auto& c:connections)std::erase_if(c->streams,[&](auto& s){return s->closed&&c->control!=s.get();});
             std::erase_if(connections,[](auto& c){return c->closed;});
         }
+        ProcessDns(now);
     }
 };
 SecurePeerTransport::SecurePeerTransport():impl_(std::make_shared<Impl>()){}
@@ -402,29 +505,23 @@ bool SecurePeerTransport::Start(const PeerIdentity& identity,const PublicPeerIde
     self.port=QuicAddrGetPort(&address);return true;
 }
 bool SecurePeerTransport::Connect(const std::string& host,std::uint16_t port,std::string& error) {
-    auto& self=*impl_;std::lock_guard lock(self.mutex);
-    if(!self.registration||self.stopping||!port||host.empty()||host.size()>253){error="Invalid peer endpoint or inactive transport";return false;}
+    PeerHost parsed;
+    if(!ParsePeerHost(host,parsed,error)||!port){if(!port)error="Enter a valid Remote Port";return false;}
+    auto owner=impl_;auto& self=*owner;std::lock_guard lock(self.mutex);
+    if(!self.registration||self.stopping){error="Peer transport is inactive";return false;}
     self.Maintenance();
-    if(self.connections.size()>=kMaxConnections){error="Peer connection limit reached";return false;}
-    // The evaluation accepts explicit IPv4 endpoints and the fixed local alias.
-    // Never call an unbounded namespace provider while holding the transport lock.
-    QUIC_ADDR address{};QuicAddrSetFamily(&address,QUIC_ADDRESS_FAMILY_INET);QuicAddrSetPort(&address,port);
-    std::string normalized=host;
-    std::transform(normalized.begin(),normalized.end(),normalized.begin(),[](unsigned char c){return static_cast<char>(c>='A'&&c<='Z'?c-'A'+'a':c);});
-    if(normalized=="localhost"||normalized=="localhost.")address.Ipv4.sin_addr.s_addr=htonl(INADDR_LOOPBACK);
-    else if(InetPtonA(AF_INET,host.c_str(),&address.Ipv4.sin_addr)!=1) {
-        error="Use an IPv4 address or localhost; DNS names are not enabled in this evaluation";return false;
+    if(!parsed.is_ipv4&&self.config.loopback_only) {
+        if(parsed.dns_name!="localhost"&&parsed.dns_name!="localhost."){
+            error="Use an IPv4 address or localhost in loopback-only tests";return false;
+        }
+        parsed.is_ipv4=true;parsed.ipv4={127,0,0,1};
     }
-    if(self.config.loopback_only&&(ntohl(address.Ipv4.sin_addr.s_addr)>>24)!=127){error="This transport milestone is restricted to loopback";return false;}
-    if(port==self.port&&(ntohl(address.Ipv4.sin_addr.s_addr)>>24)==127){error="Cannot connect to this instance's own share port";return false;}
-    auto c=std::make_unique<Impl::Connection>();c->owner=&self;c->id=self.nextId++;c->client=true;
-    auto status=self.api->ConnectionOpen(self.registration,Impl::ConnectionCallback,c.get(),&c->handle);
-    if(QUIC_FAILED(status)){error=StatusText("QUIC connection open failed",status);return false;}
-    auto* raw=c.get();self.connections.push_back(std::move(c));
-    status=self.api->SetParam(raw->handle,QUIC_PARAM_CONN_REMOTE_ADDRESS,sizeof(address),&address);
-    if(QUIC_SUCCEEDED(status))status=self.api->ConnectionStart(raw->handle,self.clientConfiguration,QUIC_ADDRESS_FAMILY_INET,self.peer.stable_name.c_str(),port);
-    if(QUIC_FAILED(status)){raw->closed=true;self.api->ConnectionClose(raw->handle);raw->handle=nullptr;error=StatusText("QUIC connection start failed",status);return false;}
-    return true;
+    if(!parsed.is_ipv4)return self.BeginDns(parsed.dns_name,port,error);
+    QUIC_ADDR address{};QuicAddrSetFamily(&address,QUIC_ADDRESS_FAMILY_INET);QuicAddrSetPort(&address,port);
+    std::memcpy(&address.Ipv4.sin_addr,parsed.ipv4.data(),parsed.ipv4.size());
+    if(self.config.loopback_only&&parsed.ipv4[0]!=127){error="This transport milestone is restricted to loopback";return false;}
+    self.CancelDns();
+    return self.ConnectAddress(address,error);
 }
 TransportSendResult SecurePeerTransport::SendControl(std::span<const std::uint8_t> bytes,std::uint64_t id) {
     if(bytes.empty()||bytes.size()>kMaxControlBytes)return TransportSendResult::Invalid;
@@ -488,12 +585,13 @@ std::uint16_t SecurePeerTransport::ListenPort()const{return impl_->port;}
 std::string SecurePeerTransport::RuntimeInfo()const{return impl_->runtime;}
 void SecurePeerTransport::Disconnect(std::uint64_t id) {
     auto& self=*impl_;std::lock_guard lock(self.mutex);
+    if(!id)self.CancelDns();
     if(!self.api)return;
     for(auto& c:self.connections)if(!c->closed&&!c->closing&&(!id||c->id==id)){c->closing=true;self.api->ConnectionShutdown(c->handle,QUIC_CONNECTION_SHUTDOWN_FLAG_NONE,0);}
 }
 void SecurePeerTransport::Stop() {
     auto& self=*impl_;
-    {std::lock_guard lock(self.mutex);self.stopping=true;}
+    {std::lock_guard lock(self.mutex);self.stopping=true;self.CancelDns();}
     // Closing the listener and registration may wait for callbacks: never hold their callback mutex.
     if(self.listener){self.api->ListenerClose(self.listener);self.listener=nullptr;}
     Disconnect();

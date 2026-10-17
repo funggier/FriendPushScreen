@@ -1,5 +1,6 @@
 #include "app/peer_video_controller.h"
 #include "network/peer_video_flow.h"
+#include "network/peer_endpoint.h"
 #include "audio/audio_worker.h"
 #include <bcrypt.h>
 #include <objbase.h>
@@ -121,7 +122,7 @@ struct PeerVideoController::Impl {
                 if(command.epoch<workerEpoch)continue;
                 if(command.kind==CommandKind::Start) {
                     workerEpoch=command.epoch;audioEngine.Configure(0,0,{},false);std::string reason;
-                    if(transport.Start(*identity,command.peer,{directory/"transport",command.port,true,250},reason)) {
+                    if(transport.Start(*identity,command.peer,{directory/"transport",command.port,false,250},reason)) {
                         if(!precision)precision=timeBeginPeriod(1)==TIMERR_NOERROR;
                         {std::lock_guard lock(mutex);actualPort=transport.ListenPort();runtime=transport.RuntimeInfo();}
                         Notice notice;notice.kind=NoticeKind::Started;notice.epoch=workerEpoch;NoticeOut(std::move(notice));
@@ -149,6 +150,7 @@ struct PeerVideoController::Impl {
             auto events=transport.PollEvents();
             for(auto& event:events) {
                 if(event.kind==TransportEventKind::Audio){audioEngine.OnAudio(std::move(event));continue;}
+                if(event.kind==TransportEventKind::Error&&!event.connection_id){Failure(event.detail);continue;}
                 Notice notice;notice.epoch=workerEpoch;notice.event=std::move(event);NoticeOut(std::move(notice));
             }
             audioEngine.Dispatch([&](const audio::AudioOutbound& packet) {
@@ -304,7 +306,9 @@ bool PeerVideoController::Listen(std::uint16_t port,std::string& error) {
     if(!p.Queue(std::move(command))){p.startPending=false;error=p.error;return false;}return true;
 }
 bool PeerVideoController::Connect(std::string host,std::uint16_t remotePort,std::uint16_t ownPort,std::string& error) {
-    if(host.empty()||host.size()>253||!remotePort){error="Enter a valid peer host and Remote Port";return false;}
+    network::PeerHost parsed;
+    if(!network::ParsePeerHost(host,parsed,error)||!remotePort){if(!remotePort)error="Enter a valid Remote Port";return false;}
+    if(!parsed.is_ipv4)host=parsed.dns_name;
     if(!Listen(ownPort,error))return false;
     auto& p=*impl_;p.remoteHost=host;p.remotePort=remotePort;p.connecting=true;p.session->SetConnectionIntent(true,GetTickCount64());
     Impl::Command command;command.kind=Impl::CommandKind::Connect;command.epoch=p.epoch;command.host=std::move(host);command.port=remotePort;

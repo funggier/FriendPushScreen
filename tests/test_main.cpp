@@ -9,6 +9,7 @@ void RunAudioTests();
 void RunFeedbackProtectionTests();
 void RunPeerSessionTests();
 void RunPeerProtocolTests();
+void RunPeerEndpointTests();
 void RunPeerIdentityTests();
 void RunDiagnosticsFormatterTests();
 void RunPlatformFilterTests();
@@ -37,6 +38,7 @@ int main() {
     RunAudioRetryTests();
     RunAudioWorkerTests();
     RunAudioTests();
+    RunPeerEndpointTests();
     RunPeerIdentityTests();
     RunPeerProtocolTests();
     RunPeerSessionTests();

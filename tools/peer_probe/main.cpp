@@ -150,6 +150,67 @@ bool NegativeTests(const std::filesystem::path& root) {
     }
     return ok;
 }
+bool DnsRouteTests(const std::filesystem::path& root) {
+    std::string error;auto a=PeerIdentity::LoadOrCreate(root/"dns-a",error),b=PeerIdentity::LoadOrCreate(root/"dns-b",error);
+    if(!a||!b)return Check(false,"DNS route identities");
+    SecurePeerTransport client,server;
+    if(!client.Start(*a,b->Public(),{root/"dns-a",0,false,250},error)||
+       !server.Start(*b,a->Public(),{root/"dns-b",0,false,250},error))return Check(false,"unrestricted pinned route listeners");
+    auto start=GetTickCount64();
+    bool ok=Check(client.Connect("localhost",server.ListenPort(),error),"DNS connection is accepted asynchronously");
+    ok=Check(GetTickCount64()-start<1000,"DNS initiation does not block the caller")&&ok;
+    client.Disconnect();
+    bool stale=false;auto until=GetTickCount64()+100;
+    while(GetTickCount64()<until){
+        for(auto& event:client.PollEvents())stale|=event.kind==TransportEventKind::Connected;
+        server.PollEvents();Sleep(1);
+    }
+    ok=Check(!stale,"Disconnect invalidates completed or pending DNS")&&ok;
+    ok=Check(client.Connect("localhost",server.ListenPort(),error)&&WaitConnected(client,server),
+        "native DNS route retains mutual certificate and stable SAN validation")&&ok;
+    const std::vector<std::uint8_t> payload{'d','n','s','-','p','i','n','n','e','d'};
+    ok=Check(client.SendControl(payload)==TransportSendResult::Sent,"DNS route control send")&&ok;
+    bool delivered=false;until=GetTickCount64()+1000;
+    while(GetTickCount64()<until&&!delivered){
+        client.PollEvents();for(auto& event:server.PollEvents())if(event.kind==TransportEventKind::Control&&event.bytes==payload)delivered=true;
+        Sleep(1);
+    }
+    ok=Check(delivered,"DNS route delivers authenticated payload")&&ok;
+    client.Stop();
+    for(unsigned round=0;round<4;++round){
+        SecurePeerTransport pending;
+        if(!pending.Start(*a,b->Public(),{root/"dns-a",0,false,250},error))return Check(false,"DNS stop fixture");
+        start=GetTickCount64();pending.Connect("localhost",server.ListenPort(),error);pending.Stop();
+        ok=Check(GetTickCount64()-start<2000,"DNS context survives prompt stop without waiting for provider")&&ok;
+    }
+    return ok;
+}
+bool RouteProbe(const std::filesystem::path& root,const std::string& host,std::uint16_t localPort,std::uint16_t peerPort) {
+    std::string error;auto a=PeerIdentity::LoadOrCreate(root/"a",error),b=PeerIdentity::LoadOrCreate(root/"b",error);
+    SecurePeerTransport client,server;
+    if(!a||!b||!client.Start(*a,b->Public(),{root/"a",localPort,false,250},error)||
+       !server.Start(*b,a->Public(),{root/"b",peerPort,false,250},error)){
+        std::cerr<<"route startup: "<<error<<"\n";return false;
+    }
+    std::cout<<"route host="<<host<<" Aport="<<client.ListenPort()<<" Bport="<<server.ListenPort()<<"\n";
+    if(!client.Connect(host,server.ListenPort(),error)){std::cerr<<error<<"\n";return false;}
+    bool ca=false,cb=false,delivered=false,sent=false;const auto until=GetTickCount64()+7000;
+    const std::vector<std::uint8_t> bytes{'r','o','u','t','e'};
+    while(GetTickCount64()<until&&!delivered){
+        for(auto& event:client.PollEvents()){
+            if(event.kind==TransportEventKind::Connected){ca=true;std::cout<<"route A authenticated\n";}
+            if(event.kind==TransportEventKind::Error)std::cout<<"route A error "<<event.detail<<"\n";
+        }
+        for(auto& event:server.PollEvents()){
+            if(event.kind==TransportEventKind::Connected){cb=true;std::cout<<"route B authenticated\n";}
+            if(event.kind==TransportEventKind::Error)std::cout<<"route B error "<<event.detail<<"\n";
+            if(event.kind==TransportEventKind::Control&&event.bytes==bytes)delivered=true;
+        }
+        if(ca&&cb&&!sent){client.SendControl(bytes);sent=true;}Sleep(1);
+    }
+    std::cout<<"route rejected A="<<client.Metrics().rejected_certificates<<" B="<<server.Metrics().rejected_certificates<<"\n";
+    return Check(ca&&cb&&delivered,"route mutual authentication and payload");
+}
 bool Prepare(const std::filesystem::path& root) {
     std::string error;auto a=PeerIdentity::LoadOrCreate(root/"a",error),b=PeerIdentity::LoadOrCreate(root/"b",error);
     return a&&b&&WritePublicBundle(root/"a.friendpair",a->Public(),error)&&WritePublicBundle(root/"b.friendpair",b->Public(),error);
@@ -195,10 +256,16 @@ int wmain(int argc,wchar_t** argv) {
     std::cout << std::unitbuf; std::cerr << std::unitbuf;
     std::filesystem::path root=std::filesystem::current_path()/("peer-probe-test-"+std::to_string(GetCurrentProcessId()));
     if(argc>2 && std::wstring_view(argv[1])==L"--self-test")root=argv[2];
+    if(argc>3&&std::wstring_view(argv[1])==L"--route-self-test"){
+        const std::wstring wide(argv[3]);std::string host;
+        for(wchar_t ch:wide){if(ch<=0||ch>=127){std::cerr<<"Use an ASCII/punycode peer host\n";return 2;}host.push_back(static_cast<char>(ch));}
+        return RouteProbe(argv[2],host,argc>4?static_cast<std::uint16_t>(_wtoi(argv[4])):0,
+            argc>5?static_cast<std::uint16_t>(_wtoi(argv[5])):0)?0:1;
+    }
     if(argc>2&&std::wstring_view(argv[1])==L"--prepare")return Prepare(argv[2])?0:1;
     if(argc>7&&std::wstring_view(argv[1])==L"--process")return ProcessProbe(argv[2],argv[3],
         static_cast<std::uint16_t>(_wtoi(argv[4])),static_cast<std::uint16_t>(_wtoi(argv[5])),
         static_cast<std::uint32_t>(_wtoi(argv[6])),argv[7])?0:1;
-    const bool ok=SelfTest(root)&&NegativeTests(root);
+    const bool ok=SelfTest(root)&&NegativeTests(root)&&DnsRouteTests(root);
     return ok?0:1;
 }
