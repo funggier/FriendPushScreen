@@ -72,4 +72,25 @@ void RunMainWindowLayoutTests() {
         FPS_EXPECT_EQ(viewport.width, 0);
         FPS_EXPECT_EQ(viewport.height, 0);
     }
+    {
+        fps::ui::MainWindow window;
+        FPS_EXPECT_TRUE(window.Create(GetModuleHandleW(nullptr),SW_HIDE));
+        if(window.Handle()) {
+            auto state=fps::ui::MakeDefaultUiState(19045);
+            state.connection_state=fps::ui::ConnectionUiState::Connected;
+            state.peer_round_trip_ms=25;state.peer_frame_rates={59.8,60.0};
+            window.ApplyUiState(state);
+            for(int width:{640,1280}) {
+                SetWindowPos(window.Handle(),nullptr,0,0,width,720,SWP_NOZORDER|SWP_NOACTIVATE);
+                const auto status=FindWindowExW(window.Handle(),nullptr,L"Static",nullptr);
+                const auto toggle=GetDlgItem(window.Handle(),2201);
+                FPS_EXPECT_TRUE(status&&toggle);
+                RECT statusBounds{},toggleBounds{};
+                GetWindowRect(status,&statusBounds);GetWindowRect(toggle,&toggleBounds);
+                FPS_EXPECT_TRUE(statusBounds.right<=toggleBounds.left);
+            }
+            DestroyWindow(window.Handle());
+            MSG quit{};while(PeekMessageW(&quit,nullptr,WM_QUIT,WM_QUIT,PM_REMOVE)){}
+        }
+    }
 }

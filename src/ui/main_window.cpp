@@ -626,7 +626,7 @@ void MainWindow::LayoutChildren() {
             HWND_TOP,
             0,
             0,
-            width,
+            std::max(0, toggle_x - kOuterPadding),
             kStatusHeight,
             SWP_NOACTIVATE);
 
