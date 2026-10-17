@@ -179,6 +179,7 @@ private:
     HWND viewer_heading_{nullptr};
     HWND topmost_checkbox_{nullptr};
     HWND borderless_checkbox_{nullptr};
+    HWND status_bar_checkbox_{nullptr};
     HWND fullscreen_button_{nullptr};
 
     HWND advanced_heading_{nullptr};

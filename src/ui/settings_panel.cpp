@@ -36,6 +36,8 @@ constexpr int kMuteButtonId = 2107;
 constexpr int kVolumeSliderId = 2108;
 constexpr int kTopmostId = 2109;
 constexpr int kBorderlessId = 2110;
+constexpr int kStatusBarId = 2131;
+constexpr int kViewerStatusSectionHeight = 30;
 constexpr int kFullscreenId = 2111;
 constexpr int kDiagnosticsToggleId = 2112;
 constexpr int kRefreshButtonId = 2113;
@@ -1764,6 +1766,12 @@ void SettingsPanel::InitializeControls(
             kBorderlessId,
             L"Borderless Viewer",
             BS_AUTOCHECKBOX);
+    status_bar_checkbox_ =
+        CreateButton(
+            instance,
+            kStatusBarId,
+            L"Show Status Bar (Tab: Settings)",
+            BS_AUTOCHECKBOX);
     fullscreen_button_ =
         CreateButton(
             instance,
@@ -1875,6 +1883,7 @@ void SettingsPanel::ApplyDefaultFont() {
         viewer_heading_,
         topmost_checkbox_,
         borderless_checkbox_,
+        status_bar_checkbox_,
         fullscreen_button_,
         advanced_heading_,
         diagnostics_toggle_,
@@ -1952,7 +1961,7 @@ void SettingsPanel::LayoutControls() {
         };
 
     const auto move = [&](HWND control,int x,int y,int w,int h) {
-        place(control,x,y + (y >= 316 ? kVideoSectionHeight : 0) + (y >= 560 ? kPairSectionHeight : 0) + (y>=712?kAudioSectionHeight:0) + (control==audio_status_?66:0),w,h);
+        place(control,x,y + (y >= 316 ? kVideoSectionHeight : 0) + (y >= 560 ? kPairSectionHeight : 0) + (y>=712?kAudioSectionHeight:0) + (y>=882?kViewerStatusSectionHeight:0) + (control==audio_status_?66:0),w,h);
     };
     place(video_heading_,kPadding,316,field_width,20);
     place(encoder_label_,kPadding,342,field_width,18);
@@ -2214,6 +2223,12 @@ void SettingsPanel::LayoutControls() {
         field_width,
         26);
     move(
+        status_bar_checkbox_,
+        kPadding,
+        878,
+        field_width,
+        26);
+    move(
         fullscreen_button_,
         kPadding,
         882,
@@ -2261,9 +2276,9 @@ void SettingsPanel::LayoutControls() {
             button_width,
             kButtonHeight);
 
-        content_height_ = 1342 + kVideoSectionHeight + kPairSectionHeight + kAudioSectionHeight;
+        content_height_ = 1342 + kVideoSectionHeight + kPairSectionHeight + kAudioSectionHeight + kViewerStatusSectionHeight;
     } else {
-        content_height_ = 1012 + kVideoSectionHeight + kPairSectionHeight + kAudioSectionHeight;
+        content_height_ = 1012 + kVideoSectionHeight + kPairSectionHeight + kAudioSectionHeight + kViewerStatusSectionHeight;
     }
 
     SetWindowPos(
@@ -2886,6 +2901,7 @@ std::wstring host;
     SetCheckIfDifferent(topmost_checkbox_,state.preferences.always_on_top);
 
     SetCheckIfDifferent(borderless_checkbox_,state.preferences.borderless);
+    SetCheckIfDifferent(status_bar_checkbox_,state.preferences.status_bar_visible);
 
     SetTextIfDifferent(
         fullscreen_button_,
@@ -3427,6 +3443,10 @@ LRESULT SettingsPanel::HandleMessage(
                     UiCommandType::
                         ToggleBorderless
                 });
+                return 0;
+
+            case kStatusBarId:
+                Emit(UiCommand{UiCommandType::ToggleStatusBar});
                 return 0;
 
             case kFullscreenId:

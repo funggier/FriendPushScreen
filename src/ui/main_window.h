@@ -141,6 +141,7 @@ private:
     std::deque<UiCommand> deferred_ui_commands_;
 
     bool settings_visible_{true};
+    bool status_bar_visible_{true};
 
     bool applied_fullscreen_{false};
     bool applied_borderless_{false};

@@ -109,6 +109,10 @@ void ToggleSettingsVisible(UiState& state) {
         !state.preferences.settings_visible;
 }
 
+void ToggleStatusBarVisible(UiState& state) {
+    state.preferences.status_bar_visible = !state.preferences.status_bar_visible;
+}
+
 void ToggleAlwaysOnTop(UiState& state) {
     state.preferences.always_on_top =
         !state.preferences.always_on_top;

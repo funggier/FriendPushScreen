@@ -8,6 +8,7 @@ namespace fps::ui {
 
 enum class UiCommandType {
     ToggleSettings,
+    ToggleStatusBar,
     ApplyVideoSettings,
     ToggleShareRequest,
     SelectCaptureSource,

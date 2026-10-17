@@ -54,6 +54,7 @@ media::VideoCodecConfig MakeVideoCodecConfig(
 struct UiPreferences {
     VideoPreferences video;
     bool settings_visible{true};
+    bool status_bar_visible{true};
     bool borderless{false};
     bool always_on_top{false};
 
@@ -122,6 +123,7 @@ UiPreferences PersistentPreferencesFromState(
     const UiState& state);
 
 void ToggleSettingsVisible(UiState& state);
+void ToggleStatusBarVisible(UiState& state);
 void ToggleAlwaysOnTop(UiState& state);
 void ToggleBorderless(UiState& state);
 void ToggleFullscreen(UiState& state);

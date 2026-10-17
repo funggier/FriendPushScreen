@@ -24,6 +24,13 @@ void RunSettingsStoreTests() {
         FPS_EXPECT_TRUE(writer.Flush());FPS_EXPECT_EQ(finalVolume.load(),0);
         FPS_EXPECT_TRUE(writerThread.load()!=GetCurrentThreadId());
     }
+    {
+        std::cout << "StatusStripPreferenceRoundTripAndLegacyDefaults\n";
+        const auto hidden=ParsePreferences("status_bar_visible=false\n");
+        FPS_EXPECT_TRUE(SerializePreferences(hidden).find("status_bar_visible=false\n")!=std::string::npos);
+        FPS_EXPECT_TRUE(SerializePreferences(ParsePreferences("version=1\n")).find("status_bar_visible=true\n")!=std::string::npos);
+        FPS_EXPECT_TRUE(SerializePreferences(ParsePreferences("status_bar_visible=maybe\n")).find("status_bar_visible=true\n")!=std::string::npos);
+    }
     UiPreferences preferences{};
     preferences.settings_visible = false;
     preferences.borderless = true;

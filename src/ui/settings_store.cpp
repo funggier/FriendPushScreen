@@ -207,6 +207,9 @@ std::string SerializePreferences(
     out << "settings_visible="
         << BoolText(preferences.settings_visible)
         << "\n";
+    out << "status_bar_visible="
+        << BoolText(preferences.status_bar_visible)
+        << "\n";
     out << "borderless="
         << BoolText(preferences.borderless)
         << "\n";
@@ -298,6 +301,11 @@ UiPreferences ParsePreferences(
                     bool parsed = false;
                     if (ParseBool(value, parsed)) {
                         result.settings_visible = parsed;
+                    }
+                } else if (key == "status_bar_visible") {
+                    bool parsed = false;
+                    if (ParseBool(value, parsed)) {
+                        result.status_bar_visible = parsed;
                     }
                 } else if (key == "borderless") {
                     bool parsed = false;

@@ -1,4 +1,5 @@
 #include "ui/main_window.h"
+#include "ui/settings_store.h"
 
 #include "test_support.h"
 
@@ -89,6 +90,56 @@ void RunMainWindowLayoutTests() {
                 GetWindowRect(status,&statusBounds);GetWindowRect(toggle,&toggleBounds);
                 FPS_EXPECT_TRUE(statusBounds.right<=toggleBounds.left);
             }
+            DestroyWindow(window.Handle());
+            MSG quit{};while(PeekMessageW(&quit,nullptr,WM_QUIT,WM_QUIT,PM_REMOVE)){}
+        }
+    }
+    {
+        std::cout << "HiddenStatusStripFillsViewerAndTabRestoresSettings\n";
+        fps::ui::MainWindow window;
+        FPS_EXPECT_TRUE(window.Create(GetModuleHandleW(nullptr),SW_HIDE));
+        if(window.Handle()) {
+            auto state=fps::ui::MakeStateFromPreferences(
+                fps::ui::ParsePreferences("status_bar_visible=false\nsettings_visible=false\nborderless=true\n"),19045);
+            window.ApplyUiState(state);
+            const auto status=FindWindowExW(window.Handle(),nullptr,L"Static",nullptr);
+            const auto toggle=GetDlgItem(window.Handle(),2201);
+            const auto panel=FindWindowExW(window.Handle(),nullptr,L"FriendPushScreenSettingsPanel",nullptr);
+            const auto statusCheck=GetDlgItem(panel,2131);
+            FPS_EXPECT_TRUE(status&&toggle&&panel&&statusCheck);
+            const auto visible=[](HWND h){return (GetWindowLongPtrW(h,GWL_STYLE)&WS_VISIBLE)!=0;};
+            const auto expectFullView=[&]{
+                RECT client{},render{};GetClientRect(window.Handle(),&client);
+                GetWindowRect(window.RenderHandle(),&render);
+                MapWindowPoints(nullptr,window.Handle(),reinterpret_cast<POINT*>(&render),2);
+                FPS_EXPECT_EQ(render.left,0L);FPS_EXPECT_EQ(render.top,0L);
+                FPS_EXPECT_EQ(render.right,client.right);FPS_EXPECT_EQ(render.bottom,client.bottom);
+                FPS_EXPECT_TRUE(!visible(status)&&!visible(toggle));
+            };
+            expectFullView();
+            FPS_EXPECT_TRUE(!visible(panel));
+            window.SetUiCommandCallback([&](const fps::ui::UiCommand& command){
+                if(command.type==UiCommandType::ToggleSettings) {
+                    fps::ui::ToggleSettingsVisible(state);window.ApplyUiState(state);
+                }
+            });
+            MSG tab{};tab.hwnd=window.RenderHandle();tab.message=WM_KEYDOWN;tab.wParam=VK_TAB;
+            FPS_EXPECT_TRUE(window.HandleShortcut(tab));
+            FPS_EXPECT_TRUE(state.preferences.settings_visible&&visible(panel));
+            expectFullView();
+            FPS_EXPECT_EQ(SendMessageW(statusCheck,BM_GETCHECK,0,0),static_cast<LRESULT>(BST_UNCHECKED));
+            state.fullscreen=true;window.ApplyUiState(state);expectFullView();
+            state.fullscreen=false;window.ApplyUiState(state);expectFullView();
+            state.preferences=fps::ui::ParsePreferences("status_bar_visible=true\n");
+            window.ApplyUiState(state);
+            FPS_EXPECT_TRUE(visible(status)&&visible(toggle));
+            FPS_EXPECT_EQ(SendMessageW(statusCheck,BM_GETCHECK,0,0),static_cast<LRESULT>(BST_CHECKED));
+            RECT render{};GetWindowRect(window.RenderHandle(),&render);
+            MapWindowPoints(nullptr,window.Handle(),reinterpret_cast<POINT*>(&render),2);
+            FPS_EXPECT_EQ(render.top,30L);
+            state.fullscreen=true;window.ApplyUiState(state);expectFullView();
+            state.fullscreen=false;window.ApplyUiState(state);
+            FPS_EXPECT_TRUE(visible(status)&&visible(toggle));
             DestroyWindow(window.Handle());
             MSG quit{};while(PeekMessageW(&quit,nullptr,WM_QUIT,WM_QUIT,PM_REMOVE)){}
         }

@@ -153,6 +153,7 @@ bool IsPreferenceCommand(
     switch (type) {
     case ui::UiCommandType::ApplyVideoSettings:
     case ui::UiCommandType::ToggleSettings:
+    case ui::UiCommandType::ToggleStatusBar:
     case ui::UiCommandType::ToggleShowCursor:
     case ui::UiCommandType::SetConnectionMode:
     case ui::UiCommandType::SetHost:
@@ -663,6 +664,11 @@ void Application::HandleUiCommand(
     case ui::UiCommandType::ToggleSettings:
         ui::ToggleSettingsVisible(
             ui_state_);
+        state_changed = true;
+        break;
+
+    case ui::UiCommandType::ToggleStatusBar:
+        ui::ToggleStatusBarVisible(ui_state_);
         state_changed = true;
         break;
 

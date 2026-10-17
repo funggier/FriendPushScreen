@@ -546,7 +546,7 @@ void MainWindow::LayoutChildren() {
                 client.top));
 
     const bool show_status_chrome =
-        !applied_fullscreen_;
+        !applied_fullscreen_ && status_bar_visible_;
 
     const ViewerViewport viewer =
         CalculateViewerViewport(
@@ -733,10 +733,12 @@ void MainWindow::ApplyUiState(
     const UiState& state) {
     const bool visibility_changed =
         settings_visible_ !=
-        state.preferences.settings_visible;
+        state.preferences.settings_visible ||
+        status_bar_visible_ != state.preferences.status_bar_visible;
 
     settings_visible_ =
         state.preferences.settings_visible;
+    status_bar_visible_ = state.preferences.status_bar_visible;
 
     if (settings_toggle_button_ != nullptr && visibility_changed) {
         SetWindowTextW(
