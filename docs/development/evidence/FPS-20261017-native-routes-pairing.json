@@ -1,0 +1,236 @@
+{
+  "schema": 1,
+  "date": "2026-10-17",
+  "machine": "CDQ-P",
+  "windows_build": 19045,
+  "logical_cpus": 14,
+  "branch": "fps-006-encode-decode-local-loopback",
+  "route_product_commit": "0c9f40398380563f3ac11da7b797112703fc6b54",
+  "route_release_sha256": "CF07D1C374F03B553BC3D42BBC251C18CDF3036B11CEC73B0CB8E1E1729F9C68",
+  "pairing_product_commit": "dfa9edeb938ecb441631d0547e8f5b98128b7efa",
+  "pairing_release_sha256": "31CB0B8F0B7EE580A5518A6FC6B3A7B9FFD950A7F210292712231684CAC90CD5",
+  "ports": {
+    "A": {
+      "listen": 8996,
+      "remote": 8997
+    },
+    "B": {
+      "listen": 8997,
+      "remote": 8996
+    }
+  },
+  "measurement_scope": "Two owned portable processes, GPU H264, WGC1920x1080@60 fixtures, No Audio. Same-PC routes; no physical WAN/Tailscale peer. Route samples are functional throughput evidence, not controlled comparative resource results; Tailscale run overlapped a bounded native test build.",
+  "measurements": {
+    "ddns": [
+      {
+        "phase": "ddns-0c9f",
+        "role": "A",
+        "wall_seconds": 59.2274167,
+        "counter_seconds": 59,
+        "send_fps": 29.89830508474576,
+        "render_fps": 29.915254237288135,
+        "cpu_mean_machine_percent": 0.8856600551828078,
+        "working_peak_mb": 237.19140625,
+        "video_drops": 0,
+        "recoveries": 0,
+        "generations_unchanged": true
+      },
+      {
+        "phase": "ddns-0c9f",
+        "role": "B",
+        "wall_seconds": 59.2274167,
+        "counter_seconds": 59,
+        "send_fps": 29.89830508474576,
+        "render_fps": 29.89830508474576,
+        "cpu_mean_machine_percent": 1.0288731704889638,
+        "working_peak_mb": 238.45703125,
+        "video_drops": 0,
+        "recoveries": 0,
+        "generations_unchanged": true
+      }
+    ],
+    "self_lan": [
+      {
+        "phase": "self-lan-0c9f",
+        "role": "A",
+        "wall_seconds": 44.0141407,
+        "counter_seconds": 44,
+        "send_fps": 59.95454545454545,
+        "render_fps": 59.95454545454545,
+        "cpu_mean_machine_percent": 1.2830697904710948,
+        "working_peak_mb": 237.73828125,
+        "video_drops": 0,
+        "recoveries": 0,
+        "generations_unchanged": true
+      },
+      {
+        "phase": "self-lan-0c9f",
+        "role": "B",
+        "wall_seconds": 44.0141407,
+        "counter_seconds": 44,
+        "send_fps": 59.95454545454545,
+        "render_fps": 59.95454545454545,
+        "cpu_mean_machine_percent": 1.2095341700686013,
+        "working_peak_mb": 237.61328125,
+        "video_drops": 0,
+        "recoveries": 0,
+        "generations_unchanged": true
+      }
+    ],
+    "own_tailscale": [
+      {
+        "phase": "self-tailscale-0c9f",
+        "role": "A",
+        "wall_seconds": 44.1151879,
+        "counter_seconds": 44,
+        "send_fps": 59.09090909090909,
+        "render_fps": 59.09090909090909,
+        "cpu_mean_machine_percent": 1.247242141488678,
+        "working_peak_mb": 271.234375,
+        "video_drops": 0,
+        "recoveries": 1,
+        "generations_unchanged": false
+      },
+      {
+        "phase": "self-tailscale-0c9f",
+        "role": "B",
+        "wall_seconds": 44.1151879,
+        "counter_seconds": 44,
+        "send_fps": 59.09090909090909,
+        "render_fps": 59.11363636363637,
+        "cpu_mean_machine_percent": 1.2143534034778205,
+        "working_peak_mb": 258.37890625,
+        "video_drops": 0,
+        "recoveries": 0,
+        "generations_unchanged": false
+      }
+    ]
+  },
+  "native_tests": {
+    "network_red": "proc404",
+    "core_green": "proc408 Release/Debug3/3",
+    "unified_ui_red": "proc410",
+    "unified_ui_green": "proc411 Release/Debug3/3",
+    "remove_red": "proc414",
+    "remove_green": "proc415 Release/Debug3/3"
+  },
+  "actual_removal": {
+    "session": "proc-1792245510062-1",
+    "exit_code": 0,
+    "checks": [
+      {
+        "check": "closed-before-deploy-A",
+        "pass": true
+      },
+      {
+        "check": "closed-before-deploy-B",
+        "pass": true
+      },
+      {
+        "check": "launch-connected-fixtures",
+        "pass": true
+      },
+      {
+        "check": "duplex-ddns-before-remove",
+        "pass": true
+      },
+      {
+        "check": "remove-enabled-for-saved-peer",
+        "pass": true
+      },
+      {
+        "check": "saved-device-identity-name-visible",
+        "pass": true
+      },
+      {
+        "check": "trust-file-removed",
+        "pass": true
+      },
+      {
+        "check": "own-identity-preserved",
+        "pass": true
+      },
+      {
+        "check": "remove-disabled-when-empty",
+        "pass": true
+      },
+      {
+        "check": "media-and-ping-cleared",
+        "pass": true
+      },
+      {
+        "check": "remote-disconnected",
+        "pass": true
+      },
+      {
+        "check": "listener-8996-stopped",
+        "pass": true
+      },
+      {
+        "check": "restart-stays-unpaired",
+        "pass": true
+      },
+      {
+        "check": "restart-no-auto-listener",
+        "pass": true
+      },
+      {
+        "check": "restart-removal-persists",
+        "pass": true
+      },
+      {
+        "check": "host-port-preserved",
+        "pass": true
+      },
+      {
+        "check": "connect-blocked-until-paired",
+        "pass": true
+      },
+      {
+        "check": "unpaired-explanation",
+        "pass": true
+      },
+      {
+        "check": "explicit-repair-restores-exact-known-trust",
+        "pass": true
+      },
+      {
+        "check": "duplex-ddns-after-explicit-repair",
+        "pass": true
+      },
+      {
+        "check": "identity-still-preserved",
+        "pass": true
+      }
+    ],
+    "trust_condition_wait_ms": 445,
+    "owned_apps_and_fixtures_closed": true
+  },
+  "reviews": [
+    {
+      "range": "21f95a7..0c9f403",
+      "critical": 0,
+      "important": 0,
+      "minor": 0
+    },
+    {
+      "range": "0c9f403..dfa9ede",
+      "critical": 0,
+      "important": 0,
+      "minor": 0
+    }
+  ],
+  "retained_failures": [
+    "127.0.0.2 MsQuic route idle0x80410005 despite successful raw UDP; no alias normalization or TLS bypass",
+    "Own Tailscale run A recovery1 and changed generations both; strict continuity fail retained",
+    "Actual helper attempts416-420: wrong-endian public bundle read, ASCII dash expectation, remote reconnect-state expectation, native OK control ID assumption, and fixed-delay publication race. Corrected only the helper against observed behavior; prior JSON/log evidence retained."
+  ],
+  "open_gates": [
+    "identical encoded workload TLS/TCP comparison",
+    "physical second-PC LAN/DDNS/Tailscale/Direct/DERP",
+    "remote clock/A-V sync",
+    "broader recovery/audio fidelity/installer and V1 acceptance",
+    "DG001/006/008 remain open"
+  ],
+  "release_boundary": "User requested v1.0.0 with friendpushscreen-v1.0.0-portable.zip; version does not change the documented qualification scope."
+}

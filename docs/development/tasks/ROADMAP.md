@@ -16,7 +16,7 @@ This roadmap converts the V1 master specification into execution-sized FPS tasks
 | FPS-008 | Control Protocol | Versioned handshake, connection/audio/video capabilities, peer/share/audio state, heartbeat, reconnect semantics | SCOPED PASS in FPS-009; full V1 inputs open |
 | FPS-009 | Media Transport Decision & Network Streaming | Evidence-backed secure low-latency control/video/audio transport; one-port feasibility; timing/multiplexing | PROVISIONAL — localhost video+audio subgate recorded; TCP comparison/remote inputs and decision open |
 | FPS-009A | Peer Status Metrics | Correlated application Ping and actual Send/View FPS, stale resets and existing heartbeat | SCOPED PASS â€” localhost8996/8997, performance comparison retained |
-| FPS-010 | Connectivity Modes | Dual-instance localhost, LAN, Direct IP/DDNS, Tailscale, secure Direct Internet, reconnect/path diagnostics | PLANNED |
+| FPS-010 | Connectivity Routes | One Host/IP+Port; self-LAN, DDNS NAT-loopback and own Tailscale IP with pinned identity | SCOPED PASS / physical remote and recovery gates open |
 | FPS-011 | One-Way Production Flow | Daily-usable A → B video plus optional shared audio across all V1 source types | PLANNED |
 | FPS-012 | Two-Way Sharing | Stable A ↔ B video/audio streams with independent audio state, receiver mute/volume, and feedback protection | PLANNED |
 | FPS-013 | Quality Controller | Conservative video adaptation with hysteresis while preserving control/audio continuity and bounded audio QoS | PLANNED |

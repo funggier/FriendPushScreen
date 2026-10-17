@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "date": "2026-10-17",
+  "version": "1.0.0",
+  "tag": "v1.0.0",
+  "requested_portable_asset": "friendpushscreen-v1.0.0-portable.zip",
+  "source_branch": "fps-006-encode-decode-local-loopback",
+  "product_commit": "dfa9edeb938ecb441631d0547e8f5b98128b7efa",
+  "app_sha256": "31CB0B8F0B7EE580A5518A6FC6B3A7B9FFD950A7F210292712231684CAC90CD5",
+  "local_gates": {
+    "session": "proc-1792246436194-3",
+    "exit_code": 0,
+    "configuration": [
+      "Release",
+      "Debug"
+    ],
+    "ctest_each": {
+      "passed": 3,
+      "failed": 0
+    },
+    "cmake_version": "1.0.0"
+  },
+  "portable_qualification": {
+    "session": "proc-1792246543007-4",
+    "exit_code": 0,
+    "checks": 45,
+    "passed": 45,
+    "fresh_folders": 2,
+    "loaded_crt_from_each_portable_folder": true,
+    "new_independent_identities": true,
+    "no_auto_udp_listeners": true,
+    "closed_owned_processes": true,
+    "qualification_archive_sha256": "98B738F41003152A4BF9C8404A77E218B6F79441A8F3A1D42DAA1B57E55C1D5C",
+    "publication_archive_differs_by_exact_commit_manifest": true
+  },
+  "packaging_fix_retained": "Initial wrapper proc1792246186765-2: native tests passed, package failed because PSScriptRoot was empty during param default evaluation. Moved source-path initialization into script body, then reran all local gates and ZIP qualification successfully.",
+  "publication_gate": "Exact final release commit CI, tag and asset download verification are required; see external published manifest for immutable release/CI/file identities.",
+  "packaging_review": {
+    "critical": 0,
+    "important": 1,
+    "minor": 0,
+    "fixed": "README copying only EXE+MsQuic omitted required CRT files; changed to complete ZIP extraction for A/B. Readback, link/script/version checks passed. One grouped doc-only fix, no native source changes or repeated review."
+  }
+}

@@ -156,7 +156,7 @@
 - [x] Run five-minute hardware 1080p60 tests per direction and simultaneous sharing. Aim ≥59 rendered fps each, report actual fps, p50/p95/p99 stage latency, bitrate, CPU/GPU/memory, queue count/bytes/age and drops honestly.
 - [x] Test Stop Share/Disconnect, source switch/loss, server/client restart, trust rejection/replacement/expiry, unavailable/duplicate ports, stalled receiver, malformed records and repeated shutdown. Write reproducing RED tests for any defect before fixing.
 - [ ] Compare same encoded workload with the TLS/TCP reference and, if candidate evidence warrants it, the WebRTC alternative. Include interleaved control and scheduled synthetic audio load; retain DG-001 as provisional if full decision inputs remain outstanding.
-- [ ] Qualify self-LAN only after secure localhost tests; label all untested Internet/Tailscale/physical peer paths. No firewall/router change is needed for this local acceptance.
+- [x] Qualify self-LAN only after secure localhost tests; label all untested Internet/Tailscale/physical peer paths. No firewall/router change is needed for this local acceptance.
 - [x] Run final Debug/Release build/CTest, full source regression and exact-commit CI. Prepare one fresh whole-change review with spec, plan, diff, ledger rulings and Review Focus verbatim. Re-grade findings; fix Critical/Important with RED→GREEN and the whole suite.
 - [x] Preserve reports/evidence, update roadmap states only to demonstrated outcomes, commit/push exact final source and documentation and confirm both CI jobs/clean state. Do not merge main or release without a separate instruction.
 
@@ -173,3 +173,7 @@ The single fresh whole-change reviewer and one grouped Important fix pass comple
 Every approved-spec section maps to Tasks 1–6 above. Cross-task interfaces are named and owned; file setup/documentation is folded into the task it serves. Existing source/build baseline CTest passed before implementation. Source-side media and cryptographic behavior is verified by real runtime probes in addition to model tests.
 
 The user explicitly approved the spec and authorized plan preparation plus continuous Native implementation without further confirmation. Do not reintroduce the writing-plans review pause. Routine choices/rulings go to the ledger and must preserve the spec; irreversible/destructive/out-of-scope actions remain outside this authorization.
+
+## 2026-10-17 route/release continuation
+
+The later native-routes-pairing report supplies actual self-LAN and public-name DDNS NAT-loopback/own-Tailscale-IP evidence on8996/8997, plus the user-requested one saved-device Delete. Earlier loopback-only statements above describe the original increment. Same encoded TLS/TCP/control/audio-load comparison remains unchecked. The user requested a v1.0.0 release of the documented current feature boundary, with friendpushscreen-v1.0.0-portable.zip; no physical WAN or full V1 acceptance is inferred.

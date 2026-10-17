@@ -32,3 +32,9 @@ This directory separates stable product intent from current execution state.
 ## Rule
 
 Do not duplicate the full V1 specification into task files. Task files state current execution and evidence. The master specification remains the baseline product/architecture authority unless an explicit later approved amendment supersedes it.
+
+## Published release and user guide
+
+- [v1.0.0 release boundary and assets](releases/v1.0.0.md)
+- [Thai portable guide](USER_GUIDE_TH.md)
+- [Native Host/IP routes and saved-device removal](development/reports/FPS-20261017-native-routes-pairing.md)

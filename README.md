@@ -1,8 +1,10 @@
 # FriendPushScreen
 
+[FriendPushScreen v1.0.0](https://github.com/funggier/FriendPushScreen/releases/tag/v1.0.0) | [Portable ZIP](https://github.com/funggier/FriendPushScreen/releases/download/v1.0.0/friendpushscreen-v1.0.0-portable.zip) | [Thai portable guide](docs/USER_GUIDE_TH.md)
+
 FriendPushScreen is a Windows real-time screen-sharing project for two peers who want higher-quality, lower-latency video plus optional shared machine audio while continuing to use an external service such as Discord for voice and chat.
 
-> **Current state on this branch:** Native H.264 video has independent CPU/GPU controls, with optional WASAPI/Opus audio and selectable receiver output, mute and volume. Actual two-folder localhost qualification is recorded in the dated [audio report](docs/development/reports/FPS-20261017-native-audio-qualification.md) and [video report](docs/development/reports/FPS-20261016-native-peer-video-qualification.md). Wider V1 connectivity, recovery and release gates remain open.
+> **Current state on this branch:** Native H.264 video has independent CPU/GPU controls, with optional WASAPI/Opus audio and selectable receiver output, mute and volume. Actual two-folder localhost qualification is recorded in the dated [audio report](docs/development/reports/FPS-20261017-native-audio-qualification.md) and [video report](docs/development/reports/FPS-20261016-native-peer-video-qualification.md). Wider V1 connectivity, recovery and acceptance gates remain open.
 
 ## V1 product boundary
 
@@ -19,7 +21,7 @@ V1 targets:
 - capability-dependent HEVC and AV1
 - sender Audio Source dropdown: No Audio / System / Device / capability-dependent Application Audio
 - receiver remote-audio mute/unmute, local volume and selectable playback device
-- LAN / Direct IP-DDNS / Tailscale connection modes
+- LAN / direct IPv4-DDNS / Tailscale through one Host / IP and Remote Port
 - secure Direct Internet requirement with a one-public-UDP-port operational target when feasible
 - low-latency Direct P2P preference
 - reconnect and video/audio source/device recovery
@@ -141,22 +143,22 @@ See:
 - `docs/development/QUALIFICATION-MATRIX.md`
 - `docs/architecture/DECISION-GATES.md`
 
-Build instructions are available in `docs/BUILDING.md`. The current executable includes native diagnostics, unified capture, and decoded H.264 local preview. Secure peer video is available for the loopback evaluation described below. Native WASAPI/Opus audio and selectable playback devices now have local/secure-loopback evidence; non-loopback connectivity remains gated. See docs/development/reports/FPS-20261017-native-audio-qualification.md for measured limits.
+Build instructions are available in `docs/BUILDING.md`. The current executable includes native diagnostics, unified capture, and decoded H.264 local preview. Secure peer video supports the scoped routes described below. Native WASAPI/Opus audio and selectable playback devices now have local/secure-loopback evidence; self-LAN and public-name NAT-loopback are now recorded; physical remote paths remain gated. See docs/development/reports/FPS-20261017-native-audio-qualification.md for measured limits.
 
 ## Two portable instances on one PC
 
-This development increment uses native H.264 over pinned TLS 1.3 QUIC. The transport candidate remains provisional. It currently accepts IPv4 loopback endpoints or `localhost`; DNS, LAN, Internet and Tailscale are not qualified by this increment.
+This development increment uses native H.264 over pinned TLS 1.3 QUIC. The transport candidate remains provisional. Use Host / IP plus Remote Port for IPv4 or ASCII/punycode DNS names. Self-LAN, DDNS NAT-loopback and the local Tailscale address were exercised; physical second-PC/WAN/overlay paths remain unqualified. See the [route and pairing report](docs/development/reports/FPS-20261017-native-routes-pairing.md).
 
-1. Copy `FriendPushScreen.exe` and its pinned `msquic.dll` into two separate folders A and B. Create an empty `portable.flag` in each folder.
-2. Open both copies. Give A Share Port `42801` and B Share Port `42802`.
+1. Extract the complete `friendpushscreen-v1.0.0-portable.zip` into two fresh folders A and B. Keep all DLLs, license notices and the included `portable.flag` in each folder.
+2. Open both copies. Give A Share Port `8996` and B Share Port `8997`.
 3. Use **Export Identity** in each copy. Exchange only the public `.friendpair` files. Use **Pair with Friend**, compare the complete SHA-256 fingerprint with the other copy, and confirm only that known identity.
 4. In A, choose an owned capture source and click **Start Share**.
-5. In B, set Host `127.0.0.1`, Remote Port `42801`, and click **Connect**. B can receive without selecting any local source.
+5. In B, set Host `127.0.0.1`, Remote Port `8996`, and click **Connect**. B can receive without selecting any local source.
 6. To send B's picture back over the same connection, choose B's source and click **Start Share**. Both peers choose their encoder and decoder independently.
 
 **Stop Share** stops only your outgoing picture; incoming video and the connection continue. **Disconnect** cancels listening, reconnect and outgoing sharing. Starting the program does not share automatically. **Preview** is a separate local choice, and incoming video has viewer priority.
 
-Each portable folder owns a different persistent identity, public peer trust and settings. Private identity data is protected for the current Windows user and is never exported in the pairing file. Do not reuse the same data folder for both peers.
+Each portable folder owns a different persistent identity, one saved public peer trust and settings. The saved device appears with its full fingerprint; Remove Paired Device stops the session and deletes that authorization. It stays unpaired after restart until explicit fingerprint pairing again. Own identity and Host/Port preferences are preserved. Private identity data is protected for the current Windows user and is never exported in the pairing file. Do not reuse the same data folder for both peers.
 
 The application bounds media to two access units per direction, waits for the remote decoder before sending, and returns send capacity after the remote consumer releases a frame. Genuine dependency loss requests a fresh generation and IDR with parameter sets. Peer presentation uses sync interval zero so waiting for a display refresh does not block capture and reception. Existing local preview keeps its default presentation behavior.
 

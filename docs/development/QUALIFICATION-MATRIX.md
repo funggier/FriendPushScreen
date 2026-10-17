@@ -16,7 +16,7 @@ A task may be called **GREEN** only when its required evidence exists and can be
 | FPS-008 | native-peer-video report: authenticated No Audio capabilities, independent share/receive, generations, heartbeat/reconnect and simultaneous Connect; local audio capability/source/format/ready and independent generations qualified in audio report; remote/recovery state remains open | SCOPED PASS |
 | FPS-009 | actual secure No Audio localhost video, codec matrix, >=59fps throughput aim and bounded recovery evidence; strict generation-continuity failures retained; localhost audio/output subgate qualified separately; TCP/remote/permanent decision inputs open | ACTIVE / provisional |
 | FPS-009A | status/viewer report: matching fresh RTT, actual elapsed FPS and independent resets; real UI7/7 on8996/8997;60s comparison includes retained failed continuity run; Debug/Release3/3 | SCOPED PASS â€” localhost; no wider stability/route claim |
-| FPS-010 | actual dual-instance pinned localhost subgate demonstrated; LAN, Direct IP/DDNS, Tailscale, Direct Internet and physical second-PC paths remain open | LOCALHOST SUBGATE ONLY |
+| FPS-010 | dual-instance pinned localhost plus self-LAN/DDNS NAT-loopback/own Tailscale IP actual app tests; one-host limitation and retained recovery1; full physical remote routes remain open | SCOPED ROUTE PASS / strict continuity open |
 | FPS-011 | repeated one-way video sharing plus optional shared audio across all V1 source types | PENDING |
 | FPS-012 | sustained two-way video/audio sharing with independent audio state, receiver mute/volume, resource and feedback evidence | PENDING |
 | FPS-013 | controlled impairment tests proving stable video adaptation/hysteresis while preserving control/audio continuity and bounded audio QoS | PENDING |
@@ -27,3 +27,5 @@ A task may be called **GREEN** only when its required evidence exists and can be
 ## Evidence rule
 
 A statement such as “works”, “stable”, “low latency”, or “hardware accelerated” is not qualification evidence by itself. Reports must include the command/test/scenario, observed result, relevant environment, and exact commit being qualified.
+
+Scoped2026-10-17 additions: unified Host/IP without mode chooser; saved one-device removal native tests and actual21/21 including restart/re-pair. See FPS-20261017-native-routes-pairing report/JSON. Release numbering follows the user-selectedv1.0.0 and does not close remaining acceptance/decision gates.

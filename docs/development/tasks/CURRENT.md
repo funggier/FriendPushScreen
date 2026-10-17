@@ -1,17 +1,22 @@
 # Current Development Task
 
-## FPS-009 — remaining transport comparison and connectivity evidence
+## v1.0.0 release — requested 2026-10-17
 
-**Status:** ACTIVE — user explicitly requested continuation after the status/viewer increment on 2026-10-17.
-**Branch/worktree:** fps-006-encode-decode-local-loopback. Native inline execution under the approved 2026-10-16 secure-dual-instance plan and standing instruction to continue without routine confirmation.
+**Status:** v1.0.0 RELEASE SNAPSHOT. Publication status is authoritative in the GitHub release and its exact-commit manifest. The user explicitly requested documentation and release after the bounded Host/IP and single saved-device removal work, then specified friendpushscreen-v1.0.0-portable.zip.
+**Branch/worktree:** fps-006-encode-decode-local-loopback. Native inline implementation. No main merge or historical tag modification.
 
-Remaining approved Task 6 work: identical encoded-workload encrypted TLS/TCP comparison with interleaved control/scheduled audio, plus secure self-LAN. The latest user steering supplies cdloot.thddns.net:8996/8997 and authorizes trying that route; prioritize DNS and bounded authenticated route enablement/qualification, then return to the outstanding comparison. Native DNS preflight resolved the name; HTTP HEAD timed out on both ports while owned applications were closed. This says nothing about UDP reachability. Keep candidate selection provisional until all DG-001 inputs exist. No firewall/router/trust-store/main/tag/release mutation is implied.
+Completed product increments: source0c9f40398380563f3ac11da7b797112703fc6b54 unifies Host/IP/Port and bounded async DNS; sourcedfa9edeb938ecb441631d0547e8f5b98128b7efa displays/removes the one saved identity. Native Release/Debug all3CTest passed. Actual final GUI21/21 verifies delete, clear media/metrics, remote loss, restart unpaired/no listener, unchanged Host/Port, blocked Connect, exact known re-pair and duplex DDNS restored. Both bounded fresh reviews completed without findings. Owned test apps/fixtures were closed.
 
-## Completed immediately preceding increments
+Self-LAN, public-name DDNS through ports8996/8997 and own Tailscale address were exercised on this PC. No physical remote peer. DDNS29.9fps and self-LAN59.95fps short runs had0drop/0recovery; own-Tailscale run had1recovery and changed generations. Preserve the strict failure.
 
-- FPS-009A live peer Ping and Send/View FPS: source30b24979d17faae0e35e5d79c8e4c0fde43a6f26; Release/Debug3/3, actual two-app7/7, user ports8996/8997 and60s comparison recorded.
-- FPS-004A clean viewer status-strip visibility: source2c0b71761f3a715a9d9dafd54872f7336f763be7; Release/Debug3/3, actual viewer14/14 plus640px visual check, persisted flag/Tab/fullscreen verified. One fresh bounded review, no actionable findings.
-- Dated report/evidence: FPS-20261017-peer-status-metrics. Exact delivery-commit CI is checked after push and retained in the local ledger. All owned test apps/fixtures were closed; requested ports retained.
-- Previous FPS-006A native audio/output scoped qualification remains in its dated2026-10-17 report/evidence.
+Release process: publish only after final local build/test/package startup, exact release-commit CI, immutable tag and post-publication asset readback. Source/document archives come from that tag. Publication manifest and checksums bind exact final artifacts.
 
-Strict video continuity failures and all historical evidence remain preserved. Wider FPS-009 permanent decision/FPS-010 remote routes, DG001/006/008, endpoint recovery/external fidelity and V1 release gates remain open.
+## Evidence
+
+- docs/development/reports/FPS-20261017-native-routes-pairing.md and matching JSON.
+- docs/releases/v1.0.0.md and docs/USER_GUIDE_TH.md.
+- Earlier status/viewer and native-audio dated2026-10-17 reports remain authoritative for their original scopes.
+
+## Next boundary
+
+After this requested release, no next task is automatically activated. The approved Task6 identical encoded-workload TLS/TCP/control/scheduled-audio comparison remains outstanding. Self-LAN is now evidenced; physical peer WAN/LAN/overlay, wider recovery/audio fidelity, remote timing, installer and full V1 acceptance remain open. DG001/006/008 remain open and permanent transport selection provisional.
