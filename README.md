@@ -124,6 +124,14 @@ In **Settings → VIDEO / H.264**, choose the encoder and decoder independently:
 
 `FPS_FORCE_SOFTWARE_CODEC=1` remains a diagnostic override forcing both codecs to CPU; `FPS_RAW_PREVIEW=1` bypasses codecs. Both overrides are shown in video status.
 
+## Status and clean viewer
+
+The status strip shows application Ping plus actual Send/View FPS. Ping reuses the authenticated heartbeat and includes application service time; it is not ICMP or one-way video latency. Send counts successful bounded sender-queue handoffs and View counts renderer-sink deliveries. Values warm up and reset to an em dash on stop/disconnect rather than retaining old rates.
+
+In Settings â†’ VIEWER, turn off Show Status Bar (Tab: Settings) to hide both the text and Settings button and reclaim the entire strip. Combine this with Borderless Viewer, then press Tab to hide Settings, for an image-only window. Tab opens Settings again. The choice is saved and survives fullscreen transitions.
+
+Two real copies on user-selected ports8996/8997, resource comparisons and visible UI/relaunch results are in the [status/viewer report](docs/development/reports/FPS-20261017-peer-status-metrics.md).
+
 ## Current task
 
 See:

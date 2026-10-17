@@ -1,0 +1,263 @@
+{
+    "schema":  1,
+    "date":  "2026-10-17",
+    "machine":  "CDQ-P",
+    "windows_build":  19045,
+    "logical_cpus":  14,
+    "branch":  "fps-006-encode-decode-local-loopback",
+    "baseline_commit":  "c657f6a4ca87487178a1e4eccadcf94c345ecef6",
+    "metrics_commit":  "30b24979d17faae0e35e5d79c8e4c0fde43a6f26",
+    "product_commit":  "2c0b71761f3a715a9d9dafd54872f7336f763be7",
+    "release_sha256":  "89D55654B298F975C89B4063C6B4BDCC4D60E8003C7C2661CD06437E74B09C81",
+    "ports":  {
+                  "A":  {
+                            "remote":  8997,
+                            "listen":  8996
+                        },
+                  "B":  {
+                            "remote":  8996,
+                            "listen":  8997
+                        }
+              },
+    "resource_workload":  "Two WGC1920x1080@60 GPU H264 peers, No Audio, diagnostic counters equally enabled; sequential60s; status source predates viewer checkbox",
+    "measurements":  [
+                         {
+                             "phase":  "baseline",
+                             "role":  "A",
+                             "wall_seconds":  59.259987699999996,
+                             "counter_seconds":  60,
+                             "send_fps":  58.4,
+                             "render_fps":  57.56666666666667,
+                             "cpu_mean_machine_percent":  1.2919763059620075,
+                             "working_peak_mb":  241.22265625,
+                             "video_drops":  0,
+                             "recoveries":  0,
+                             "generations_unchanged":  true
+                         },
+                         {
+                             "phase":  "baseline",
+                             "role":  "B",
+                             "wall_seconds":  59.259987699999996,
+                             "counter_seconds":  59,
+                             "send_fps":  57.6271186440678,
+                             "render_fps":  58.474576271186443,
+                             "cpu_mean_machine_percent":  1.7119627727688995,
+                             "working_peak_mb":  240.7109375,
+                             "video_drops":  0,
+                             "recoveries":  0,
+                             "generations_unchanged":  true
+                         },
+                         {
+                             "phase":  "current",
+                             "role":  "A",
+                             "wall_seconds":  59.7214528,
+                             "counter_seconds":  60,
+                             "send_fps":  58.366666666666667,
+                             "render_fps":  58.333333333333336,
+                             "cpu_mean_machine_percent":  1.2819932605524289,
+                             "working_peak_mb":  255.56640625,
+                             "video_drops":  0,
+                             "recoveries":  0,
+                             "generations_unchanged":  false
+                         },
+                         {
+                             "phase":  "current",
+                             "role":  "B",
+                             "wall_seconds":  59.7214528,
+                             "counter_seconds":  60,
+                             "send_fps":  58.333333333333336,
+                             "render_fps":  58.366666666666667,
+                             "cpu_mean_machine_percent":  1.3305819264042704,
+                             "working_peak_mb":  303.0078125,
+                             "video_drops":  0,
+                             "recoveries":  2,
+                             "generations_unchanged":  false
+                         },
+                         {
+                             "phase":  "final",
+                             "role":  "A",
+                             "wall_seconds":  59.273149399999994,
+                             "counter_seconds":  59,
+                             "send_fps":  59.949152542372879,
+                             "render_fps":  59.966101694915253,
+                             "cpu_mean_machine_percent":  1.3688895170659325,
+                             "working_peak_mb":  230.0703125,
+                             "video_drops":  0,
+                             "recoveries":  0,
+                             "generations_unchanged":  true
+                         },
+                         {
+                             "phase":  "final",
+                             "role":  "B",
+                             "wall_seconds":  59.273149399999994,
+                             "counter_seconds":  59,
+                             "send_fps":  59.949152542372879,
+                             "render_fps":  59.949152542372879,
+                             "cpu_mean_machine_percent":  1.2709771994766221,
+                             "working_peak_mb":  230.2109375,
+                             "video_drops":  0,
+                             "recoveries":  0,
+                             "generations_unchanged":  true
+                         }
+                     ],
+    "resource_conclusion":  "No clear extra CPU cost resolved by these short uncontrolled samples. No zero-overhead, CPU-savings, memory-delta or long-run-stability claim.",
+    "retained_failure":  "Initial metrics candidate: B2 recoveries; generations changed on both, strict continuity failed. Later60s pass does not erase historical recovery.",
+    "native_tests":  {
+                         "viewer_red":  "400",
+                         "metrics_green_debug":  "392 3/3",
+                         "metrics_red":  "390",
+                         "bounds_red":  "395",
+                         "bounds_green":  "396 Release3/3 Debug3/3",
+                         "metrics_green_release":  "391 3/3",
+                         "viewer_green":  "401 Release3/3 Debug3/3"
+                     },
+    "status_cases":  [
+                         {
+                             "check":  "A measured RTT and both frame rates",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "B measured RTT and both frame rates",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "status does not overlap Settings at width640",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "status does not overlap Settings at width1280",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Stop A clears A Send and B View independently",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "idle connected retains Ping and clears both FPS",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Disconnect clears all old metrics on both apps",
+                             "pass":  true
+                         }
+                     ],
+    "viewer_cases":  [
+                         {
+                             "check":  "A current build has live Ping and Send/View FPS",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "B current build has live Ping and Send/View FPS",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Viewer checkbox starts enabled",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Off hides entire strip and fills bordered client",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Borderless keeps full client with strip hidden",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Tab hides Settings while strip stays hidden",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Tab restores Settings without restoring strip",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "F11 enters fullscreen with strip hidden",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Esc leaves fullscreen preserving hidden strip",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Hidden preference persisted on close",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Relaunch restores hidden strip and borderless",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Tab still restores Settings after relaunch",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "On restores status and Settings button",
+                             "pass":  true
+                         },
+                         {
+                             "check":  "Enabled preference persisted again",
+                             "pass":  true
+                         }
+                     ],
+    "narrow_viewer":  {
+                          "width":  640,
+                          "checkbox":  "Show Status Bar (Tab: Settings)",
+                          "visible":  true,
+                          "bounds_inside_panel":  true
+                      },
+    "review":  {
+                   "repeat_review":  false,
+                   "viewer":  "One fresh read-only30b2497..2c0b717; no actionable findings",
+                   "metrics":  "One bounded review; Minor status width corrected with RED/GREEN"
+               },
+    "cleanup":  {
+                    "processes":  {
+                                      "value":  [
+                                                    {
+                                                        "label":  "A off persistence",
+                                                        "pid":  19440,
+                                                        "forced":  false
+                                                    },
+                                                    {
+                                                        "label":  "A restored",
+                                                        "pid":  25536,
+                                                        "forced":  false
+                                                    },
+                                                    {
+                                                        "label":  "A fixture",
+                                                        "pid":  21768,
+                                                        "forced":  false
+                                                    },
+                                                    {
+                                                        "label":  "B final app",
+                                                        "pid":  27188,
+                                                        "forced":  false
+                                                    },
+                                                    {
+                                                        "label":  "B fixture",
+                                                        "pid":  23924,
+                                                        "forced":  false
+                                                    }
+                                                ],
+                                      "Count":  5
+                                  },
+                    "screenshot_app_closed_gracefully":  true,
+                    "owned_remaining":  0,
+                    "udp_8996_8997_listeners":  0
+                },
+    "preserved":  [
+                      "Private paired identity/trust",
+                      "User-selected8996/8997",
+                      "Historical failure evidence",
+                      "main/siblings/tags/releases"
+                  ],
+    "remaining":  [
+                      "TLS/TCP identical-workload comparison",
+                      "Self-LAN and DDNS route qualification",
+                      "Physical peer/Internet/Tailscale",
+                      "Remote clock alignment",
+                      "Broader endpoint/audio recovery",
+                      "DG001/006/008 and V1 acceptance"
+                  ],
+    "ci":  "Exact delivery-head run checked after push; proof in ignored task directory"
+}

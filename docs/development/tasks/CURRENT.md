@@ -1,17 +1,17 @@
-﻿# Current Development Task
+# Current Development Task
 
-## FPS-006A — Native audio and selectable playback: scoped qualification complete
+## FPS-009 — remaining transport comparison and connectivity evidence
 
-**Status:** SCOPED PASS on the reference Windows10 machine and two real localhost portable instances.
-**Branch/worktree:** fps-006-encode-decode-local-loopback, preserved. Main and sibling worktrees untouched.
-Authority: approved V1 audio amendment, autonomous Native execution, explicit Settings output selector and steady-audio requirement.
+**Status:** ACTIVE — user explicitly requested continuation after the status/viewer increment on 2026-10-17.
+**Branch/worktree:** fps-006-encode-decode-local-loopback. Native inline execution under the approved 2026-10-16 secure-dual-instance plan and standing instruction to continue without routine confirmation.
 
-[Qualification report](../reports/FPS-20261017-native-audio-qualification.md) · [Curated evidence](../evidence/FPS-20261017-native-audio.json) · [Completed plan](../../superpowers/plans/2026-10-17-native-audio.md).
+Remaining approved Task 6 work: identical encoded-workload encrypted TLS/TCP comparison with interleaved control/scheduled audio, plus secure self-LAN. The latest user steering supplies cdloot.thddns.net:8996/8997 and authorizes trying that route; prioritize DNS and bounded authenticated route enablement/qualification, then return to the outstanding comparison. Native DNS preflight resolved the name; HTTP HEAD timed out on both ports while owned applications were closed. This says nothing about UDP reachability. Keep candidate selection provisional until all DG-001 inputs exist. No firewall/router/trust-store/main/tag/release mutation is implied.
 
-Implemented: actual WASAPI System/output-loopback/input capture, pinned Opus1.6.1, authenticated QUIC audio with independent generations and finite queues; local output selection, mute and volume with persisted stable IDs. NoAudio releases capture/send. Same-host endpoint guard prevents recapture loops. Windows19045 correctly marks process capture unsupported.
+## Completed immediately preceding increments
 
-Verified source9d24f9ed61470ad2ab4fd7a8b5beef8fecffb381, appSHA256B1CC600361EAAF1783E9DE4AC66CEC09951544C5DB2E71CBF92F1B7D4A57E7BC: all native Debug/Release targets and CTest3/3, exact-source CI both configurations,13/13 physical audio/routing cases,5min duplex50audio frames/s with0drops/PLC/underflows,0silent10msblocks at measured output,59.8fps video with0recoveries and unchanged generations in the final run. Actual close/relaunch preserved both endpoint/mute/volume choices. Visible Diagnostics scroll repaint4/4. Single whole-change review and one consequential TDD fix pass completed.
+- FPS-009A live peer Ping and Send/View FPS: source30b24979d17faae0e35e5d79c8e4c0fde43a6f26; Release/Debug3/3, actual two-app7/7, user ports8996/8997 and60s comparison recorded.
+- FPS-004A clean viewer status-strip visibility: source2c0b71761f3a715a9d9dafd54872f7336f763be7; Release/Debug3/3, actual viewer14/14 plus640px visual check, persisted flag/Tab/fullscreen verified. One fresh bounded review, no actionable findings.
+- Dated report/evidence: FPS-20261017-peer-status-metrics. Exact delivery-commit CI is checked after push and retained in the local ledger. All owned test apps/fixtures were closed; requested ports retained.
+- Previous FPS-006A native audio/output scoped qualification remains in its dated2026-10-17 report/evidence.
 
-Owned apps/fixtures/helpers are closed; original portable test preferences restored, identities retained. No main merge or release.
-
-Next gated scope: FPS-009 transport comparison/permanent decision and FPS-010 remote connectivity; DG001/006/008 remain open. Physical endpoint removal/default switching, external capture-card signal fidelity, newer-OS process backend, LAN/DDNS/Internet/Tailscale, physical second peer and fullV1 acceptance remain unqualified. Earlier strict video-continuity FAILs are retained in the reports; a single final scoped PASS does not erase them.
+Strict video continuity failures and all historical evidence remain preserved. Wider FPS-009 permanent decision/FPS-010 remote routes, DG001/006/008, endpoint recovery/external fidelity and V1 release gates remain open.
